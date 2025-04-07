@@ -1,6 +1,6 @@
 // components/common/Button.tsx
 import React, { ReactNode } from 'react';
-import { cn } from '../../lib/utils'; // Assuming you have utils.ts from shadcn-ui setup
+import { cn } from '../../../lib/utils'; // Assuming you have utils.ts from shadcn-ui setup
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'default' | 'primary' | 'secondary' | 'destructive' | 'outline' | 'ghost';

@@ -1,6 +1,6 @@
 // components/common/Typography.tsx
 import React, { ReactNode } from 'react';
-import { cn } from '../../lib/utils'; // Assuming you have utils.ts
+import { cn } from '../../../lib/utils'; // Assuming you have utils.ts
 
 type HTMLTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span';
 type TypographyVariant = HTMLTag | 'lead' | 'muted' | 'small';
