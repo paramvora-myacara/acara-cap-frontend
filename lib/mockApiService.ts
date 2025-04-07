@@ -1,5 +1,5 @@
 // lib/mockApiService.ts
-import { LenderProfile } from '../types/lender';
+import { LenderProfile } from '../src/types/lender';
 
 export const getLenders = async (): Promise<LenderProfile[]> => {
   const mockLenders: LenderProfile[] = [

@@ -2,7 +2,7 @@
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { LenderProfile } from '../types/lender';
+import { LenderProfile } from '../src/types/lender';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
