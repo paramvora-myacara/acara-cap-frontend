@@ -9,34 +9,58 @@ import { Card, CardContent, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/Button';
 import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
 import { useProjects } from '../../hooks/useProjects';
+import { useAuth } from '../../hooks/useAuth';
 import { useUI } from '../../hooks/useUI';
 import { GlobalToast } from '../../components/ui/GlobalToast';
-import { LoadingOverlay } from '../../components/ui/LoadingOverlay';
-import { PlusCircle, FileText, ArrowUpRight, Calendar, Building, Users } from 'lucide-react';
+import { 
+  PlusCircle, 
+  FileText, 
+  ArrowUpRight, 
+  Calendar, 
+  Building, 
+  Users, 
+  CheckCircle, 
+  UserCheck, 
+  FileCheck,
+  Zap
+} from 'lucide-react';
+
+// Resource card data with guaranteed unique keys
+const RESOURCE_CARDS = [
+  {
+    id: 'resource-lender-matching',
+    title: 'Find Lenders',
+    description: 'Search and match with lenders based on your project criteria.',
+    buttonText: 'Go to Lender Matching',
+    buttonAction: '/',
+    icon: <Building className="h-6 w-6 text-blue-600" />
+  },
+  {
+    id: 'resource-templates',
+    title: 'Project Templates',
+    description: 'Jumpstart your project creation with pre-filled templates.',
+    buttonText: 'Browse Templates',
+    buttonAction: null, // Will show notification
+    icon: <FileText className="h-6 w-6 text-green-600" />
+  },
+  {
+    id: 'resource-advisors',
+    title: 'Need Help?',
+    description: 'Connect with a capital markets advisor for personalized guidance.',
+    buttonText: 'Talk to an Advisor',
+    buttonAction: null, // Will show notification
+    icon: <Users className="h-6 w-6 text-purple-600" />
+  }
+];
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { projects, isLoading } = useProjects();
-  const { setLoading } = useUI();
+  const { projects, isLoading, getCompletionStats } = useProjects();
+  const { user } = useAuth();
+  const { showNotification } = useUI();
 
-  // Update loading state
-  useEffect(() => {
-    setLoading(isLoading);
-  }, [isLoading, setLoading]);
-
-  const stats = {
-    totalProjects: projects.length,
-    activeProjects: projects.length, // For demo, all projects are active
-    matchedLenders: Math.floor(Math.random() * 10) + 5, // Random number for demo
-    averageProgress: projects.length 
-      ? Math.round(
-          projects.reduce(
-            (sum, project) => sum + ((project.borrowerProgress + project.projectProgress) / 2), 
-            0
-          ) / projects.length
-        )
-      : 0
-  };
+  // Get completion statistics
+  const stats = getCompletionStats();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -47,11 +71,34 @@ export default function DashboardPage() {
     });
   };
 
+  // Handle resource card button click
+  const handleResourceClick = (resourceId: string, action: string | null) => {
+    if (action) {
+      router.push(action);
+    } else {
+      // Show notification for upcoming features
+      showNotification({
+        type: 'info',
+        message: 'This feature is coming soon in a future update!',
+        duration: 3000
+      });
+    }
+  };
+
   return (
     <ProtectedRoute>
       <DashboardLayout title="Dashboard">
-        <LoadingOverlay />
         <GlobalToast />
+        
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+            Welcome back, {user?.name || user?.email?.split('@')[0] || 'User'}
+          </h2>
+          <p className="text-gray-600">
+            Track your projects and connect with lenders that match your needs.
+          </p>
+        </div>
         
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -73,11 +120,11 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm font-medium text-emerald-600">Active Projects</p>
-                  <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.activeProjects}</h3>
+                  <p className="text-sm font-medium text-emerald-600">Completed Projects</p>
+                  <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.completedProjects}</h3>
                 </div>
                 <div className="bg-emerald-100 p-3 rounded-lg">
-                  <Building className="h-6 w-6 text-emerald-600" />
+                  <CheckCircle className="h-6 w-6 text-emerald-600" />
                 </div>
               </div>
             </CardContent>
@@ -87,11 +134,11 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm font-medium text-violet-600">Matched Lenders</p>
-                  <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.matchedLenders}</h3>
+                  <p className="text-sm font-medium text-violet-600">Borrower Completion</p>
+                  <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.averageBorrowerProgress}%</h3>
                 </div>
                 <div className="bg-violet-100 p-3 rounded-lg">
-                  <Users className="h-6 w-6 text-violet-600" />
+                  <UserCheck className="h-6 w-6 text-violet-600" />
                 </div>
               </div>
             </CardContent>
@@ -101,11 +148,11 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-sm font-medium text-amber-600">Avg. Completion</p>
-                  <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.averageProgress}%</h3>
+                  <p className="text-sm font-medium text-amber-600">Project Completion</p>
+                  <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.averageProjectProgress}%</h3>
                 </div>
                 <div className="bg-amber-100 p-3 rounded-lg">
-                  <Calendar className="h-6 w-6 text-amber-600" />
+                  <FileCheck className="h-6 w-6 text-amber-600" />
                 </div>
               </div>
             </CardContent>
@@ -149,12 +196,31 @@ export default function DashboardPage() {
         {projects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
-              <Card key={project.id} className="shadow-sm hover:shadow-md transition-shadow">
+              <Card key={`project-${project.id}`} className="shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2 truncate">{project.name}</h3>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800 truncate">{project.name}</h3>
+                    {project.borrowerProgress === 100 && project.projectProgress === 100 ? (
+                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Complete
+                      </span>
+                    ) : (
+                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center">
+                        <Zap className="h-3 w-3 mr-1" />
+                        In Progress
+                      </span>
+                    )}
+                  </div>
+                  
                   <p className="text-sm text-gray-500 mb-4 flex items-center">
                     <Calendar className="h-4 w-4 mr-1" />
                     Created on {formatDate(project.createdAt)}
+                    {project.updatedAt !== project.createdAt && (
+                      <span className="ml-3 text-gray-400">
+                        • Updated {formatDate(project.updatedAt)}
+                      </span>
+                    )}
                   </p>
                   
                   <div className="space-y-4">
@@ -211,6 +277,33 @@ export default function DashboardPage() {
             >
               Create Project
             </Button>
+          </div>
+        )}
+        
+        {/* Additional resources section */}
+        {projects.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Resources</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {RESOURCE_CARDS.map(resource => (
+                <Card key={resource.id} className="shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-center mb-3">
+                      {resource.icon}
+                      <h3 className="text-lg font-semibold text-gray-800 ml-2">{resource.title}</h3>
+                    </div>
+                    <p className="text-gray-600 mb-4">{resource.description}</p>
+                    <Button 
+                      variant="outline"
+                      rightIcon={<ArrowUpRight size={16} />}
+                      onClick={() => handleResourceClick(resource.id, resource.buttonAction)}
+                    >
+                      {resource.buttonText}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         )}
       </DashboardLayout>

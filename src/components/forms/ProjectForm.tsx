@@ -10,7 +10,7 @@ import { Form, FormGroup } from '../../components/ui/Form';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
 import { Button } from '../../components/ui/Button';
-import { Save, ChevronDown, ChevronUp, MessageSquare, FileText, User, CheckCircle } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, MessageSquare, FileText, User, CheckCircle, Clock } from 'lucide-react';
 import { Project, FormSection } from '../../contexts/ProjectContext';
 
 interface ProjectFormProps {
@@ -23,13 +23,22 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   onFormSaved
 }) => {
   const router = useRouter();
-  const { createProject, updateProject } = useProjects();
-  const { showNotification, setLoading } = useUI();
+  const { 
+    createProject, 
+    updateProject, 
+    activeProject, 
+    setActiveProject, 
+    projectChanges,
+    setProjectChanges,
+    autoSaveProject
+  } = useProjects();
+  const { showNotification } = useUI();
   
   const [projectName, setProjectName] = useState('');
   const [formSaved, setFormSaved] = useState(false);
   const [borrowerProgress, setBorrowerProgress] = useState(0);
   const [projectProgress, setProjectProgress] = useState(0);
+  const [lastAutoSave, setLastAutoSave] = useState<string | null>(null);
   
   // Initialize borrower sections
   const [borrowerSections, setBorrowerSections] = useState<FormSection[]>([
@@ -111,12 +120,46 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     }
   ]);
 
+  // Create a new project right away if we don't have an existing one
+  useEffect(() => {
+    const initializeProject = async () => {
+      if (!existingProject && !activeProject) {
+        try {
+          // Create placeholder project that will update automatically
+          const newProject = await createProject({
+            name: "New Project",
+            borrowerProgress: 0,
+            projectProgress: 0,
+            borrowerSections,
+            projectSections,
+          });
+          
+          // Set as active project
+          setActiveProject(newProject);
+          showNotification({
+            type: 'info',
+            message: 'New project created. Will be saved automatically as you work.',
+          });
+        } catch (error) {
+          console.error('Error creating project:', error);
+          showNotification({
+            type: 'error',
+            message: 'Failed to create project. Please try again.',
+          });
+        }
+      }
+    };
+    
+    initializeProject();
+  }, [existingProject, activeProject, createProject, setActiveProject, borrowerSections, projectSections, showNotification]);
+
   // Populate form if editing an existing project
   useEffect(() => {
     if (existingProject) {
       setProjectName(existingProject.name);
       setBorrowerProgress(existingProject.borrowerProgress);
       setProjectProgress(existingProject.projectProgress);
+      setLastAutoSave(existingProject.lastAutoSave || null);
       
       // Convert icon objects to React elements for borrower sections
       const borrowerSectionsWithIcons = existingProject.borrowerSections.map(section => ({
@@ -132,8 +175,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
       
       setBorrowerSections(borrowerSectionsWithIcons);
       setProjectSections(projectSectionsWithIcons);
+      
+      // Set as active project
+      setActiveProject(existingProject);
     }
-  }, [existingProject]);
+  }, [existingProject, setActiveProject]);
 
   // Load initial data from LastFormData if available and creating a new project
   useEffect(() => {
@@ -208,12 +254,15 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
               return newSections;
             });
           }
+
+          // Set project changes flag to trigger auto-save
+          setProjectChanges(true);
         } catch (error) {
           console.error('Error parsing last form data:', error);
         }
       }
     }
-  }, [existingProject]);
+  }, [existingProject, setProjectChanges]);
 
   // Calculate progress whenever form values change
   useEffect(() => {
@@ -232,7 +281,26 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     
     const newProjectProgress = totalProjectFields ? Math.round((filledProjectFields / totalProjectFields) * 100) : 0;
     setProjectProgress(newProjectProgress);
-  }, [borrowerSections, projectSections]);
+
+    // Update project name if available
+    const projectNameField = projectSections
+      .find(section => section.id === 'project-basics')
+      ?.fields.find(field => field.id === 'projectName');
+    
+    if (projectNameField?.value) {
+      setProjectName(projectNameField.value);
+    }
+
+    // If we have an active project and form values have changed, update it
+    if (activeProject && (
+      newBorrowerProgress !== borrowerProgress || 
+      newProjectProgress !== projectProgress ||
+      projectName !== activeProject.name
+    )) {
+      // Set changes flag to trigger auto-save
+      setProjectChanges(true);
+    }
+  }, [borrowerSections, projectSections, activeProject, projectName, borrowerProgress, projectProgress, setProjectChanges]);
 
   // Helper to get section icon based on id
   const getSectionIcon = (sectionId: string) => {
@@ -268,6 +336,9 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         return section;
       });
     });
+
+    // Signal that we have changes to save
+    setProjectChanges(true);
   };
 
   const handleProjectFieldChange = (sectionId: string, fieldId: string, value: string) => {
@@ -292,6 +363,9 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     if (fieldId === 'projectName') {
       setProjectName(value);
     }
+    
+    // Signal that we have changes to save
+    setProjectChanges(true);
   };
 
   // Toggle section visibility
@@ -317,97 +391,79 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     });
   };
 
-  // Save project
+  // Manual save project - for "Save" button
   const handleSaveProject = async () => {
     try {
-      setLoading(true);
-      
-      // Get project name from fields if not set directly
-      let finalProjectName = projectName;
-      if (!finalProjectName) {
-        const projectNameField = projectSections
-          .find(section => section.id === 'project-basics')
-          ?.fields.find(field => field.id === 'projectName');
-        
-        finalProjectName = projectNameField?.value || 'Untitled Project';
-      }
+      if (!activeProject) return;
       
       // Create sanitized versions of the sections without React elements
       const sanitizedBorrowerSections = borrowerSections.map(section => ({
-        ...section,
-        icon: null, // Remove React element
-        fields: section.fields.map(field => ({
-          ...field
-        }))
+        id: section.id,
+        title: section.title,
+        isOpen: section.isOpen,
+        fields: section.fields,
+        icon: null // Remove React element
       }));
       
       const sanitizedProjectSections = projectSections.map(section => ({
-        ...section,
-        icon: null, // Remove React element
-        fields: section.fields.map(field => ({
-          ...field
-        }))
+        id: section.id,
+        title: section.title,
+        isOpen: section.isOpen,
+        fields: section.fields,
+        icon: null // Remove React element
       }));
 
-      // If editing existing project
-      if (existingProject) {
-        const updatedProject = await updateProject(existingProject.id, {
-          name: finalProjectName,
-          borrowerProgress,
-          projectProgress,
-          borrowerSections: sanitizedBorrowerSections,
-          projectSections: sanitizedProjectSections,
-        });
-        
-        if (updatedProject) {
-          showNotification({
-            type: 'success',
-            message: 'Project updated successfully',
-          });
-          
-          if (onFormSaved) {
-            onFormSaved(updatedProject);
-          }
-        }
-      } 
-      // Creating new project
-      else {
-        const newProject = await createProject({
-          name: finalProjectName,
-          borrowerProgress,
-          projectProgress,
-          borrowerSections: sanitizedBorrowerSections,
-          projectSections: sanitizedProjectSections,
-        });
-        
+      // Update the project
+      const updatedProject = await updateProject(activeProject.id, {
+        name: projectName || "Untitled Project",
+        borrowerProgress,
+        projectProgress,
+        borrowerSections: sanitizedBorrowerSections,
+        projectSections: sanitizedProjectSections,
+      }, true); // True indicates manual save
+      
+      if (updatedProject) {
         showNotification({
           type: 'success',
-          message: 'Project created successfully',
+          message: 'Project saved successfully',
         });
         
+        // Update last auto-save timestamp
+        setLastAutoSave(updatedProject.lastAutoSave || null);
+        
+        // Show saved confirmation
+        setFormSaved(true);
+        
+        // Reset after 3 seconds
+        setTimeout(() => {
+          setFormSaved(false);
+        }, 3000);
+        
+        // Call the onFormSaved callback if provided
         if (onFormSaved) {
-          onFormSaved(newProject);
-        } else {
-          router.push('/dashboard');
+          onFormSaved(updatedProject);
         }
       }
-      
-      // Show saved confirmation
-      setFormSaved(true);
-      
-      // Reset after 3 seconds
-      setTimeout(() => {
-        setFormSaved(false);
-      }, 3000);
     } catch (error) {
       console.error('Error saving project:', error);
       showNotification({
         type: 'error',
         message: 'Failed to save project. Please try again.',
       });
-    } finally {
-      setLoading(false);
     }
+  };
+
+  // Format a date string to a readable format
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    
+    const date = new Date(dateString);
+    return date.toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   // Get personalized message based on form data
@@ -511,6 +567,17 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Auto-save status indicator */}
+      {lastAutoSave && (
+        <div className="lg:col-span-3 flex items-center justify-end text-sm text-gray-500">
+          <Clock className="h-4 w-4 mr-1" />
+          <span>Last saved: {formatDate(lastAutoSave)}</span>
+          {projectChanges && (
+            <span className="ml-2 text-amber-500">(Unsaved changes)</span>
+          )}
+        </div>
+      )}
+      
       {/* Borrower Resume */}
       <div className="lg:col-span-1">
         <Card className="shadow-md">
@@ -543,7 +610,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                   <span className="mr-2 text-blue-600">{section.icon}</span>
                     <h3 className="font-medium text-gray-800">{section.title}</h3>
                   </div>
-                  <button className="text-gray-500 hover:text-gray-700">
+                  <button 
+                    type="button"
+                    className="text-gray-500 hover:text-gray-700"
+                    aria-label={section.isOpen ? "Collapse section" : "Expand section"}
+                  >
                     {section.isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                   </button>
                 </div>
@@ -595,7 +666,11 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
                     <span className="mr-2 text-blue-600">{section.icon}</span>
                     <h3 className="font-medium text-gray-800">{section.title}</h3>
                   </div>
-                  <button className="text-gray-500 hover:text-gray-700">
+                  <button 
+                    type="button"
+                    className="text-gray-500 hover:text-gray-700"
+                    aria-label={section.isOpen ? "Collapse section" : "Expand section"}
+                  >
                     {section.isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                   </button>
                 </div>
@@ -648,15 +723,19 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
         </Card>
       </div>
       
-      <div className="mt-6 flex justify-end lg:col-span-3">
+      <div className="mt-6 flex items-center justify-between lg:col-span-3">
+        <div className="flex items-center">
+          <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+          <span className="text-sm text-gray-600">Auto-saving enabled</span>
+        </div>
+        
         <Button
           variant="primary"
-          leftIcon={<Save className="h-5 w-5" />}
+          leftIcon={<Check className="h-5 w-5" />}
           onClick={handleSaveProject}
           isLoading={formSaved}
         >
-          {existingProject ? 'Update Project' : 'Save Project'}
-          {formSaved && <span className="ml-2 text-green-200">✓</span>}
+          {formSaved ? 'Saved!' : 'Save Changes'}
         </Button>
       </div>
     </div>

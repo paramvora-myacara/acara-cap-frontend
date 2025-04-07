@@ -50,22 +50,30 @@ export const UIProvider: React.FC<UIProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activeModal, setActiveModal] = useState<Modal | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [notificationCounter, setNotificationCounter] = useState(0);
 
-  // Show a notification
+  // Show a notification with a truly unique ID
   const showNotification = useCallback((notification: Omit<Notification, 'id'>) => {
-    const id = Date.now().toString();
-    const newNotification = { ...notification, id };
+    // Create a truly unique ID - using counter to ensure uniqueness
+    const uniqueId = `notification_${Date.now()}_${notificationCounter}`;
+    setNotificationCounter(prev => prev + 1);
     
-    setNotifications(prev => [...prev, newNotification]);
+    const newNotification = { ...notification, id: uniqueId };
+    
+    // Remove any duplicate notifications with the same message to prevent clutter
+    setNotifications(prev => {
+      const filteredNotifications = prev.filter(n => n.message !== notification.message);
+      return [...filteredNotifications, newNotification];
+    });
     
     // Auto-remove notification after duration (default: 5000ms)
     if (notification.duration !== -1) {
       const duration = notification.duration || 5000;
       setTimeout(() => {
-        removeNotification(id);
+        removeNotification(uniqueId);
       }, duration);
     }
-  }, []);
+  }, [notificationCounter]);
 
   // Remove a notification
   const removeNotification = useCallback((id: string) => {
@@ -74,7 +82,7 @@ export const UIProvider: React.FC<UIProviderProps> = ({ children }) => {
 
   // Show a modal
   const showModal = useCallback((modal: Omit<Modal, 'id'>) => {
-    const id = Date.now().toString();
+    const id = `modal_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     setActiveModal({ ...modal, id });
   }, []);
 
@@ -84,7 +92,7 @@ export const UIProvider: React.FC<UIProviderProps> = ({ children }) => {
   }, []);
 
   // Set loading state
-  const setLoading = useCallback((loading: boolean) => {
+  const setLoadingState = useCallback((loading: boolean) => {
     setIsLoading(loading);
   }, []);
 
@@ -97,7 +105,7 @@ export const UIProvider: React.FC<UIProviderProps> = ({ children }) => {
       removeNotification,
       showModal,
       hideModal,
-      setLoading,
+      setLoading: setLoadingState,
     }}>
       {children}
     </UIContext.Provider>

@@ -97,9 +97,37 @@ export const Toast: React.FC<ToastProps> = ({
 };
 
 export const ToastContainer: React.FC<{ toasts: ToastProps[] }> = ({ toasts }) => {
+  // Make a copy of the notifications array with guaranteed unique IDs
+  const processedToasts = React.useMemo(() => {
+    // Create a map by ID to ensure uniqueness
+    const uniqueToastsMap = new Map<string, ToastProps>();
+    
+    // Process each toast to ensure uniqueness
+    toasts.forEach(toast => {
+      // Add a suffix to the ID if needed to make it unique
+      let uniqueId = toast.id;
+      let counter = 0;
+      
+      // Keep incrementing the counter until we find a unique ID
+      while (uniqueToastsMap.has(uniqueId)) {
+        counter++;
+        uniqueId = `${toast.id}_${counter}`;
+      }
+      
+      // Store the toast with its unique ID
+      uniqueToastsMap.set(uniqueId, {
+        ...toast,
+        id: uniqueId
+      });
+    });
+    
+    // Convert the map back to an array
+    return Array.from(uniqueToastsMap.values());
+  }, [toasts]);
+
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col gap-3">
-      {toasts.map((toast) => (
+      {processedToasts.map((toast) => (
         <Toast key={toast.id} {...toast} />
       ))}
     </div>
