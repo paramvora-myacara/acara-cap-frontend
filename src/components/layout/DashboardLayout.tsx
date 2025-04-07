@@ -1,11 +1,14 @@
-// components/layout/DashboardLayout.tsx
-
+// src/components/layout/DashboardLayout.tsx
 'use client';
 
-import React, { ReactNode, useState, useEffect } from 'react';
+import React, { ReactNode } from 'react';
 import Link from 'next/link';
 import { LogOut, PlusCircle, BarChart, User, FileText, Home } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../../hooks/useAuth';
+import { useUI } from '../../hooks/useUI';
+import { GlobalToast } from '../ui/GlobalToast';
+import { LoadingOverlay } from '../ui/LoadingOverlay';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -14,24 +17,30 @@ interface DashboardLayoutProps {
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) => {
   const router = useRouter();
-  const [userEmail, setUserEmail] = useState('');
+  const { user, logout, isAuthenticated } = useAuth();
+  const { showNotification } = useUI();
   
-  // Move localStorage access to useEffect to avoid hydration mismatch
-  useEffect(() => {
-    // This only runs on the client, after hydration
-    const email = localStorage.getItem('userEmail') || '';
-    setUserEmail(email);
-  }, []);
-
-  const handleLogout = () => {
-    // In a real app, you'd clear authentication tokens
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('lastFormData');
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      showNotification({
+        type: 'success',
+        message: 'You have been successfully signed out',
+      });
+      router.push('/');
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        message: 'Failed to sign out. Please try again.',
+      });
+    }
   };
 
   return (
     <div className="flex h-screen bg-gray-50">
+      <LoadingOverlay />
+      <GlobalToast />
+      
       {/* Sidebar */}
       <div className="w-64 bg-white shadow-md">
         <div className="p-4 border-b border-gray-200">
@@ -62,13 +71,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
         
         <div className="absolute bottom-0 w-64 p-4 border-t border-gray-200">
           <div className="flex items-center mb-4">
-            {userEmail ? (
+            {isAuthenticated && user ? (
               <>
                 <div className="bg-blue-600 h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold">
-                  {userEmail.charAt(0).toUpperCase()}
+                  {user.email.charAt(0).toUpperCase()}
                 </div>
                 <div className="ml-3 truncate">
-                  <p className="text-sm font-medium text-gray-700 truncate">{userEmail}</p>
+                  <p className="text-sm font-medium text-gray-700 truncate">{user.email}</p>
                   <p className="text-xs text-gray-500">Borrower</p>
                 </div>
               </>
@@ -78,7 +87,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title }) =>
                   ?
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-700">Loading...</p>
+                  <p className="text-sm font-medium text-gray-700">Not signed in</p>
                   <p className="text-xs text-gray-500">Borrower</p>
                 </div>
               </>

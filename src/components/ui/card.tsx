@@ -1,6 +1,6 @@
 // components/ui/card.tsx
 import React from 'react';
-import { cn } from '../../lib/utils';
+import { cn } from '../../utils/cn';
 
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, children, ...props }, ref) => (

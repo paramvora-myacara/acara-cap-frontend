@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import MultiSelect from '../../components/ui/MultiSelect';
+import { MultiSelect } from '../../components/ui/MultiSelect';
 
 interface AssetTypeFilterProps {
   value: string[];

@@ -77,11 +77,12 @@ function getLenderColor(lender: LenderProfile, formData: any, isActive: boolean)
   return score === 1 ? "red" : "hsl(220, 10%, 70%)";
 }
 
+// In components/graph/LenderGraph.tsx
 interface LenderGraphProps {
   lenders: LenderProfile[];
   formData?: any;
   filtersApplied?: boolean;
-  onLenderClick?: () => void;
+  onLenderClick?: (lender: LenderProfile | null) => void;
 }
 
 export default function LenderGraph({

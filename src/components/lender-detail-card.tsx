@@ -3,7 +3,7 @@
 'use client';
 
 import { X, Check, Building2, Mail, Phone, ArrowRight } from 'lucide-react';
-import { Button } from "./ui/button";
+import { Button } from "./ui/Button";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { Badge } from "./ui/badge";
 import type { LenderProfile } from "../types/lender";

@@ -1,20 +1,31 @@
 // src/app/(auth)/login/page.tsx
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AuthLayout from '../../../../components/layout/AuthLayout';
-import { Input } from '../../../../components/ui/input';
-import { Button } from '../../../../components/ui/button';
-import Typography from '../../../../components/common/Typography';
-import { Sparkles } from 'lucide-react';
+import { useAuth } from '../../../hooks/useAuth';
+import { useUI } from '../../../hooks/useUI';
+import AuthLayout from '../../../components/layout/AuthLayout';
+import { Form, FormGroup, FormLabel, FormHelperText } from '../../../components/ui/Form';
+import { Input } from '../../../components/ui/Input';
+import { Button } from '../../../components/ui/Button';
+import { Sparkles, Mail } from 'lucide-react';
+import { GlobalToast } from '../../../components/ui/GlobalToast';
+import { LoadingOverlay } from '../../../components/ui/LoadingOverlay';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { showNotification, setLoading } = useUI();
   const router = useRouter();
+
+  // Check for existing user session
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   // Check if user is coming from lender selection
   useEffect(() => {
@@ -25,37 +36,44 @@ export default function LoginPage() {
     }
   }, []);
 
+  // Update loading state
+  useEffect(() => {
+    setLoading(authLoading);
+  }, [authLoading, setLoading]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
+    setValidationError(null);
 
     // Basic email validation
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Please enter a valid email address.');
-      setLoading(false);
+      setValidationError('Please enter a valid email address.');
       return;
     }
 
     try {
-      // Simulate authentication delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      setLoading(true);
+      await login(email);
       
-      // Store user email in localStorage
-      localStorage.setItem('userEmail', email);
+      showNotification({
+        type: 'success',
+        message: 'Successfully signed in!',
+      });
       
-      // Check if user has existing projects
-      const projectsStr = localStorage.getItem('userProjects');
+      // Redirect to dashboard or project creation based on existing projects
+      const projectsStr = localStorage.getItem('acara_userProjects');
       const hasExistingProjects = projectsStr ? JSON.parse(projectsStr).length > 0 : false;
       
-      // If user has projects, redirect to dashboard, otherwise to new project
       if (hasExistingProjects) {
         router.push('/dashboard');
       } else {
         router.push('/project/create');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      showNotification({
+        type: 'error',
+        message: 'An error occurred. Please try again.',
+      });
     } finally {
       setLoading(false);
     }
@@ -63,6 +81,9 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
+      <LoadingOverlay />
+      <GlobalToast />
+      
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl shadow-xl overflow-hidden transform transition-all hover:scale-[1.01] duration-300">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
@@ -81,37 +102,34 @@ export default function LoginPage() {
               </p>
             </div>
             
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
+            <Form onSubmit={handleLogin} className="space-y-4">
+              <FormGroup>
                 <Input
                   id="email"
                   type="email"
+                  label="Email Address"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full"
+                  error={validationError || undefined}
+                  leftIcon={<Mail className="h-5 w-5 text-gray-400" />}
                   required
                 />
-                {error && (
-                  <p className="mt-1 text-sm text-red-600">{error}</p>
-                )}
-              </div>
+              </FormGroup>
               
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md transition-colors"
-                disabled={loading}
+                variant="primary"
+                fullWidth
+                isLoading={authLoading}
               >
-                {loading ? 'Signing in...' : 'Continue'}
+                Continue
               </Button>
               
               <p className="text-center text-xs text-gray-500 mt-4">
                 By continuing, you agree to our Terms of Service and Privacy Policy.
               </p>
-            </form>
+            </Form>
           </div>
         </div>
       </div>
