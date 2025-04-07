@@ -120,12 +120,121 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     }
   ]);
 
-  // Create a new project right away if we don't have an existing one
+  
+
   useEffect(() => {
     const initializeProject = async () => {
       if (!existingProject && !activeProject) {
         try {
-          // Create placeholder project that will update automatically
+          // Check if a project was already created in this session
+          // and avoid creating another one if it exists
+          const existingProjects = localStorage.getItem('acara_userProjects');
+          if (existingProjects) {
+            // Parse the projects to see if we already have an active one
+            try {
+              const projects = JSON.parse(existingProjects);
+              
+              // If there are projects, check if any are already "New Project"
+              const newProject = projects.find((p: any) => 
+                p.name === "New Project" && 
+                p.borrowerProgress === 0 && 
+                p.projectProgress === 0
+              );
+              
+              // If we found a new project, just use that instead of creating a new one
+              if (newProject) {
+                // Add back React elements to the sections
+                const projectWithIcons = {
+                  ...newProject,
+                  borrowerSections: newProject.borrowerSections.map((section: any) => ({
+                    ...section,
+                    icon: getSectionIcon(section.id),
+                  })),
+                  projectSections: newProject.projectSections.map((section: any) => ({
+                    ...section,
+                    icon: getSectionIcon(section.id),
+                  }))
+                };
+                
+                setActiveProject(projectWithIcons);
+                return;
+              }
+            } catch (error) {
+              console.error('Error parsing existing projects:', error);
+            }
+          }
+          
+          // If no existing project was found or there was an error, create a new one
+          const newProject = await createProject({
+            name: "New Project",
+            borrowerProgress: 0,
+            projectProgress: 0,
+            borrowerSections,
+            projectSections,
+          });
+          
+          // Set as active project
+          setActiveProject(newProject);
+          showNotification({
+            type: 'info',
+            message: 'New project created. Will be saved automatically as you work.',
+          });
+        } catch (error) {
+          console.error('Error creating project:', error);
+          showNotification({
+            type: 'error',
+            message: 'Failed to create project. Please try again.',
+          });
+        }
+      }
+    };
+    
+    initializeProject();
+  }, [existingProject, activeProject, createProject, setActiveProject, borrowerSections, projectSections, showNotification]);
+  
+  useEffect(() => {
+    const initializeProject = async () => {
+      if (!existingProject && !activeProject) {
+        try {
+          // Check if a project was already created in this session
+          // and avoid creating another one if it exists
+          const existingProjects = localStorage.getItem('acara_userProjects');
+          if (existingProjects) {
+            // Parse the projects to see if we already have an active one
+            try {
+              const projects = JSON.parse(existingProjects);
+              
+              // If there are projects, check if any are already "New Project"
+              const newProject = projects.find((p: any) => 
+                p.name === "New Project" && 
+                p.borrowerProgress === 0 && 
+                p.projectProgress === 0
+              );
+              
+              // If we found a new project, just use that instead of creating a new one
+              if (newProject) {
+                // Add back React elements to the sections
+                const projectWithIcons = {
+                  ...newProject,
+                  borrowerSections: newProject.borrowerSections.map((section: any) => ({
+                    ...section,
+                    icon: getSectionIcon(section.id),
+                  })),
+                  projectSections: newProject.projectSections.map((section: any) => ({
+                    ...section,
+                    icon: getSectionIcon(section.id),
+                  }))
+                };
+                
+                setActiveProject(projectWithIcons);
+                return;
+              }
+            } catch (error) {
+              console.error('Error parsing existing projects:', error);
+            }
+          }
+          
+          // If no existing project was found or there was an error, create a new one
           const newProject = await createProject({
             name: "New Project",
             borrowerProgress: 0,
@@ -302,8 +411,8 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
     }
   }, [borrowerSections, projectSections, activeProject, projectName, borrowerProgress, projectProgress, setProjectChanges]);
 
-  // Helper to get section icon based on id
-  const getSectionIcon = (sectionId: string) => {
+  // And add the helper function for adding icons back to sections
+  const getSectionIcon = (sectionId: string): React.ReactNode => {
     switch (sectionId) {
       case 'basic-info':
         return <User className="h-5 w-5" />;

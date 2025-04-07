@@ -182,6 +182,11 @@ const getSectionIcon = (sectionId: string): React.ReactNode => {
   return icons[sectionId as keyof typeof icons] || icons['project-basics'];
 };
 
+// Generate a truly unique ID
+const generateUniqueId = (): string => {
+  return `proj_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+};
+
 export const ProjectProvider: React.FC<ProjectProviderProps> = ({ 
   children, 
   storageService 
@@ -194,7 +199,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
   const { user } = useAuth();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedRef = useRef<string | null>(null);
-  const projectIdCounterRef = useRef(0); // Counter for unique project IDs
+  const loadedProjectsRef = useRef<Set<string>>(new Set());
 
   // Calculate progress for a project - MOVED UP TO FIX HOISTING ISSUE
   const calculateProgress = useCallback((project: Project) => {
@@ -282,18 +287,21 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
         if (storedProjects && Array.isArray(storedProjects)) {
           // Convert stored projects to projects with icons
           const projectsWithIcons = storedProjects.map(addIconsToProject);
-          setProjects(projectsWithIcons);
           
-          // Set the project counter to be higher than any existing project ID
-          // This helps ensure we don't generate duplicate IDs
-          projectsWithIcons.forEach(project => {
-            const projectIdNum = parseInt(project.id, 10);
-            if (!isNaN(projectIdNum) && projectIdNum > projectIdCounterRef.current) {
-              projectIdCounterRef.current = projectIdNum;
+          // Track loaded project IDs to prevent duplicates
+          const loadedProjects = new Set<string>();
+          const uniqueProjects = projectsWithIcons.filter(project => {
+            // If we've already seen this ID, filter it out
+            if (loadedProjects.has(project.id)) {
+              return false;
             }
+            // Otherwise, add it to our set and keep it
+            loadedProjects.add(project.id);
+            return true;
           });
-          // Add 1000 to ensure uniqueness even if there were previous projects with timestamp IDs
-          projectIdCounterRef.current += 1000;
+          
+          setProjects(uniqueProjects);
+          loadedProjectsRef.current = loadedProjects;
         }
       } catch (error) {
         console.error('Failed to load projects:', error);
@@ -415,9 +423,16 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
       }
     }
     
-    // Create a unique ID using counter instead of timestamp
-    projectIdCounterRef.current += 1;
-    const uniqueId = `proj_${projectIdCounterRef.current}`;
+    // Create a unique ID
+    let uniqueId = generateUniqueId();
+    
+    // Just to be extra careful, keep generating until we find a truly unique ID
+    while (loadedProjectsRef.current.has(uniqueId)) {
+      uniqueId = generateUniqueId();
+    }
+    
+    // Add to our tracking set
+    loadedProjectsRef.current.add(uniqueId);
     
     // Create new project with projectData properties first, then override specific ones
     const newProject: Project = {
@@ -428,7 +443,16 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
       updatedAt: now,
     };
 
-    setProjects(prevProjects => [...prevProjects, newProject]);
+    // Add to projects array
+    setProjects(prevProjects => {
+      // Double check we don't already have a project with this ID
+      if (prevProjects.some(p => p.id === uniqueId)) {
+        console.warn(`Prevented duplicate project: ${uniqueId}`);
+        return prevProjects;
+      }
+      return [...prevProjects, newProject];
+    });
+    
     return newProject;
   }, []);
 
@@ -475,6 +499,9 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
   // Delete a project
   const deleteProject = useCallback(async (id: string) => {
     try {
+      // Remove from our tracking set
+      loadedProjectsRef.current.delete(id);
+      
       setProjects(prevProjects => prevProjects.filter(p => p.id !== id));
       
       // Clear active project if it's the one being deleted
