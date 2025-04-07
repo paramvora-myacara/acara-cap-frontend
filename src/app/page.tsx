@@ -1,7 +1,7 @@
 // src/app/page.tsx
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import LenderGraph from '../components/graph/LenderGraph';
@@ -11,7 +11,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useLenders } from '../hooks/useLenders';
 import { useUI } from '../hooks/useUI';
 import { GlobalToast } from '../components/ui/GlobalToast';
-import { LoadingOverlay } from '../components/ui/LoadingOverlay';
+import { SubtleLoadingIndicator } from '../components/ui/SubtleLoadingIndicator';
 import { Building, LogIn, User } from 'lucide-react';
 import { LenderProfile } from '@/types/lender';
 
@@ -27,16 +27,31 @@ export default function HomePage() {
     refreshLenders 
   } = useLenders();
   const { setLoading } = useUI();
+  const [localIsLoading, setLocalIsLoading] = useState(false);
 
-  // Set loading state based on lenders loading
+  // Load lenders with no loading indicators
   useEffect(() => {
-    setLoading(isLoading);
-  }, [isLoading, setLoading]);
-
-  // Initial data load
-  useEffect(() => {
-    refreshLenders();
+    const loadData = async () => {
+      try {
+        // Load data without any loading indicators
+        await refreshLenders();
+      } catch (error) {
+        console.error("Error loading lenders:", error);
+      }
+    };
+    
+    loadData();
   }, [refreshLenders]);
+
+  // Don't set global loading state at all
+  useEffect(() => {
+    setLoading(false); // Always keep loading off
+  }, [setLoading]);
+
+  // Handle filter changes with no loading states
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(newFilters);
+  };
 
   // Determine if filters are applied
   const filtersApplied = 
@@ -48,7 +63,6 @@ export default function HomePage() {
 
   return (
     <div className="h-screen flex flex-col">
-      <LoadingOverlay />
       <GlobalToast />
       
       {/* Header with login button */}
@@ -93,7 +107,7 @@ export default function HomePage() {
             <div className="p-4 bg-gray-50 rounded-lg">
               <FilterSection 
                 formData={filters} 
-                onChange={(newData) => setFilters(newData)}
+                onChange={(newData) => handleFilterChange(newData)}
                 filterType="asset_types" 
               />
             </div>
@@ -101,7 +115,7 @@ export default function HomePage() {
             <div className="p-4 bg-gray-50 rounded-lg">
               <FilterSection 
                 formData={filters} 
-                onChange={(newData) => setFilters(newData)}
+                onChange={(newData) => handleFilterChange(newData)}
                 filterType="deal_types" 
               />
             </div>
@@ -109,7 +123,7 @@ export default function HomePage() {
             <div className="p-4 bg-gray-50 rounded-lg">
               <FilterSection 
                 formData={filters} 
-                onChange={(newData) => setFilters(newData)}
+                onChange={(newData) => handleFilterChange(newData)}
                 filterType="capital_types" 
               />
             </div>
@@ -117,7 +131,7 @@ export default function HomePage() {
             <div className="p-4 bg-gray-50 rounded-lg">
               <FilterSection 
                 formData={filters} 
-                onChange={(newData) => setFilters(newData)}
+                onChange={(newData) => handleFilterChange(newData)}
                 filterType="locations" 
               />
             </div>
@@ -125,7 +139,7 @@ export default function HomePage() {
             <div className="p-4 bg-gray-50 rounded-lg">
               <FilterSection 
                 formData={filters} 
-                onChange={(newData) => setFilters(newData)}
+                onChange={(newData) => handleFilterChange(newData)}
                 filterType="debt_ranges" 
               />
             </div>

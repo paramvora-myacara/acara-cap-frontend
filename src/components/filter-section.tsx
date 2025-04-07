@@ -20,7 +20,7 @@ export default function FilterSection({
   filterType,
 }: FilterSectionProps) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 transition-all duration-200 ease-in-out">
       {filterType === 'asset_types' && (
         <AssetTypeFilter
           value={formData.asset_types || []}

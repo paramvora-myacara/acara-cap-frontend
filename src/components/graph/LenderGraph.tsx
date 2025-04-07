@@ -70,11 +70,18 @@ function computeLenderScore(lender: LenderProfile, formData: any): number {
   return matchCount / selectedCount;
 }
 
-function getLenderColor(lender: LenderProfile, formData: any, isActive: boolean) {
+function getLenderColor(lender: LenderProfile, formData: any, isActive: boolean, score: number) {
   if (computeSelectedFilters(formData) === 0) return "hsl(220, 10%, 70%)";
   if (!isActive) return "hsl(220, 10%, 70%)";
-  const score = computeLenderScore(lender, formData);
-  return score === 1 ? "red" : "hsl(220, 10%, 70%)";
+  
+  // Create a gradient from gray to red based on match score
+  if (score === 1) return "hsl(0, 100%, 50%)"; // Perfect match: bright red
+  if (score > 0.8) return "hsl(0, 90%, 60%)";  // Good match: lighter red
+  if (score > 0.6) return "hsl(20, 80%, 65%)"; // Moderate match: orange-red
+  if (score > 0.4) return "hsl(30, 70%, 70%)"; // Lower match: orange
+  if (score > 0.2) return "hsl(40, 60%, 70%)"; // Poor match: yellow-orange
+  
+  return "hsl(220, 10%, 70%)"; // Default: gray
 }
 
 // In components/graph/LenderGraph.tsx
@@ -108,6 +115,7 @@ export default function LenderGraph({
     color: string;
     isActive: boolean;
     velocity: { x: number; y: number };
+    score: number;
   }>>(new Map());
   const particlesRef = useRef<Array<{
     x: number;
@@ -148,12 +156,25 @@ export default function LenderGraph({
       const existingPos = lenderPositionsRef.current.get(lender.lender_id);
       const score = computeLenderScore(lender, formData);
       const isActive = filtersApplied === true && score > 0;
-      const baseRadius = isActive ? 12 : 8;
-      const bonus = isActive ? score * 8 : 0;
-      const radius = baseRadius + bonus;
-      const color = getLenderColor(lender, formData, isActive);
+      
+      // Base radius now scales with score
+      const baseRadius = isActive ? 8 + score * 8 : 8;
+      const radius = baseRadius;
+      const color = getLenderColor(lender, formData, isActive, score);
+      
+      // Position lenders based on their match score
+      // Better matches are closer to the center
       const angle = index * goldenAngle;
-      const distanceFactor = 0.3 + (index / lenders.length) * 0.7;
+      let distanceFactor;
+      
+      if (isActive) {
+        // Active lenders: better scores are closer to center
+        distanceFactor = 0.3 + (1 - score) * 0.6;
+      } else {
+        // Inactive lenders: position at outer edges
+        distanceFactor = 0.75 + (index / lenders.length) * 0.2;
+      }
+      
       const distance = maxDistance * distanceFactor;
       const targetX = center.x + Math.cos(angle) * distance;
       const targetY = center.y + Math.sin(angle) * distance;
@@ -164,21 +185,21 @@ export default function LenderGraph({
           radius,
           color,
           isActive,
-          targetX: isActive ? existingPos.targetX : targetX,
-          targetY: isActive ? existingPos.targetY : targetY,
+          score,
+          targetX: targetX,
+          targetY: targetY,
         });
       } else {
-        const randomOffset = 50;
-        const startX = center.x + Math.random() * randomOffset * 2 - randomOffset;
-        const startY = center.y + Math.random() * randomOffset * 2 - randomOffset;
+        // Start nodes directly at their target positions to avoid initial animation
         newPositions.set(lender.lender_id, {
-          x: startX,
-          y: startY,
+          x: targetX,
+          y: targetY,
           targetX,
           targetY,
           radius,
           color,
           isActive,
+          score,
           velocity: { x: 0, y: 0 },
         });
       }
@@ -225,6 +246,7 @@ export default function LenderGraph({
       ctx.fillStyle = createBackground();
       ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
+      // Draw concentric circles
       ctx.strokeStyle = "rgba(200, 200, 230, 0.2)";
       ctx.lineWidth = 1;
       for (let i = 1; i <= 6; i++) {
@@ -234,6 +256,7 @@ export default function LenderGraph({
         ctx.stroke();
       }
 
+      // Draw central hub
       ctx.beginPath();
       ctx.arc(centerPoint.x, centerPoint.y, 20, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(100, 100, 255, 0.8)";
@@ -253,6 +276,7 @@ export default function LenderGraph({
       ctx.fillStyle = centerGlow;
       ctx.fill();
 
+      // Update and draw particles
       particlesRef.current.forEach((particle, index) => {
         particle.life++;
         if (particle.life >= particle.maxLife) {
@@ -267,29 +291,52 @@ export default function LenderGraph({
         ctx.fill();
       });
 
+      // Draw connecting lines to active lenders
       lenders.forEach((lender) => {
         const pos = lenderPositionsRef.current.get(lender.lender_id);
         if (!pos || !pos.isActive) return;
         if (filtersApplied) {
-          const score = computeLenderScore(lender, formData);
+          const score = pos.score;
+          
+          // Create gradient for connection lines based on score
           let gradient;
           if (score === 1) {
+            // Perfect match: bright red gradient
             gradient = ctx.createLinearGradient(centerPoint.x, centerPoint.y, pos.x, pos.y);
             gradient.addColorStop(0, "rgba(255, 0, 0, 0.7)");
             gradient.addColorStop(1, "rgba(255, 0, 0, 0.7)");
-          } else {
+          } else if (score > 0.8) {
+            // Good match: lighter red gradient
             gradient = ctx.createLinearGradient(centerPoint.x, centerPoint.y, pos.x, pos.y);
-            gradient.addColorStop(0, "rgba(200, 200, 200, 0.7)");
-            gradient.addColorStop(1, "rgba(200, 200, 200, 0.7)");
+            gradient.addColorStop(0, "rgba(255, 60, 60, 0.6)");
+            gradient.addColorStop(1, "rgba(255, 60, 60, 0.6)");
+          } else if (score > 0.6) {
+            // Moderate match: orange-red gradient
+            gradient = ctx.createLinearGradient(centerPoint.x, centerPoint.y, pos.x, pos.y);
+            gradient.addColorStop(0, "rgba(255, 120, 60, 0.5)");
+            gradient.addColorStop(1, "rgba(255, 120, 60, 0.5)");
+          } else if (score > 0.4) {
+            // Lower match: orange gradient
+            gradient = ctx.createLinearGradient(centerPoint.x, centerPoint.y, pos.x, pos.y);
+            gradient.addColorStop(0, "rgba(255, 160, 60, 0.4)");
+            gradient.addColorStop(1, "rgba(255, 160, 60, 0.4)");
+          } else {
+            // Poor match: light gradient
+            gradient = ctx.createLinearGradient(centerPoint.x, centerPoint.y, pos.x, pos.y);
+            gradient.addColorStop(0, "rgba(200, 200, 200, 0.3)");
+            gradient.addColorStop(1, "rgba(200, 200, 200, 0.3)");
           }
+          
+          // Draw connection line
           ctx.beginPath();
           ctx.moveTo(centerPoint.x, centerPoint.y);
           ctx.lineTo(pos.x, pos.y);
           ctx.strokeStyle = gradient;
-          ctx.lineWidth = 1 + score * 3;
+          ctx.lineWidth = 1 + score * 3; // Line width based on score
           ctx.stroke();
 
-          if (score === 1 && Math.random() < 0.05 * score) {
+          // Add particles along connection lines for high-scoring matches
+          if (score > 0.8 && Math.random() < 0.05 * score) {
             const t = Math.random();
             const particleX = centerPoint.x + (pos.x - centerPoint.x) * t;
             const particleY = centerPoint.y + (pos.y - centerPoint.y) * t;
@@ -298,39 +345,42 @@ export default function LenderGraph({
         }
       });
 
+      // Update and draw lenders
       lenders.forEach((lender) => {
         const pos = lenderPositionsRef.current.get(lender.lender_id);
         if (!pos) return;
-        const dx = (pos.targetX - pos.x) * 0.008;
-        const dy = (pos.targetY - pos.y) * 0.008;
-        pos.velocity.x = pos.velocity.x * 0.9 + dx;
-        pos.velocity.y = pos.velocity.y * 0.9 + dy;
-        pos.x += pos.velocity.x;
-        pos.y += pos.velocity.y;
-
-        if (pos.isActive) {
-          const speed = Math.sqrt(pos.velocity.x ** 2 + pos.velocity.y ** 2);
-          if (speed > 0.5 && Math.random() < 0.1) {
-            addParticles(pos.x, pos.y, pos.color, 1);
-          }
+        
+        // Direct smooth movement towards target position without velocity-based bouncing
+        // Use a simple linear interpolation for smoother movement
+        const moveSpeed = 0.05; // Adjust for faster/slower movement
+        pos.x = pos.x + (pos.targetX - pos.x) * moveSpeed;
+        pos.y = pos.y + (pos.targetY - pos.y) * moveSpeed;
+        
+        // Add gentle particles for active lenders without relying on movement speed
+        if (pos.isActive && pos.score > 0.7 && Math.random() < 0.03 * pos.score) {
+          addParticles(pos.x, pos.y, pos.color, 1);
         }
 
-        const pulseStrength = pos.isActive ? 0.15 : 0.05;
-        const pulse = Math.sin(time * 0.002 + lender.lender_id * 0.1) * pulseStrength + 0.85;
+        // Add pulsing effect based on score
+        const pulseStrength = pos.isActive ? 0.15 + (pos.score * 0.1) : 0.05;
+        const pulseSpeed = 0.002 + (pos.score * 0.001);
+        const pulse = Math.sin(time * pulseSpeed + lender.lender_id * 0.1) * pulseStrength + 0.85;
         const radius = pos.radius * pulse;
 
+        // Draw glow effect for active, hovered, or selected lenders
         if (pos.isActive || hoveredLenderId === lender.lender_id || (selectedLender && selectedLender.lender_id === lender.lender_id)) {
-          const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, radius * 1.5);
-          const score = computeLenderScore(lender, formData);
-          const glowOpacity = pos.isActive ? 0.1 + score * 0.3 : 0.1;
+          const glowRadius = radius * (1.5 + pos.score * 0.5);
+          const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, glowRadius);
+          const glowOpacity = pos.isActive ? 0.1 + pos.score * 0.3 : 0.1;
           glow.addColorStop(0, pos.color.replace(")", `, ${glowOpacity})`));
           glow.addColorStop(1, pos.color.replace(")", ", 0)"));
           ctx.beginPath();
-          ctx.arc(pos.x, pos.y, radius * 1.5, 0, Math.PI * 2);
+          ctx.arc(pos.x, pos.y, glowRadius, 0, Math.PI * 2);
           ctx.fillStyle = glow;
           ctx.fill();
         }
 
+        // Draw lender circle
         ctx.beginPath();
         ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
         const gradient = ctx.createRadialGradient(pos.x - radius * 0.3, pos.y - radius * 0.3, 0, pos.x, pos.y, radius);
@@ -339,6 +389,7 @@ export default function LenderGraph({
         ctx.fillStyle = gradient;
         ctx.fill();
 
+        // Add selection/hover indicators
         if (selectedLender && selectedLender.lender_id === lender.lender_id) {
           ctx.strokeStyle = "white";
           ctx.lineWidth = 3;
@@ -352,6 +403,7 @@ export default function LenderGraph({
           ctx.stroke();
         }
 
+        // Add initial letter for larger nodes
         if (radius > 15) {
           const initial = lender.name.charAt(0).toUpperCase();
           ctx.fillStyle = "white";
@@ -437,6 +489,9 @@ export default function LenderGraph({
       const pos = lenderPositionsRef.current.get(clickedLender.lender_id);
       if (pos && pos.isActive) {
         setSelectedLender(clickedLender === selectedLender ? null : clickedLender);
+        if (clickedLender !== selectedLender && onLenderClick) {
+          onLenderClick(clickedLender);
+        }
       } else {
         setSelectedLender(null);
       }
@@ -460,18 +515,20 @@ export default function LenderGraph({
 
         {selectedLender && filtersApplied && activeLenderCount > 0 && (
           <div
-            className="absolute z-10"
+            className="absolute z-10 transition-all duration-300 ease-in-out"
             style={{
               top: cardPositionRef.current.y,
               left: cardPositionRef.current.x,
               maxWidth: '300px',
+              transform: 'scale(1)',
+              opacity: 1,
             }}
           >
             <LenderDetailCard
               lender={selectedLender}
               formData={formData}
               onClose={() => setSelectedLender(null)}
-              color={getLenderColor(selectedLender, formData, true)}
+              color={getLenderColor(selectedLender, formData, true, selectedLender.match_score)}
             />
           </div>
         )}
@@ -485,7 +542,7 @@ export default function LenderGraph({
               maxWidth: '300px',
             }}
           >
-            <div className="bg-white shadow-lg rounded-lg p-4">
+            <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="font-bold text-lg">Incomplete Filters</h3>
                 <button
