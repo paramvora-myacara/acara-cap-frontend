@@ -16,7 +16,6 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Close mobile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (mobileMenuOpen) {
@@ -38,17 +37,15 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
       )}
     >
       <div className="container mx-auto flex justify-between items-center px-4">
-        {/* Logo */}
         <Link href="/" className="flex items-center">
           <img 
-            src="/acara-logo.svg" 
+            src="/acara-logo.png" 
             alt="ACARA-CAP" 
             className={cn(
-              "transition-all duration-300",
-              scrolled ? "h-8" : "h-10"
+              "transition-all duration-300 object-contain",
+              scrolled ? "h-10" : "h-12"
             )}
             onError={(e) => {
-              // Fallback if logo isn't available
               const target = e.target as HTMLImageElement;
               target.onerror = null;
               target.style.fontSize = scrolled ? '1.25rem' : '1.5rem';

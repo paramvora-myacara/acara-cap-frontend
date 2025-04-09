@@ -1,9 +1,7 @@
-// src/app/page.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { SplashScreen } from '../components/ui/SplashScreen';
 import { EnhancedHeader } from '../components/ui/EnhancedHeader';
 import { GraphIntro } from '../components/ui/GraphIntro';
@@ -15,7 +13,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useLenders } from '../hooks/useLenders';
 import { useUI } from '../hooks/useUI';
 import { GlobalToast } from '../components/ui/GlobalToast';
-import { SubtleLoadingIndicator } from '../components/ui/SubtleLoadingIndicator';
 import { LenderProfile } from '@/types/lender';
 
 export default function HomePage() {
@@ -48,7 +45,6 @@ export default function HomePage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load data without any loading indicators
         await refreshLenders();
       } catch (error) {
         console.error("Error loading lenders:", error);
@@ -58,12 +54,12 @@ export default function HomePage() {
     loadData();
   }, [refreshLenders]);
 
-  // Don't set global loading state at all
+  // Don't set global loading state
   useEffect(() => {
-    setLoading(false); // Always keep loading off
+    setLoading(false);
   }, [setLoading]);
 
-  // Handle filter changes with no loading states
+  // Handle filter changes
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
   };
@@ -78,83 +74,88 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <SplashScreen onComplete={() => setSplashComplete(true)} />
-      <EnhancedHeader scrolled={scrolled} />
-      <GlobalToast />
+      {!splashComplete && (
+        <SplashScreen onComplete={() => setSplashComplete(true)} />
+      )}
       
-      {/* Main content */}
-      <main className={`pt-16 flex-grow transition-opacity duration-700`} style={{ opacity: splashComplete ? 1 : 0 }}>
-        <div className="container mx-auto px-4 pt-12 md:pt-20">
-          <GraphIntro />
+      {splashComplete && (
+        <>
+          <EnhancedHeader scrolled={scrolled} />
+          <GlobalToast />
           
-          <div className="flex flex-col lg:flex-row">
-            {/* Left sidebar with filters - 40% width on large screens */}
-            <div className="w-full lg:w-2/5 pr-0 lg:pr-6 mb-8 lg:mb-0">
-              <div className="space-y-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <FilterSection 
-                    formData={filters} 
-                    onChange={(newData) => handleFilterChange(newData)}
-                    filterType="asset_types" 
-                  />
+          <main className="pt-16 flex-grow">
+            <div className="container mx-auto px-4 pt-12 md:pt-20">
+              <GraphIntro />
+              
+              <div className="flex flex-col lg:flex-row">
+                {/* Left sidebar with filters - 40% width on large screens */}
+                <div className="w-full lg:w-2/5 pr-0 lg:pr-6 mb-8 lg:mb-0">
+                  <div className="space-y-4">
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <FilterSection 
+                        formData={filters} 
+                        onChange={(newData) => handleFilterChange(newData)}
+                        filterType="asset_types" 
+                      />
+                    </div>
+                    
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <FilterSection 
+                        formData={filters} 
+                        onChange={(newData) => handleFilterChange(newData)}
+                        filterType="deal_types" 
+                      />
+                    </div>
+                    
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <FilterSection 
+                        formData={filters} 
+                        onChange={(newData) => handleFilterChange(newData)}
+                        filterType="capital_types" 
+                      />
+                    </div>
+                    
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <FilterSection 
+                        formData={filters} 
+                        onChange={(newData) => handleFilterChange(newData)}
+                        filterType="locations" 
+                      />
+                    </div>
+                    
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <FilterSection 
+                        formData={filters} 
+                        onChange={(newData) => handleFilterChange(newData)}
+                        filterType="debt_ranges" 
+                      />
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <FilterSection 
-                    formData={filters} 
-                    onChange={(newData) => handleFilterChange(newData)}
-                    filterType="deal_types" 
-                  />
-                </div>
-                
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <FilterSection 
-                    formData={filters} 
-                    onChange={(newData) => handleFilterChange(newData)}
-                    filterType="capital_types" 
-                  />
-                </div>
-                
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <FilterSection 
-                    formData={filters} 
-                    onChange={(newData) => handleFilterChange(newData)}
-                    filterType="locations" 
-                  />
-                </div>
-                
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <FilterSection 
-                    formData={filters} 
-                    onChange={(newData) => handleFilterChange(newData)}
-                    filterType="debt_ranges" 
+                {/* Right side with graph visualization - 60% width on large screens */}
+                <div className="w-full lg:w-3/5 h-[60vh] lg:h-[70vh] relative">
+                  <LenderGraph
+                    lenders={filteredLenders}
+                    formData={filters}
+                    filtersApplied={filtersApplied}
+                    onLenderClick={(lender: LenderProfile | null) => {
+                      selectLender(lender);
+                      localStorage.setItem('lastFormData', JSON.stringify(filters));
+                    }}
                   />
                 </div>
               </div>
             </div>
             
-            {/* Right side with graph visualization - 60% width on large screens */}
-            <div className="w-full lg:w-3/5 h-[60vh] lg:h-[70vh] relative">
-              <LenderGraph
-                lenders={filteredLenders}
-                formData={filters}
-                filtersApplied={filtersApplied}
-                onLenderClick={(lender: LenderProfile | null) => {
-                  selectLender(lender);
-                  // Store form data for later use in project creation
-                  localStorage.setItem('lastFormData', JSON.stringify(filters));
-                }}
-              />
-            </div>
-          </div>
-        </div>
-        
-        {/* Hero stats section */}
-        <HeroStats />
-      </main>
+            {/* Hero stats section */}
+            <HeroStats />
+          </main>
 
-      {/* Footer */}
-      <Footer />
+          {/* Footer */}
+          <Footer />
+        </>
+      )}
     </div>
   );
 }
