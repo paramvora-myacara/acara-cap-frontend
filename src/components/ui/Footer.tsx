@@ -12,19 +12,6 @@ export const Footer: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center">
           {/* Logo and social links */}
           <div className="flex items-center mb-4 md:mb-0">
-            <img 
-              src="/acara-logo.png" 
-              alt="ACARA-CAP" 
-              className="h-12" // Bigger logo
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.onerror = null;
-                target.style.fontWeight = 'bold';
-                target.style.fontSize = '1.5rem'; // Bigger text
-                target.style.color = 'white';
-                target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMjAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjE2IiBmaWxsPSJ3aGl0ZSI+QUNBUkEtQ0FQPC90ZXh0Pjwvc3ZnPg==';
-              }}
-            />
             <span className="text-sm text-gray-400 ml-4 hidden md:inline">
               Connecting borrowers with the perfect lenders
             </span>

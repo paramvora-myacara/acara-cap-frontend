@@ -3,10 +3,9 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { SplashScreen } from '../components/ui/SplashScreen';
 import { EnhancedHeader } from '../components/ui/EnhancedHeader';
-import { HeroStats } from '../components/ui/HeroStats';
 import { Footer } from '../components/ui/Footer';
 import FilterSection from '../components/filter-section';
 import LenderGraph from '../components/graph/LenderGraph';
@@ -16,16 +15,14 @@ import { useUI } from '../hooks/useUI';
 import { GlobalToast } from '../components/ui/GlobalToast';
 import { LenderProfile } from '@/types/lender';
 import { Button } from '@/components/ui/Button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Building, CheckCircle, DollarSign } from 'lucide-react';
 
 export default function HomePage() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
   const { 
     filteredLenders, 
     filters, 
     setFilters, 
-    isLoading, 
     selectLender,
     refreshLenders 
   } = useLenders();
@@ -34,16 +31,28 @@ export default function HomePage() {
   const [scrolled, setScrolled] = useState(false);
   const [splashComplete, setSplashComplete] = useState(false);
   const [contentVisible, setContentVisible] = useState(false);
+  const [statsVisible, setStatsVisible] = useState(false);
   
-  // Refs for scroll animations
-  const statsRef = useRef(null);
-  const isStatsInView = useInView(statsRef, { once: true, amount: 0.3 });
-
-  // Handle scroll events
+  // Ref for stats section with explicit type annotation
+  const statsRef = useRef<HTMLElement | null>(null);
+  
+  // Handle scroll events and check for stats visibility
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+      
+      // Check if stats section is visible
+      if (statsRef.current && typeof statsRef.current.getBoundingClientRect === 'function') {
+        const rect = statsRef.current.getBoundingClientRect();
+        // If the top of the element is in view or just below
+        if (rect.top < window.innerHeight - 100) {
+          setStatsVisible(true);
+        }
+      }
     };
+    
+    // Initial check
+    handleScroll();
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -54,7 +63,7 @@ export default function HomePage() {
     if (splashComplete) {
       const timer = setTimeout(() => {
         setContentVisible(true);
-      }, 100); // Super slight delay
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, [splashComplete]);
@@ -184,12 +193,12 @@ export default function HomePage() {
                   <LenderGraph
                     lenders={filteredLenders}
                     formData={filters}
-                    filtersApplied={true} // Always show graph visualization regardless of filter state
+                    filtersApplied={true}
                     onLenderClick={(lender: LenderProfile | null) => {
                       selectLender(lender);
                       localStorage.setItem('lastFormData', JSON.stringify(filters));
                     }}
-                    allFiltersSelected={allFiltersSelected} // New prop to determine if detail card should be shown
+                    allFiltersSelected={allFiltersSelected}
                   />
                 </motion.div>
               </div>
@@ -217,17 +226,66 @@ export default function HomePage() {
               </motion.div>
             </div>
             
-            {/* Hero stats section with scroll animation */}
-            <motion.div
+            {/* Hero Stats Section with Basic CSS Transitions */}
+            <section 
               ref={statsRef}
-              className="mt-20" // Add top margin for spacing
-              initial={{ opacity: 0, y: 30 }}
-              animate={isStatsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="py-16 bg-gradient-to-b from-gray-50 to-blue-50"
             >
-              <div className="mt-20 min-h-[50vh]"></div>
-              <HeroStats />
-            </motion.div>
+              <div className="container mx-auto px-4">
+                {/* Title with CSS transition */}
+                <h2 
+                  className={`text-4xl font-bold text-center mb-12 text-gray-800 italic transition-all duration-1000 ${
+                    statsVisible ? 'opacity-100 transform-none' : 'opacity-0 translate-y-8'
+                  }`}
+                >
+                  Our Impact
+                </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* First Stat with CSS transition */}
+                  <div 
+                    className={`bg-white shadow-lg rounded-lg p-6 text-center hover:shadow-xl transition-all duration-1000 ${
+                      statsVisible ? 'opacity-100 transform-none' : 'opacity-0 translate-y-8'
+                    }`}
+                    style={{ transitionDelay: '100ms' }}
+                  >
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-blue-100">
+                      <Building className="h-8 w-8 text-blue-600" />
+                    </div>
+                    <div className="text-4xl font-bold mb-2 text-blue-600">500+</div>
+                    <div className="text-gray-700 font-medium">Lenders</div>
+                  </div>
+                  
+                  {/* Second Stat with CSS transition */}
+                  <div 
+                    className={`bg-white shadow-lg rounded-lg p-6 text-center hover:shadow-xl transition-all duration-1000 ${
+                      statsVisible ? 'opacity-100 transform-none' : 'opacity-0 translate-y-8'
+                    }`}
+                    style={{ transitionDelay: '200ms' }}
+                  >
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-green-100">
+                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    </div>
+                    <div className="text-4xl font-bold mb-2 text-green-600">1,250+</div>
+                    <div className="text-gray-700 font-medium">Deals Closed</div>
+                  </div>
+                  
+                  {/* Third Stat with CSS transition */}
+                  <div 
+                    className={`bg-white shadow-lg rounded-lg p-6 text-center hover:shadow-xl transition-all duration-1000 ${
+                      statsVisible ? 'opacity-100 transform-none' : 'opacity-0 translate-y-8'
+                    }`}
+                    style={{ transitionDelay: '300ms' }}
+                  >
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-amber-100">
+                      <DollarSign className="h-8 w-8 text-amber-600" />
+                    </div>
+                    <div className="text-4xl font-bold mb-2 text-amber-600">$5B+</div>
+                    <div className="text-gray-700 font-medium">In Revenue</div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </main>
 
           {/* Footer */}
