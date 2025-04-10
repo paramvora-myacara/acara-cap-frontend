@@ -1,7 +1,7 @@
 // src/contexts/UIContext.tsx
 'use client';
 
-import React, { createContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useState, useCallback, useRef, ReactNode } from 'react';
 
 // Define notification type
 export interface Notification {
@@ -50,39 +50,50 @@ export const UIProvider: React.FC<UIProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [activeModal, setActiveModal] = useState<Modal | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [notificationCounter, setNotificationCounter] = useState(0);
-
-  // Show a notification with a truly unique ID
-  const showNotification = useCallback((notification: Omit<Notification, 'id'>) => {
-    // Create a truly unique ID - using counter to ensure uniqueness
-    const uniqueId = `notification_${Date.now()}_${notificationCounter}`;
-    setNotificationCounter(prev => prev + 1);
-    
-    const newNotification = { ...notification, id: uniqueId };
-    
-    // Remove any duplicate notifications with the same message to prevent clutter
-    setNotifications(prev => {
-      const filteredNotifications = prev.filter(n => n.message !== notification.message);
-      return [...filteredNotifications, newNotification];
-    });
-    
-    // Auto-remove notification after duration (default: 5000ms)
-    if (notification.duration !== -1) {
-      const duration = notification.duration || 5000;
-      setTimeout(() => {
-        removeNotification(uniqueId);
-      }, duration);
-    }
-  }, [notificationCounter]);
+  // Use a ref for the counter so updating it doesn't trigger re-renders
+  const notificationCounterRef = useRef(0);
 
   // Remove a notification
   const removeNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
+    setNotifications(prev =>
+      prev.filter(notification => notification.id !== id)
+    );
   }, []);
+
+  // Show a notification with a truly unique ID
+  const showNotification = useCallback(
+    (notification: Omit<Notification, 'id'>) => {
+      // Create a truly unique ID using a ref counter so that no state updates occur here.
+      const counter = notificationCounterRef.current;
+      notificationCounterRef.current = counter + 1;
+      const uniqueId = `notification_${Date.now()}_${counter}`;
+
+      const newNotification = { ...notification, id: uniqueId };
+
+      // Remove any duplicate notifications with the same message to prevent clutter
+      setNotifications(prev => {
+        const filteredNotifications = prev.filter(
+          n => n.message !== notification.message
+        );
+        return [...filteredNotifications, newNotification];
+      });
+
+      // Auto-remove notification after duration (default: 5000ms)
+      if (notification.duration !== -1) {
+        const duration = notification.duration || 5000;
+        setTimeout(() => {
+          removeNotification(uniqueId);
+        }, duration);
+      }
+    },
+    [removeNotification]
+  );
 
   // Show a modal
   const showModal = useCallback((modal: Omit<Modal, 'id'>) => {
-    const id = `modal_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const id = `modal_${Date.now()}_${Math.random()
+      .toString(36)
+      .substring(2, 9)}`;
     setActiveModal({ ...modal, id });
   }, []);
 
@@ -97,16 +108,18 @@ export const UIProvider: React.FC<UIProviderProps> = ({ children }) => {
   }, []);
 
   return (
-    <UIContext.Provider value={{
-      notifications,
-      activeModal,
-      isLoading,
-      showNotification,
-      removeNotification,
-      showModal,
-      hideModal,
-      setLoading: setLoadingState,
-    }}>
+    <UIContext.Provider
+      value={{
+        notifications,
+        activeModal,
+        isLoading,
+        showNotification,
+        removeNotification,
+        showModal,
+        hideModal,
+        setLoading: setLoadingState,
+      }}
+    >
       {children}
     </UIContext.Provider>
   );

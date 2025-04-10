@@ -7,8 +7,9 @@ import Link from 'next/link';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { Card, CardContent, CardFooter } from '../../components/ui/card';
 import { Button } from '../../components/ui/Button';
-import { ProtectedRoute } from '../../components/auth/ProtectedRoute';
+import { RoleBasedRoute } from '../../components/auth/RoleBasedRoute';
 import { useProjects } from '../../hooks/useProjects';
+import { useBorrowerProfile } from '../../hooks/useBorrowerProfile';
 import { useAuth } from '../../hooks/useAuth';
 import { useUI } from '../../hooks/useUI';
 import { GlobalToast } from '../../components/ui/GlobalToast';
@@ -25,37 +26,10 @@ import {
   Zap
 } from 'lucide-react';
 
-// Resource card data with guaranteed unique keys
-const RESOURCE_CARDS = [
-  {
-    id: 'resource-lender-matching',
-    title: 'Find Lenders',
-    description: 'Search and match with lenders based on your project criteria.',
-    buttonText: 'Go to Lender Matching',
-    buttonAction: '/',
-    icon: <Building className="h-6 w-6 text-blue-600" />
-  },
-  {
-    id: 'resource-templates',
-    title: 'Project Templates',
-    description: 'Jumpstart your project creation with pre-filled templates.',
-    buttonText: 'Browse Templates',
-    buttonAction: null, // Will show notification
-    icon: <FileText className="h-6 w-6 text-green-600" />
-  },
-  {
-    id: 'resource-advisors',
-    title: 'Need Help?',
-    description: 'Connect with a capital markets advisor for personalized guidance.',
-    buttonText: 'Talk to an Advisor',
-    buttonAction: null, // Will show notification
-    icon: <Users className="h-6 w-6 text-purple-600" />
-  }
-];
-
 export default function DashboardPage() {
   const router = useRouter();
   const { projects, isLoading, getCompletionStats } = useProjects();
+  const { borrowerProfile, principals } = useBorrowerProfile();
   const { user } = useAuth();
   const { showNotification } = useUI();
 
@@ -86,7 +60,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <ProtectedRoute>
+    <RoleBasedRoute roles={['borrower']}>
       <DashboardLayout title="Dashboard">
         <GlobalToast />
         
@@ -99,6 +73,37 @@ export default function DashboardPage() {
             Track your projects and connect with lenders that match your needs.
           </p>
         </div>
+        
+        {/* Profile Completion Card (shown only if profile is incomplete) */}
+        {(!borrowerProfile || borrowerProfile.completenessPercent < 100) && (
+          <Card className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Complete Your Borrower Profile</h3>
+                  <p className="text-gray-600 mb-4">
+                    Your borrower profile is {borrowerProfile ? borrowerProfile.completenessPercent : 0}% complete. 
+                    A complete profile helps us match you with the most suitable lenders.
+                  </p>
+                  <div className="w-full h-2 bg-gray-200 rounded-full mb-2">
+                    <div 
+                      className="h-full rounded-full bg-blue-600" 
+                      style={{ width: `${borrowerProfile ? borrowerProfile.completenessPercent : 0}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <Button 
+                    variant="primary"
+                    onClick={() => router.push('/profile')}
+                  >
+                    {borrowerProfile ? 'Update Profile' : 'Create Profile'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -159,7 +164,7 @@ export default function DashboardPage() {
           </Card>
         </div>
         
-        {/* Welcome Card */}
+        {/* Welcome Card (shown only when no projects exist) */}
         {projects.length === 0 && (
           <Card className="mb-8 bg-gradient-to-r from-blue-700 to-indigo-800 text-white shadow-xl">
             <CardContent className="p-8">
@@ -199,7 +204,7 @@ export default function DashboardPage() {
               <Card key={project.id} className="shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800 truncate">{project.name}</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 truncate">{project.projectName}</h3>
                     {project.borrowerProgress === 100 && project.projectProgress === 100 ? (
                       <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center">
                         <CheckCircle className="h-3 w-3 mr-1" />
@@ -208,7 +213,7 @@ export default function DashboardPage() {
                     ) : (
                       <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex items-center">
                         <Zap className="h-3 w-3 mr-1" />
-                        In Progress
+                        {project.projectStatus}
                       </span>
                     )}
                   </div>
@@ -230,7 +235,7 @@ export default function DashboardPage() {
                         <span className="font-medium text-blue-600">{project.borrowerProgress}%</span>
                       </div>
                       <div className="w-full h-2 bg-gray-200 rounded-full">
-                        <div 
+                      <div 
                           className="h-full rounded-full bg-blue-600" 
                           style={{ width: `${project.borrowerProgress}%` }}
                         />
@@ -285,28 +290,60 @@ export default function DashboardPage() {
           <div className="mt-12">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">Resources</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {RESOURCE_CARDS.map(resource => (
-                <Card key={resource.id} className="shadow-sm hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-center mb-3">
-                      {resource.icon}
-                      <h3 className="text-lg font-semibold text-gray-800 ml-2">{resource.title}</h3>
-                    </div>
-                    <p className="text-gray-600 mb-4">{resource.description}</p>
-                    <Button 
-                      variant="outline"
-                      rightIcon={<ArrowUpRight size={16} />}
-                      onClick={() => handleResourceClick(resource.id, resource.buttonAction)}
-                    >
-                      {resource.buttonText}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center mb-3">
+                    <Building className="h-6 w-6 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-gray-800 ml-2">Find Lenders</h3>
+                  </div>
+                  <p className="text-gray-600 mb-4">Search and match with lenders based on your project criteria.</p>
+                  <Button 
+                    variant="outline"
+                    rightIcon={<ArrowUpRight size={16} />}
+                    onClick={() => handleResourceClick('resource-lender-matching', '/')}
+                  >
+                    Go to Lender Matching
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center mb-3">
+                    <FileText className="h-6 w-6 text-green-600" />
+                    <h3 className="text-lg font-semibold text-gray-800 ml-2">Project Templates</h3>
+                  </div>
+                  <p className="text-gray-600 mb-4">Jumpstart your project creation with pre-filled templates.</p>
+                  <Button 
+                    variant="outline"
+                    rightIcon={<ArrowUpRight size={16} />}
+                    onClick={() => handleResourceClick('resource-templates', null)}
+                  >
+                    Browse Templates
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center mb-3">
+                    <Users className="h-6 w-6 text-purple-600" />
+                    <h3 className="text-lg font-semibold text-gray-800 ml-2">Need Help?</h3>
+                  </div>
+                  <p className="text-gray-600 mb-4">Connect with a capital markets advisor for personalized guidance.</p>
+                  <Button 
+                    variant="outline"
+                    rightIcon={<ArrowUpRight size={16} />}
+                    onClick={() => handleResourceClick('resource-advisors', null)}
+                  >
+                    Talk to an Advisor
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
       </DashboardLayout>
-    </ProtectedRoute>
+    </RoleBasedRoute>
   );
 }

@@ -4,22 +4,35 @@
 import React, { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-import { ProjectForm } from '../../../components/forms/ProjectForm';
-import { ProtectedRoute } from '../../../components/auth/ProtectedRoute';
+import { EnhancedProjectForm } from '../../../components/forms/EnhancedProjectForm';
+import { RoleBasedRoute } from '../../../components/auth/RoleBasedRoute';
 import { GlobalToast } from '../../../components/ui/GlobalToast';
 import { useUI } from '../../../hooks/useUI';
 import { useProjects } from '../../../hooks/useProjects';
-import { Project } from '../../../contexts/ProjectContext';
+import { useBorrowerProfile } from '../../../hooks/useBorrowerProfile';
+import { ProjectProfile } from '../../../types/enhanced-types';
 
 export default function CreateProjectPage() {
   const router = useRouter();
   const { showNotification } = useUI();
   const { autoSaveProject } = useProjects();
+  const { borrowerProfile } = useBorrowerProfile();
   const hasShownWelcome = useRef(false);
+  
+  // Check if borrower profile exists
+  useEffect(() => {
+    if (!borrowerProfile) {
+      showNotification({
+        type: 'info',
+        message: 'Please complete your borrower profile before creating a project',
+      });
+      router.push('/profile');
+    }
+  }, [borrowerProfile, router, showNotification]);
   
   // Show welcome message only once
   useEffect(() => {
-    if (!hasShownWelcome.current) {
+    if (!hasShownWelcome.current && borrowerProfile) {
       hasShownWelcome.current = true;
       
       // Timeout to prevent showing too many notifications at once
@@ -30,7 +43,7 @@ export default function CreateProjectPage() {
         });
       }, 500);
     }
-  }, [showNotification]);
+  }, [showNotification, borrowerProfile]);
   
   // Auto-save before page unload
   useEffect(() => {
@@ -47,27 +60,33 @@ export default function CreateProjectPage() {
   }, [autoSaveProject]);
   
   // Handle form saved event
-  const handleFormSaved = (project: Project) => {
+  const handleFormSaved = (project: ProjectProfile) => {
     showNotification({
       type: 'success',
       message: 'Project saved successfully',
     });
     
-    // Navigate to dashboard after successful save
-    router.push('/dashboard');
+    // Navigate to project detail page after successful save
+    router.push(`/project/${project.id}`);
   };
 
   return (
-    <ProtectedRoute>
+    <RoleBasedRoute roles={['borrower']}>
       <DashboardLayout title="New Project">
         <GlobalToast />
-        <div className="mb-6">
-          <h2 className="text-lg text-gray-600">
-            Your project is created automatically and will auto-save as you work.
-          </h2>
-        </div>
-        <ProjectForm onFormSaved={handleFormSaved} />
+        
+        {borrowerProfile && (
+          <>
+            <div className="mb-6">
+              <h2 className="text-lg text-gray-600">
+                Your project is created automatically and will auto-save as you work.
+              </h2>
+            </div>
+            
+            <EnhancedProjectForm onComplete={handleFormSaved} />
+          </>
+        )}
       </DashboardLayout>
-    </ProtectedRoute>
+    </RoleBasedRoute>
   );
 }

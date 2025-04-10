@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { AuthProvider } from '../../contexts/AuthContext';
+import { BorrowerProfileProvider } from '../../contexts/BorrowerProfileContext';
 import { ProjectProvider } from '../../contexts/ProjectContext';
 import { LenderProvider } from '../../contexts/LenderContext';
 import { UIProvider } from '../../contexts/UIContext';
@@ -15,11 +16,13 @@ export const ClientAppProviders: React.FC<{ children: React.ReactNode }> = ({ ch
   return (
     <UIProvider>
       <AuthProvider storageService={storageService}>
-        <ProjectProvider storageService={storageService}>
-          <LenderProvider storageService={storageService}>
-            {children}
-          </LenderProvider>
-        </ProjectProvider>
+        <BorrowerProfileProvider storageService={storageService}>
+          <ProjectProvider storageService={storageService}>
+            <LenderProvider storageService={storageService}>
+              {children}
+            </LenderProvider>
+          </ProjectProvider>
+        </BorrowerProfileProvider>
       </AuthProvider>
     </UIProvider>
   );

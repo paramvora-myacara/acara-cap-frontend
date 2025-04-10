@@ -1,113 +1,171 @@
 // src/contexts/ProjectContext.tsx
-
 'use client';
 
-import React, { createContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+  useRef,
+} from 'react';
 import { StorageService } from '../services/storage/StorageService';
 import { useAuth } from '../hooks/useAuth';
-
-// Define project interface
-export interface FormField {
-  id: string;
-  label: string;
-  type: string;
-  options?: string[];
-  value: string;
-  required?: boolean;
-  placeholder?: string;
-}
-
-export interface FormSection {
-  id: string;
-  title: string;
-  icon: React.ReactNode | null;
-  isOpen: boolean;
-  fields: FormField[];
-}
-
-export interface StorableFormSection {
-  id: string;
-  title: string;
-  isOpen: boolean;
-  fields: FormField[];
-  // No icon here to avoid circular references
-}
-
-export interface Project {
-  id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  borrowerProgress: number;
-  projectProgress: number;
-  borrowerSections: FormSection[];
-  projectSections: FormSection[];
-  lastAutoSave?: string;
-}
-
-export interface StorableProject {
-  id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-  borrowerProgress: number;
-  projectProgress: number;
-  borrowerSections: StorableFormSection[];
-  projectSections: StorableFormSection[];
-  lastAutoSave?: string;
-}
-
-export interface CompletionStats {
-  totalProjects: number;
-  inProgressProjects: number;
-  completedProjects: number;
-  averageBorrowerProgress: number;
-  averageProjectProgress: number;
-}
+import { useBorrowerProfile } from '../hooks/useBorrowerProfile';
+import {
+  ProjectProfile,
+  ProjectStatus,
+  ProjectPrincipal,
+  ProjectDocumentRequirement,
+  ProjectMessage,
+} from '../types/enhanced-types';
 
 // Define context interface
 interface ProjectContextProps {
-  projects: Project[];
+  projects: ProjectProfile[];
   isLoading: boolean;
-  activeProject: Project | null;
-  createProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Project>;
-  updateProject: (id: string, updates: Partial<Omit<Project, 'id'>>, manual?: boolean) => Promise<Project | null>;
+  activeProject: ProjectProfile | null;
+  projectMessages: ProjectMessage[];
+  projectPrincipals: ProjectPrincipal[];
+  documentRequirements: ProjectDocumentRequirement[];
+  createProject: (project: Partial<ProjectProfile>) => Promise<ProjectProfile>;
+  updateProject: (
+    id: string,
+    updates: Partial<ProjectProfile>,
+    manual?: boolean
+  ) => Promise<ProjectProfile | null>;
   deleteProject: (id: string) => Promise<boolean>;
-  getProject: (id: string) => Project | null;
-  setActiveProject: (project: Project | null) => void;
-  calculateProgress: (project: Project) => { borrowerProgress: number, projectProgress: number };
-  getCompletionStats: () => CompletionStats;
+  getProject: (id: string) => ProjectProfile | null;
+  setActiveProject: (project: ProjectProfile | null) => void;
+  addProjectMessage: (message: string, isAdvisor?: boolean) => Promise<ProjectMessage>;
+  addDocumentRequirement: (
+    requirement: Partial<ProjectDocumentRequirement>
+  ) => Promise<ProjectDocumentRequirement>;
+  updateDocumentRequirement: (
+    id: string,
+    updates: Partial<ProjectDocumentRequirement>
+  ) => Promise<ProjectDocumentRequirement | null>;
+  assignPrincipalToProject: (
+    principalId: string,
+    projectRole: Partial<ProjectPrincipal>
+  ) => Promise<ProjectPrincipal>;
+  updateProjectPrincipal: (
+    id: string,
+    updates: Partial<ProjectPrincipal>
+  ) => Promise<ProjectPrincipal | null>;
+  removeProjectPrincipal: (id: string) => Promise<boolean>;
+  updateProjectStatus: (id: string, status: ProjectStatus) => Promise<ProjectProfile | null>;
+  calculateProgress: (project: ProjectProfile) => {
+    borrowerProgress: number;
+    projectProgress: number;
+    totalProgress: number;
+  };
+  getCompletionStats: () => {
+    totalProjects: number;
+    inProgressProjects: number;
+    completedProjects: number;
+    averageBorrowerProgress: number;
+    averageProjectProgress: number;
+  };
   projectChanges: boolean;
   setProjectChanges: (hasChanges: boolean) => void;
   autoSaveProject: () => Promise<void>;
 }
 
-// Create context with default values
 export const ProjectContext = createContext<ProjectContextProps>({
   projects: [],
   isLoading: true,
   activeProject: null,
-  createProject: async () => ({ 
-    id: '', 
-    name: '', 
-    createdAt: '', 
-    updatedAt: '', 
-    borrowerProgress: 0, 
-    projectProgress: 0, 
-    borrowerSections: [], 
-    projectSections: [] 
-  }),
+  projectMessages: [],
+  projectPrincipals: [],
+  documentRequirements: [],
+  createProject: async (projectData: Partial<ProjectProfile>) => {
+    return ({
+      id: '',
+      borrowerProfileId: '',
+      assignedAdvisorUserId: null,
+      projectName: '',
+      name: '', // legacy field
+      propertyAddressStreet: '',
+      propertyAddressCity: '',
+      propertyAddressState: '',
+      propertyAddressCounty: '',
+      propertyAddressZip: '',
+      assetType: '',
+      projectDescription: '',
+      projectPhase: 'Acquisition',
+      loanAmountRequested: 0,
+      loanType: '',
+      targetLtvPercent: 0,
+      targetLtcPercent: 0,
+      amortizationYears: 0,
+      interestOnlyPeriodMonths: 0,
+      interestRateType: 'Not Specified',
+      targetCloseDate: '',
+      useOfProceeds: '',
+      recoursePreference: 'Flexible',
+      purchasePrice: null,
+      totalProjectCost: null,
+      capexBudget: null,
+      propertyNoiT12: null,
+      stabilizedNoiProjected: null,
+      exitStrategy: 'Undecided',
+      businessPlanSummary: '',
+      marketOverviewSummary: '',
+      equityCommittedPercent: 0,
+      projectStatus: 'Draft',
+      completenessPercent: 0,
+      internalAdvisorNotes: '',
+      borrowerProgress: 0,
+      projectProgress: 0,
+      createdAt: '',
+      updatedAt: '',
+    });
+  },
   updateProject: async () => null,
   deleteProject: async () => false,
   getProject: () => null,
   setActiveProject: () => {},
-  calculateProgress: () => ({ borrowerProgress: 0, projectProgress: 0 }),
+  addProjectMessage: async () => ({
+    id: '',
+    projectId: '',
+    senderId: '',
+    senderType: 'Borrower',
+    message: '',
+    isRead: false,
+    createdAt: '',
+  }),
+  addDocumentRequirement: async () => ({
+    id: '',
+    projectId: '',
+    requiredDocType: 'Other',
+    status: 'Required',
+    documentId: null,
+    notes: '',
+    dueDate: null,
+    lastUpdated: '',
+  }),
+  updateDocumentRequirement: async () => null,
+  assignPrincipalToProject: async () => ({
+    id: '',
+    projectId: '',
+    principalId: '',
+    roleInProject: 'Guarantor',
+    guarantyDetails: null,
+    isKeyPrincipal: false,
+    isPrimaryContact: false,
+    createdAt: '',
+  }),
+  updateProjectPrincipal: async () => null,
+  removeProjectPrincipal: async () => false,
+  updateProjectStatus: async () => null,
+  calculateProgress: () => ({ borrowerProgress: 0, projectProgress: 0, totalProgress: 0 }),
   getCompletionStats: () => ({
     totalProjects: 0,
     inProgressProjects: 0,
     completedProjects: 0,
     averageBorrowerProgress: 0,
-    averageProjectProgress: 0
+    averageProjectProgress: 0,
   }),
   projectChanges: false,
   setProjectChanges: () => {},
@@ -119,189 +177,172 @@ interface ProjectProviderProps {
   storageService: StorageService;
 }
 
-// Auto-save interval in milliseconds (3 seconds)
 const AUTO_SAVE_INTERVAL = 3000;
 
-// Helper to create a storable (serializable) version of a project
-const makeStorableProject = (project: Project): StorableProject => {
-  return {
-    id: project.id,
-    name: project.name,
-    createdAt: project.createdAt,
-    updatedAt: project.updatedAt,
-    borrowerProgress: project.borrowerProgress,
-    projectProgress: project.projectProgress,
-    lastAutoSave: project.lastAutoSave,
-    // Remove React elements from sections to avoid circular references
-    borrowerSections: project.borrowerSections.map(section => ({
-      id: section.id,
-      title: section.title,
-      isOpen: section.isOpen,
-      fields: section.fields,
-      // Do not include icon
-    })),
-    projectSections: project.projectSections.map(section => ({
-      id: section.id,
-      title: section.title,
-      isOpen: section.isOpen,
-      fields: section.fields,
-      // Do not include icon
-    })),
-  };
-};
-
-// Helper to add back icons to sections
-const addIconsToProject = (project: StorableProject): Project => {
-  return {
-    ...project,
-    borrowerSections: project.borrowerSections.map(section => ({
-      ...section,
-      icon: getSectionIcon(section.id),
-    })),
-    projectSections: project.projectSections.map(section => ({
-      ...section,
-      icon: getSectionIcon(section.id),
-    })),
-  };
-};
-
-// Helper to get section icon based on id
-const getSectionIcon = (sectionId: string): React.ReactNode => {
-  if (typeof window === 'undefined') return null;
-  
-  // These need to match the icons in the ProjectForm component
-  const icons = {
-    'basic-info': <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
-    'experience': <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>,
-    'financial': <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
-    'project-basics': <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
-    'loan-request': <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
-    'project-financials': <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>,
-  };
-  
-  return icons[sectionId as keyof typeof icons] || icons['project-basics'];
-};
-
-// Generate a truly unique ID
 const generateUniqueId = (): string => {
   return `proj_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 };
 
-export const ProjectProvider: React.FC<ProjectProviderProps> = ({ 
-  children, 
-  storageService 
+export const ProjectProvider: React.FC<ProjectProviderProps> = ({
+  children,
+  storageService,
 }) => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [activeProject, setActiveProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<ProjectProfile[]>([]);
+  const [activeProject, setActiveProject] = useState<ProjectProfile | null>(null);
+  const [projectMessages, setProjectMessages] = useState<ProjectMessage[]>([]);
+  const [projectPrincipals, setProjectPrincipals] = useState<ProjectPrincipal[]>([]);
+  const [documentRequirements, setDocumentRequirements] = useState<ProjectDocumentRequirement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [projectChanges, setProjectChanges] = useState(false);
-  
+
   const { user } = useAuth();
+  const { borrowerProfile } = useBorrowerProfile();
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedRef = useRef<string | null>(null);
   const loadedProjectsRef = useRef<Set<string>>(new Set());
 
-  // Calculate progress for a project - MOVED UP TO FIX HOISTING ISSUE
-  const calculateProgress = useCallback((project: Project) => {
-    // Calculate borrower progress
-    const totalBorrowerFields = project.borrowerSections
-      .flatMap(section => section.fields)
-      .filter(field => field.required).length;
-    
-    const filledBorrowerFields = project.borrowerSections
-      .flatMap(section => section.fields)
-      .filter(field => field.required && field.value.trim() !== '').length;
-    
-    const borrowerProgress = totalBorrowerFields 
-      ? Math.round((filledBorrowerFields / totalBorrowerFields) * 100) 
-      : 0;
+  // Calculate progress for a project
+  const calculateProgress = useCallback((project: ProjectProfile) => {
+    const borrowerRequiredFields = [
+      'projectName',
+      'propertyAddressStreet',
+      'propertyAddressCity',
+      'propertyAddressState',
+      'propertyAddressZip',
+      'assetType',
+    ];
 
-    // Calculate project progress
-    const totalProjectFields = project.projectSections
-      .flatMap(section => section.fields)
-      .filter(field => field.required).length;
-    
-    const filledProjectFields = project.projectSections
-      .flatMap(section => section.fields)
-      .filter(field => field.required && field.value.trim() !== '').length;
-    
-    const projectProgress = totalProjectFields 
-      ? Math.round((filledProjectFields / totalProjectFields) * 100) 
-      : 0;
+    const projectRequiredFields = [
+      'projectDescription',
+      'projectPhase',
+      'loanAmountRequested',
+      'loanType',
+      'targetLtvPercent',
+      'targetCloseDate',
+      'useOfProceeds',
+      'recoursePreference',
+      'exitStrategy',
+      'businessPlanSummary',
+    ];
 
-    return { borrowerProgress, projectProgress };
+    const filledBorrowerFields = borrowerRequiredFields.filter((field) => {
+      const value = project[field as keyof ProjectProfile];
+      return value !== null && value !== undefined && value !== '';
+    }).length;
+
+    const filledProjectFields = projectRequiredFields.filter((field) => {
+      const value = project[field as keyof ProjectProfile];
+      return value !== null && value !== undefined && value !== '';
+    }).length;
+
+    const borrowerProgress = Math.round((filledBorrowerFields / borrowerRequiredFields.length) * 100);
+    const projectProgress = Math.round((filledProjectFields / projectRequiredFields.length) * 100);
+    const totalProgress = Math.round(borrowerProgress * 0.3 + projectProgress * 0.7);
+
+    return { borrowerProgress, projectProgress, totalProgress };
   }, []);
 
   // Auto-save the active project
   const autoSaveProject = useCallback(async () => {
     if (!activeProject || !projectChanges) return;
-    
     try {
-      // Create a serializable version of the project for comparison
-      const storableProject = makeStorableProject(activeProject);
-      const projectStateStr = JSON.stringify(storableProject);
-      
-      // Only save if project state has changed since last save
+      const projectStateStr = JSON.stringify(activeProject);
       if (projectStateStr !== lastSavedRef.current) {
         const now = new Date().toISOString();
-        
-        // Update project with current progress calculations
         const progress = calculateProgress(activeProject);
-        
         const updatedProject = {
           ...activeProject,
           borrowerProgress: progress.borrowerProgress,
           projectProgress: progress.projectProgress,
+          completenessPercent: progress.totalProgress,
           updatedAt: now,
-          lastAutoSave: now
         };
-        
-        // Update in state
-        setProjects(prevProjects => {
-          return prevProjects.map(p => 
-            p.id === updatedProject.id ? updatedProject : p
-          );
-        });
-        
-        // Update active project reference
+
+        setProjects((prevProjects) =>
+          prevProjects.map((p) => (p.id === updatedProject.id ? updatedProject : p))
+        );
         setActiveProject(updatedProject);
-        
-        // Keep track of what we've saved (using the serializable version)
-        lastSavedRef.current = JSON.stringify(makeStorableProject(updatedProject));
-        
-        // Reset changes flag
+        lastSavedRef.current = JSON.stringify(updatedProject);
         setProjectChanges(false);
-        
-        console.log(`Auto-saved project: ${updatedProject.name}`);
+        console.log(`Auto-saved project: ${updatedProject.projectName}`);
       }
     } catch (error) {
       console.error('Failed to auto-save project:', error);
     }
   }, [activeProject, projectChanges, calculateProgress]);
 
-  // Load projects from storage on mount
+  // Set up auto-save for active project
+  useEffect(() => {
+    if (autoSaveTimerRef.current) {
+      clearInterval(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+    if (activeProject && projectChanges) {
+      autoSaveTimerRef.current = setInterval(() => {
+        autoSaveProject();
+      }, AUTO_SAVE_INTERVAL);
+    }
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearInterval(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+    };
+  }, [activeProject, projectChanges, autoSaveProject]);
+
+  // Load project data (messages, principals, requirements)
+  const loadProjectData = useCallback(
+    async (projectId: string) => {
+      try {
+        const allMessages =
+          (await storageService.getItem<ProjectMessage[]>('projectMessages')) || [];
+        const projectMessages = allMessages.filter((msg) => msg.projectId === projectId);
+        setProjectMessages(projectMessages);
+
+        const allProjectPrincipals =
+          (await storageService.getItem<ProjectPrincipal[]>('projectPrincipals')) || [];
+        const projectPrincipals = allProjectPrincipals.filter((pp) => pp.projectId === projectId);
+        setProjectPrincipals(projectPrincipals);
+
+        const allDocReqs =
+          (await storageService.getItem<ProjectDocumentRequirement[]>('documentRequirements')) || [];
+        const projectDocReqs = allDocReqs.filter((req) => req.projectId === projectId);
+        setDocumentRequirements(projectDocReqs);
+      } catch (error) {
+        console.error('Failed to load project data:', error);
+      }
+    },
+    [storageService]
+  );
+
+  // Load projects on mount or when user changes
   useEffect(() => {
     const loadProjects = async () => {
+      if (!user) {
+        setProjects([]);
+        setIsLoading(false);
+        return;
+      }
       try {
-        const storedProjects = await storageService.getItem<StorableProject[]>('userProjects');
-        if (storedProjects && Array.isArray(storedProjects)) {
-          // Convert stored projects to projects with icons
-          const projectsWithIcons = storedProjects.map(addIconsToProject);
-          
-          // Track loaded project IDs to prevent duplicates
-          const loadedProjects = new Set<string>();
-          const uniqueProjects = projectsWithIcons.filter(project => {
-            // If we've already seen this ID, filter it out
-            if (loadedProjects.has(project.id)) {
-              return false;
-            }
-            // Otherwise, add it to our set and keep it
-            loadedProjects.add(project.id);
-            return true;
-          });
-          
-          setProjects(uniqueProjects);
-          loadedProjectsRef.current = loadedProjects;
+        setIsLoading(true);
+        const storedProjects =
+          (await storageService.getItem<ProjectProfile[]>('projects')) || [];
+        const userProjects =
+          user.role === 'advisor'
+            ? storedProjects.filter((p) => p.assignedAdvisorUserId === user.email)
+            : storedProjects.filter((p) =>
+                borrowerProfile ? p.borrowerProfileId === borrowerProfile.id : false
+              );
+        const loadedProjects = new Set<string>();
+        const uniqueProjects = userProjects.filter((project) => {
+          if (loadedProjects.has(project.id)) return false;
+          loadedProjects.add(project.id);
+          return true;
+        });
+        setProjects(uniqueProjects);
+        loadedProjectsRef.current = loadedProjects;
+        if (activeProject) {
+          loadProjectData(activeProject.id);
         }
       } catch (error) {
         console.error('Failed to load projects:', error);
@@ -311,17 +352,19 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
     };
 
     loadProjects();
-  }, [storageService]);
+  }, [user, borrowerProfile, storageService, activeProject, loadProjectData]);
 
-  // Save projects to storage whenever they change
+  // Save projects to storage when they change
   useEffect(() => {
     const saveProjects = async () => {
       try {
         if (projects.length === 0) return;
-        
-        // Convert projects to a storable format (without React elements)
-        const storableProjects = projects.map(makeStorableProject);
-        await storageService.setItem('userProjects', storableProjects);
+        const allProjects =
+          (await storageService.getItem<ProjectProfile[]>('projects')) || [];
+        const otherProjects = allProjects.filter(
+          (p) => !loadedProjectsRef.current.has(p.id)
+        );
+        await storageService.setItem('projects', [...otherProjects, ...projects]);
       } catch (error) {
         console.error('Failed to save projects:', error);
       }
@@ -332,163 +375,208 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
     }
   }, [projects, isLoading, storageService]);
 
-  // Set up auto-save for active project
-  useEffect(() => {
-    // Clear any existing auto-save timer
-    if (autoSaveTimerRef.current) {
-      clearInterval(autoSaveTimerRef.current);
-      autoSaveTimerRef.current = null;
-    }
-
-    // If there's an active project and unsaved changes, set up auto-save timer
-    if (activeProject && projectChanges) {
-      autoSaveTimerRef.current = setInterval(() => {
-        autoSaveProject();
-      }, AUTO_SAVE_INTERVAL);
-    }
-
-    // Cleanup function
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearInterval(autoSaveTimerRef.current);
-        autoSaveTimerRef.current = null;
-      }
-    };
-  }, [activeProject, projectChanges, autoSaveProject]);
-
-  // Get stats on completion rates
+  // Get completion statistics
   const getCompletionStats = useCallback(() => {
     const totalProjects = projects.length;
-    
     if (totalProjects === 0) {
       return {
         totalProjects: 0,
         inProgressProjects: 0,
         completedProjects: 0,
         averageBorrowerProgress: 0,
-        averageProjectProgress: 0
+        averageProjectProgress: 0,
       };
     }
-    
-    // A project is considered "completed" if both borrower and project progress are 100%
     const completedProjects = projects.filter(
-      p => p.borrowerProgress === 100 && p.projectProgress === 100
+      (p) => p.borrowerProgress === 100 && p.projectProgress === 100
     ).length;
-    
     const inProgressProjects = totalProjects - completedProjects;
-    
-    // Calculate average progress
     const totalBorrowerProgress = projects.reduce((sum, p) => sum + p.borrowerProgress, 0);
     const totalProjectProgress = projects.reduce((sum, p) => sum + p.projectProgress, 0);
-    
     const averageBorrowerProgress = Math.round(totalBorrowerProgress / totalProjects);
     const averageProjectProgress = Math.round(totalProjectProgress / totalProjects);
-    
     return {
       totalProjects,
       inProgressProjects,
       completedProjects,
       averageBorrowerProgress,
-      averageProjectProgress
+      averageProjectProgress,
     };
   }, [projects]);
 
-  // Create a new project with auto-generated name if needed
-  const createProject = useCallback(async (projectData: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
+  // --- Helper Functions (declared in order) ---
+
+  // addProjectMessage: Declared before updateProjectStatus uses it.
+  const addProjectMessage = useCallback(async (message: string, isAdvisor = false) => {
+    if (!activeProject) throw new Error('No active project to add message to');
     const now = new Date().toISOString();
-    
-    // Generate a project name if none is provided
-    let projectName = projectData.name || ""; // Default to empty string to avoid undefined
-    if (!projectName || projectName.trim() === '') {
-      // Try to find a name from project data
-      const projectNameField = projectData.projectSections
-        .find(section => section.id === 'project-basics')
-        ?.fields.find(field => field.id === 'projectName');
-      
-      // If we found a project name field with a value, use it
-      if (projectNameField?.value) {
-        projectName = projectNameField.value;
-      } else {
-        // Otherwise, generate a name based on asset type if available
-        const assetTypeField = projectData.projectSections
-          .find(section => section.id === 'project-basics')
-          ?.fields.find(field => field.id === 'assetType');
-        
-        if (assetTypeField?.value) {
-          projectName = `${assetTypeField.value} Project`;
-        } else {
-          // Default name with timestamp
-          projectName = `New Project (${new Date().toLocaleString()})`;
-        }
-      }
-    }
-    
-    // Create a unique ID
-    let uniqueId = generateUniqueId();
-    
-    // Just to be extra careful, keep generating until we find a truly unique ID
-    while (loadedProjectsRef.current.has(uniqueId)) {
-      uniqueId = generateUniqueId();
-    }
-    
-    // Add to our tracking set
-    loadedProjectsRef.current.add(uniqueId);
-    
-    // Create new project with projectData properties first, then override specific ones
-    const newProject: Project = {
-      ...projectData,
-      id: uniqueId,
-      name: projectName,
+    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const senderId = isAdvisor
+      ? activeProject.assignedAdvisorUserId || 'advisor@acaracap.com'
+      : user?.email || 'borrower@example.com';
+    const newMessage: ProjectMessage = {
+      id: messageId,
+      projectId: activeProject.id,
+      senderId,
+      senderType: isAdvisor ? 'Advisor' : 'Borrower',
+      message,
+      isRead: false,
       createdAt: now,
+    };
+    setProjectMessages((prev) => [...prev, newMessage]);
+    const allMessages = (await storageService.getItem<ProjectMessage[]>('projectMessages')) || [];
+    await storageService.setItem('projectMessages', [...allMessages, newMessage]);
+    if (activeProject.projectStatus === 'Draft') {
+      await updateProjectStatus(activeProject.id, 'Info Gathering');
+    }
+    return newMessage;
+  }, [activeProject, user, storageService, /* updateProjectStatus will be added as dependency below */]);
+
+  // updateProjectStatus: Uses addProjectMessage
+  const updateProjectStatus = useCallback(async (id: string, status: ProjectStatus) => {
+    const projectIndex = projects.findIndex((p) => p.id === id);
+    if (projectIndex === -1) return null;
+    const now = new Date().toISOString();
+    const updatedProject: ProjectProfile = {
+      ...projects[projectIndex],
+      projectStatus: status,
       updatedAt: now,
     };
-
-    // Add to projects array
-    setProjects(prevProjects => {
-      // Double check we don't already have a project with this ID
-      if (prevProjects.some(p => p.id === uniqueId)) {
-        console.warn(`Prevented duplicate project: ${uniqueId}`);
-        return prevProjects;
+    if (activeProject?.id === id) {
+      const statusMessages: Record<ProjectStatus, string> = {
+        Draft: 'Your project has been saved as a draft.',
+        'Info Gathering': "We're now gathering information about your project.",
+        'Advisor Review': 'Your project is now under review by your capital advisor.',
+        'Matches Curated': "We've curated lender matches for your project.",
+        'Introductions Sent': 'Introductions have been sent to matching lenders.',
+        'Term Sheet Received': "Congratulations! You've received a term sheet.",
+        Closed: 'Congratulations! Your project has successfully closed.',
+        Withdrawn: 'Your project has been withdrawn.',
+        Stalled: 'Your project is currently stalled. Please contact your advisor for assistance.',
+      };
+      if (statusMessages[status]) {
+        await addProjectMessage(statusMessages[status], true);
       }
-      return [...prevProjects, newProject];
-    });
-    
-    return newProject;
-  }, []);
+    }
+    const updatedProjects = [...projects];
+    updatedProjects[projectIndex] = updatedProject;
+    setProjects(updatedProjects);
+    if (activeProject?.id === id) {
+      setActiveProject(updatedProject);
+    }
+    return updatedProject;
+  }, [projects, activeProject, addProjectMessage]);
+
+  const createProject = useCallback(
+    async (projectData: Partial<ProjectProfile>) => {
+      if (!user)
+        throw new Error("User must be logged in to create a project");
+      if (!borrowerProfile)
+        throw new Error("Borrower profile must exist to create a project");
+  
+      const now = new Date().toISOString();
+      const projName = projectData.projectName || "New Project";
+      let uniqueId = generateUniqueId();
+      while (loadedProjectsRef.current.has(uniqueId)) {
+        uniqueId = generateUniqueId();
+      }
+      // Pick a random advisor for demo purposes.
+      const advisors = [
+        { id: "advisor1@acaracap.com", name: "Sarah Adams" },
+        { id: "advisor2@acaracap.com", name: "Michael Chen" },
+        { id: "advisor3@acaracap.com", name: "Jessica Williams" },
+      ];
+      const randomAdvisor =
+        advisors[Math.floor(Math.random() * advisors.length)];
+      loadedProjectsRef.current.add(uniqueId);
+  
+      const createdProject: ProjectProfile = {
+        id: uniqueId,
+        borrowerProfileId: borrowerProfile.id,
+        assignedAdvisorUserId: randomAdvisor.id,
+        projectName: projName,
+        name: projName, // legacy field
+        propertyAddressStreet: projectData.propertyAddressStreet || "",
+        propertyAddressCity: projectData.propertyAddressCity || "",
+        propertyAddressState: projectData.propertyAddressState || "",
+        propertyAddressCounty: projectData.propertyAddressCounty || "",
+        propertyAddressZip: projectData.propertyAddressZip || "",
+        assetType: projectData.assetType || "",
+        projectDescription: projectData.projectDescription || "",
+        projectPhase: projectData.projectPhase || "Acquisition",
+        loanAmountRequested: projectData.loanAmountRequested || 0,
+        loanType: projectData.loanType || "",
+        targetLtvPercent: projectData.targetLtvPercent || 70,
+        targetLtcPercent: projectData.targetLtcPercent || 80,
+        amortizationYears: projectData.amortizationYears || 30,
+        interestOnlyPeriodMonths: projectData.interestOnlyPeriodMonths || 0,
+        interestRateType: projectData.interestRateType || "Not Specified",
+        targetCloseDate: projectData.targetCloseDate || "",
+        useOfProceeds: projectData.useOfProceeds || "",
+        recoursePreference: projectData.recoursePreference || "Flexible",
+        purchasePrice: projectData.purchasePrice || null,
+        totalProjectCost: projectData.totalProjectCost || null,
+        capexBudget: projectData.capexBudget || null,
+        propertyNoiT12: projectData.propertyNoiT12 || null,
+        stabilizedNoiProjected: projectData.stabilizedNoiProjected || null,
+        exitStrategy: projectData.exitStrategy || "Undecided",
+        businessPlanSummary: projectData.businessPlanSummary || "",
+        marketOverviewSummary: projectData.marketOverviewSummary || "",
+        equityCommittedPercent: projectData.equityCommittedPercent || 0,
+        projectStatus: "Draft",
+        completenessPercent: 0,
+        internalAdvisorNotes: "",
+        borrowerProgress: 0,
+        projectProgress: 0,
+        createdAt: now,
+        updatedAt: now,
+        ...projectData,
+      };
+  
+      const progress = calculateProgress(createdProject);
+      createdProject.borrowerProgress = progress.borrowerProgress;
+      createdProject.projectProgress = progress.projectProgress;
+      createdProject.completenessPercent = progress.totalProgress;
+  
+      setProjects((prevProjects) => {
+        if (prevProjects.some((p) => p.id === uniqueId)) {
+          console.warn(`Prevented duplicate project: ${uniqueId}`);
+          return prevProjects;
+        }
+        return [...prevProjects, createdProject];
+      });
+  
+      return createdProject;
+    },
+    [user, borrowerProfile, calculateProgress]
+  );
 
   // Update an existing project
-  const updateProject = useCallback(async (id: string, updates: Partial<Omit<Project, 'id'>>, manual = false) => {
+  const updateProject = useCallback(async (id: string, updates: Partial<ProjectProfile>, manual = false) => {
     const projectIndex = projects.findIndex(p => p.id === id);
     if (projectIndex === -1) return null;
 
     const now = new Date().toISOString();
-    
-    const updatedProject: Project = {
+    const updatedProject: ProjectProfile = {
       ...projects[projectIndex],
       ...updates,
       updatedAt: now,
     };
 
-    // If it's a manual save, also update lastAutoSave
     if (manual) {
-      updatedProject.lastAutoSave = now;
-      const storableProject = makeStorableProject(updatedProject);
-      lastSavedRef.current = JSON.stringify(storableProject);
+      lastSavedRef.current = JSON.stringify(updatedProject);
       setProjectChanges(false);
     }
 
-    // Recalculate progress if necessary
-    if (updates.borrowerSections || updates.projectSections) {
-      const progress = calculateProgress(updatedProject);
-      updatedProject.borrowerProgress = progress.borrowerProgress;
-      updatedProject.projectProgress = progress.projectProgress;
-    }
+    const progress = calculateProgress(updatedProject);
+    updatedProject.borrowerProgress = progress.borrowerProgress;
+    updatedProject.projectProgress = progress.projectProgress;
+    updatedProject.completenessPercent = progress.totalProgress;
 
     const updatedProjects = [...projects];
     updatedProjects[projectIndex] = updatedProject;
     setProjects(updatedProjects);
-    
-    // Update active project if it's the one being modified
+
     if (activeProject?.id === id) {
       setActiveProject(updatedProject);
     }
@@ -496,59 +584,188 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
     return updatedProject;
   }, [projects, activeProject, calculateProgress]);
 
+  // Add a document requirement
+  const addDocumentRequirement = useCallback(async (requirement: Partial<ProjectDocumentRequirement>) => {
+    if (!requirement.projectId) {
+      if (!activeProject) throw new Error('No active project to add requirement to');
+      requirement.projectId = activeProject.id;
+    }
+    const now = new Date().toISOString();
+    const reqId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const newRequirement: ProjectDocumentRequirement = {
+      id: reqId,
+      projectId: requirement.projectId,
+      requiredDocType: requirement.requiredDocType || 'Other',
+      status: requirement.status || 'Required',
+      documentId: requirement.documentId || null,
+      notes: requirement.notes || '',
+      dueDate: requirement.dueDate || null,
+      lastUpdated: now,
+    };
+    setDocumentRequirements((prev) => [...prev, newRequirement]);
+    const allRequirements =
+      (await storageService.getItem<ProjectDocumentRequirement[]>('documentRequirements')) || [];
+    await storageService.setItem('documentRequirements', [...allRequirements, newRequirement]);
+    return newRequirement;
+  }, [activeProject, storageService]);
+
+  // Update a document requirement
+  const updateDocumentRequirement = useCallback(async (id: string, updates: Partial<ProjectDocumentRequirement>) => {
+    const reqIndex = documentRequirements.findIndex((req) => req.id === id);
+    if (reqIndex === -1) return null;
+    const now = new Date().toISOString();
+    const updatedRequirement: ProjectDocumentRequirement = {
+      ...documentRequirements[reqIndex],
+      ...updates,
+      lastUpdated: now,
+    };
+    const updatedRequirements = [...documentRequirements];
+    updatedRequirements[reqIndex] = updatedRequirement;
+    setDocumentRequirements(updatedRequirements);
+    const allRequirements =
+      (await storageService.getItem<ProjectDocumentRequirement[]>('documentRequirements')) || [];
+    const otherRequirements = allRequirements.filter((req) => req.id !== id);
+    await storageService.setItem('documentRequirements', [...otherRequirements, updatedRequirement]);
+    return updatedRequirement;
+  }, [documentRequirements, storageService]);
+
+  // Assign a principal to a project
+  const assignPrincipalToProject = useCallback(async (principalId: string, projectRole: Partial<ProjectPrincipal>) => {
+    if (!activeProject) throw new Error('No active project to assign principal to');
+    const now = new Date().toISOString();
+    const rolId = `projp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const newProjectPrincipal: ProjectPrincipal = {
+      id: rolId,
+      projectId: activeProject.id,
+      principalId: principalId,
+      roleInProject: projectRole.roleInProject || 'Key Principal',
+      guarantyDetails: projectRole.guarantyDetails || null,
+      isKeyPrincipal: projectRole.isKeyPrincipal || false,
+      isPrimaryContact: projectRole.isPrimaryContact || false,
+      createdAt: now,
+    };
+    setProjectPrincipals((prev) => [...prev, newProjectPrincipal]);
+    const allProjectPrincipals =
+      (await storageService.getItem<ProjectPrincipal[]>('projectPrincipals')) || [];
+    await storageService.setItem('projectPrincipals', [...allProjectPrincipals, newProjectPrincipal]);
+    return newProjectPrincipal;
+  }, [activeProject, storageService]);
+
+  // Update a project principal
+  const updateProjectPrincipal = useCallback(async (id: string, updates: Partial<ProjectPrincipal>) => {
+    const ppIndex = projectPrincipals.findIndex((pp) => pp.id === id);
+    if (ppIndex === -1) return null;
+    const updatedPP: ProjectPrincipal = {
+      ...projectPrincipals[ppIndex],
+      ...updates,
+    };
+    const updatedPPs = [...projectPrincipals];
+    updatedPPs[ppIndex] = updatedPP;
+    setProjectPrincipals(updatedPPs);
+    const allPPs = (await storageService.getItem<ProjectPrincipal[]>('projectPrincipals')) || [];
+    const otherPPs = allPPs.filter((pp) => pp.id !== id);
+    await storageService.setItem('projectPrincipals', [...otherPPs, updatedPP]);
+    return updatedPP;
+  }, [projectPrincipals, storageService]);
+
+  // Remove a project principal
+  const removeProjectPrincipal = useCallback(async (id: string) => {
+    try {
+      setProjectPrincipals((prev) => prev.filter((pp) => pp.id !== id));
+      const allPPs = (await storageService.getItem<ProjectPrincipal[]>('projectPrincipals')) || [];
+      const updatedPPs = allPPs.filter((pp) => pp.id !== id);
+      await storageService.setItem('projectPrincipals', updatedPPs);
+      return true;
+    } catch (error) {
+      console.error('Failed to remove project principal:', error);
+      return false;
+    }
+  }, [storageService]);
+
   // Delete a project
   const deleteProject = useCallback(async (id: string) => {
     try {
-      // Remove from our tracking set
       loadedProjectsRef.current.delete(id);
-      
       setProjects(prevProjects => prevProjects.filter(p => p.id !== id));
-      
-      // Clear active project if it's the one being deleted
       if (activeProject?.id === id) {
         setActiveProject(null);
       }
-      
+      await Promise.all([
+        storageService
+          .getItem<ProjectMessage[]>('projectMessages')
+          .then((messages) => {
+            if (messages) {
+              const updatedMessages = messages.filter(msg => msg.projectId !== id);
+              return storageService.setItem('projectMessages', updatedMessages);
+            }
+          }),
+        storageService
+          .getItem<ProjectPrincipal[]>('projectPrincipals')
+          .then((principals) => {
+            if (principals) {
+              const updatedPrincipals = principals.filter(pp => pp.projectId !== id);
+              return storageService.setItem('projectPrincipals', updatedPrincipals);
+            }
+          }),
+        storageService
+          .getItem<ProjectDocumentRequirement[]>('documentRequirements')
+          .then((reqs) => {
+            if (reqs) {
+              const updatedReqs = reqs.filter(req => req.projectId !== id);
+              return storageService.setItem('documentRequirements', updatedReqs);
+            }
+          }),
+      ]);
       return true;
     } catch (error) {
       console.error('Failed to delete project:', error);
       return false;
     }
-  }, [activeProject]);
+  }, [activeProject, storageService]);
 
-  // Get a project by ID
-  const getProject = useCallback((id: string) => {
-    return projects.find(p => p.id === id) || null;
-  }, [projects]);
-  
   // Set active project and reset changes flag
-  const setActiveProjectWithChanges = (project: Project | null) => {
+  const setActiveProjectWithChanges = useCallback((project: ProjectProfile | null) => {
     setActiveProject(project);
     setProjectChanges(false);
     if (project) {
-      const storableProject = makeStorableProject(project);
-      lastSavedRef.current = JSON.stringify(storableProject);
+      loadProjectData(project.id);
+      lastSavedRef.current = JSON.stringify(project);
     } else {
+      setProjectMessages([]);
+      setProjectPrincipals([]);
+      setDocumentRequirements([]);
       lastSavedRef.current = null;
     }
-  };
+  }, [loadProjectData]);
 
   return (
-    <ProjectContext.Provider value={{
-      projects,
-      isLoading,
-      activeProject,
-      createProject,
-      updateProject,
-      deleteProject,
-      getProject,
-      setActiveProject: setActiveProjectWithChanges,
-      calculateProgress,
-      getCompletionStats,
-      projectChanges,
-      setProjectChanges,
-      autoSaveProject,
-    }}>
+    <ProjectContext.Provider
+      value={{
+        projects,
+        isLoading,
+        activeProject,
+        projectMessages,
+        projectPrincipals,
+        documentRequirements,
+        createProject,
+        updateProject,
+        deleteProject,
+        getProject: (id: string) => projects.find(p => p.id === id) || null,
+        setActiveProject: setActiveProjectWithChanges,
+        addProjectMessage,
+        addDocumentRequirement,
+        updateDocumentRequirement,
+        assignPrincipalToProject,
+        updateProjectPrincipal,
+        removeProjectPrincipal,
+        updateProjectStatus,
+        calculateProgress,
+        getCompletionStats,
+        projectChanges,
+        setProjectChanges,
+        autoSaveProject,
+      }}
+    >
       {children}
     </ProjectContext.Provider>
   );

@@ -9,7 +9,7 @@ import { ProtectedRoute } from '../../../../components/auth/ProtectedRoute';
 import { useProjects } from '../../../../hooks/useProjects';
 import { useUI } from '../../../../hooks/useUI';
 import { GlobalToast } from '../../../../components/ui/GlobalToast';
-import { Project } from '../../../../contexts/ProjectContext';
+import { ProjectProfile as Project } from '../../../../types/enhanced-types';
 
 export default function EditProjectPage() {
   const router = useRouter();

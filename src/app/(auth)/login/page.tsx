@@ -9,23 +9,30 @@ import AuthLayout from '../../../components/layout/AuthLayout';
 import { Form, FormGroup, FormLabel, FormHelperText } from '../../../components/ui/Form';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
-import { Sparkles, Mail } from 'lucide-react';
+import { Sparkles, Mail, Lock } from 'lucide-react';
 import { GlobalToast } from '../../../components/ui/GlobalToast';
 import { LoadingOverlay } from '../../../components/ui/LoadingOverlay';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { showNotification, setLoading } = useUI();
   const router = useRouter();
 
   // Check for existing user session
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      // Redirect based on user role
+      if (user?.role === 'advisor') {
+        router.push('/advisor/dashboard');
+      } else if (user?.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, user]);
 
   // Check if user is coming from lender selection
   useEffect(() => {
@@ -53,21 +60,32 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      await login(email);
+      
+      // Detect if this should be an advisor login based on email
+      // In a real app, this would be determined by the backend
+      const isAdvisor = email.includes('advisor') || email.endsWith('@acaracap.com');
+      const role = isAdvisor ? 'advisor' : 'borrower';
+      
+      await login(email, role);
       
       showNotification({
         type: 'success',
         message: 'Successfully signed in!',
       });
       
-      // Redirect to dashboard or project creation based on existing projects
-      const projectsStr = localStorage.getItem('acara_userProjects');
-      const hasExistingProjects = projectsStr ? JSON.parse(projectsStr).length > 0 : false;
-      
-      if (hasExistingProjects) {
-        router.push('/dashboard');
+      // Redirect based on role
+      if (role === 'advisor') {
+        router.push('/advisor/dashboard');
       } else {
-        router.push('/project/create');
+        // For borrowers, redirect to dashboard or project creation based on existing projects
+        const projectsStr = localStorage.getItem('acara_projects');
+        const hasExistingProjects = projectsStr ? JSON.parse(projectsStr).length > 0 : false;
+        
+        if (hasExistingProjects) {
+          router.push('/dashboard');
+        } else {
+          router.push('/project/create');
+        }
       }
     } catch (err) {
       showNotification({
@@ -91,14 +109,14 @@ export default function LoginPage() {
               <Sparkles className="h-6 w-6" />
               <h2 className="text-2xl font-bold">Welcome to ACARA-Cap</h2>
             </div>
-            <p className="mt-2 opacity-90">Connect with the perfect lender for your project</p>
+            <p className="mt-2 opacity-90">Sign in to access the lender matching platform</p>
           </div>
           
           <div className="p-6">
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-gray-800">Sign In</h3>
               <p className="text-gray-600 text-sm mt-1">
-                Enter your email to access your lender matches and project dashboard
+                Enter your email to access the platform
               </p>
             </div>
             
@@ -116,6 +134,16 @@ export default function LoginPage() {
                   required
                 />
               </FormGroup>
+              
+              <div className="text-sm text-gray-500 mt-2">
+                <p>
+                  <strong>Demo account options:</strong>
+                </p>
+                <ul className="mt-1 space-y-1">
+                  <li>Borrower: <span className="text-blue-600">borrower@example.com</span></li>
+                  <li>Advisor: <span className="text-blue-600">advisor@acaracap.com</span></li>
+                </ul>
+              </div>
               
               <Button
                 type="submit"

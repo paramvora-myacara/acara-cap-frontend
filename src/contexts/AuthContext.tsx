@@ -4,23 +4,16 @@
 
 import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { StorageService } from '../services/storage/StorageService';
+import { EnhancedUser } from '../types/enhanced-types';
 
-// Define user interface
-export interface User {
-  email: string;
-  name?: string;
-  profileId?: string;
-  lastLogin: Date;
-}
-
-// Define context interface
+// Define context interface with enhanced user type
 interface AuthContextProps {
-  user: User | null;
+  user: EnhancedUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string) => Promise<void>;
+  login: (email: string, role?: 'borrower' | 'advisor' | 'admin') => Promise<void>;
   logout: () => void;
-  updateUser: (userData: Partial<User>) => void;
+  updateUser: (userData: Partial<EnhancedUser>) => void;
 }
 
 // Create context with default values
@@ -42,15 +35,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   children, 
   storageService 
 }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<EnhancedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load user from storage on mount
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const userData = await storageService.getItem<User>('user');
+        const userData = await storageService.getItem<EnhancedUser>('user');
         if (userData) {
+          // Ensure role exists for backward compatibility
+          if (!userData.role) {
+            userData.role = 'borrower';
+          }
           setUser(userData);
         }
       } catch (error) {
@@ -63,15 +60,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     loadUser();
   }, [storageService]);
 
-  // Login function
-  const login = useCallback(async (email: string) => {
+  // Login function with role support
+  const login = useCallback(async (email: string, role: 'borrower' | 'advisor' | 'admin' = 'borrower') => {
     try {
       setIsLoading(true);
+      // Detect if this is an advisor email (simple rule for mock implementation)
+      const detectedRole = email.includes('advisor') ? 'advisor' : 
+                           email.includes('admin') ? 'admin' : role;
+      
       // In a real app, this would be an API call
-      const newUser: User = {
+      const newUser: EnhancedUser = {
         email,
         lastLogin: new Date(),
+        role: detectedRole,
       };
+      
+      if (detectedRole === 'advisor') {
+        // Add sample advisor name based on email
+        const nameMatch = email.match(/([^@]+)@/);
+        if (nameMatch) {
+          const name = nameMatch[1]
+            .split('.')
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+          newUser.name = name;
+        }
+      }
       
       await storageService.setItem('user', newUser);
       setUser(newUser);
@@ -97,7 +111,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   }, [storageService]);
 
   // Update user data
-  const updateUser = useCallback(async (userData: Partial<User>) => {
+  const updateUser = useCallback(async (userData: Partial<EnhancedUser>) => {
     if (!user) return;
     
     try {
