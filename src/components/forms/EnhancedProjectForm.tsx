@@ -14,6 +14,8 @@ import { DocumentUpload } from '../ui/DocumentUpload';
 import { useProjects } from '../../hooks/useProjects';
 import { useBorrowerProfile } from '../../hooks/useBorrowerProfile';
 import { useUI } from '../../hooks/useUI';
+import { useAuth } from '../../hooks/useAuth';
+
 import { 
   FileText, 
   MapPin, 
@@ -178,39 +180,51 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
   
   // Handle form submission
   const handleFormSubmit = async () => {
+    const { borrowerProfile, createBorrowerProfile } = useBorrowerProfile();
+    const { user } = useAuth();
     try {
       if (!borrowerProfile) {
+        // Create a minimal borrower profile if it doesn't exist
         showNotification({
-          type: 'error',
-          message: 'Please complete your borrower profile first',
+          type: 'info',
+          message: 'Creating a basic borrower profile to associate with this project',
         });
-        router.push('/profile');
-        return;
-      }
-      
-      if (existingProject) {
-        // Update existing project
-        const updatedProject = await updateProject(existingProject.id, formData, true);
         
-        if (updatedProject) {
-          showNotification({
-            type: 'success',
-            message: 'Project updated successfully',
+        // Create a new minimal profile
+        const newProfile = await createBorrowerProfile({
+          fullLegalName: user?.name || user?.email?.split('@')[0] || 'Borrower',
+          contactEmail: user?.email || '',
+          primaryEntityName: formData.projectName || 'Project Entity',
+          primaryEntityStructure: 'LLC',
+        });
+        
+        // Now create the project with this new profile
+        const newProject = await createProject({
+          ...formData,
+          borrowerProfileId: newProfile.id,
+          projectStatus: 'Info Gathering',
+        });
+        
+        // Add document requirements for the new project
+        for (const req of documentRequirements) {
+          await addDocumentRequirement({
+            ...req,
+            projectId: newProject.id,
           });
-          
-          setFormSaved(true);
-          setTimeout(() => setFormSaved(false), 3000);
-          
-          if (onComplete) {
-            onComplete(updatedProject);
-          }
+        }
+        
+        setFormSaved(true);
+        setTimeout(() => setFormSaved(false), 3000);
+        
+        if (onComplete) {
+          onComplete(newProject);
         }
       } else {
-        // Create new project
+        // Existing implementation - create project with existing profile
         const newProject = await createProject({
           ...formData,
           borrowerProfileId: borrowerProfile.id,
-          projectStatus: 'Info Gathering', // Start as Info Gathering when created
+          projectStatus: 'Info Gathering',
         });
         
         showNotification({

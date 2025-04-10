@@ -10,6 +10,8 @@ import { GlobalToast } from '../../../components/ui/GlobalToast';
 import { LoadingOverlay } from '../../../components/ui/LoadingOverlay';
 import { Card, CardContent, CardHeader, CardFooter } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/Button';
+import { LogOut, ChevronLeft } from 'lucide-react';
+
 import { 
   Users, 
   FileText, 
@@ -28,7 +30,7 @@ import { Advisor, ProjectProfile, ProjectMessage, ProjectStatus } from '../../..
 
 export default function AdvisorDashboardPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { showNotification, setLoading } = useUI();
   
   const [advisor, setAdvisor] = useState<Advisor | null>(null);
@@ -235,9 +237,40 @@ export default function AdvisorDashboardPage() {
         
         {/* Main content */}
         <div className="flex-1 overflow-auto">
-          <header className="bg-white shadow-sm py-4 px-6">
-            <h1 className="text-2xl font-semibold text-gray-800">Dashboard</h1>
-          </header>
+            <header className="bg-white shadow-sm py-4 px-6 flex justify-between items-center">
+                <h1 className="text-2xl font-semibold text-gray-800">Dashboard</h1>
+                <div className="flex space-x-3">
+                    <Button 
+                    variant="outline"
+                    leftIcon={<ChevronLeft size={16} />}
+                    onClick={() => router.push('/')}
+                    >
+                    Back to Home
+                    </Button>
+                    <Button 
+                    variant="outline"
+                    leftIcon={<LogOut size={16} />}
+                    onClick={async () => {
+                        try {
+                        await logout();
+                        showNotification({
+                            type: 'success',
+                            message: 'You have been successfully signed out',
+                        });
+                        router.push('/');
+                        } catch (error) {
+                        console.error('Failed to sign out:', error);
+                        showNotification({
+                            type: 'error',
+                            message: 'Failed to sign out. Please try again.',
+                        });
+                        }
+                    }}
+                    >
+                    Sign Out
+                    </Button>
+                </div>
+            </header>
           
           <main className="p-6">
             {/* Dashboard greeting */}

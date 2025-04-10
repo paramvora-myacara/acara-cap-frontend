@@ -19,29 +19,28 @@ export default function CreateProjectPage() {
   const { borrowerProfile } = useBorrowerProfile();
   const hasShownWelcome = useRef(false);
   
-  // Check if borrower profile exists
+  // Show welcome message only once - but don't redirect if no profile
   useEffect(() => {
-    if (!borrowerProfile) {
-      showNotification({
-        type: 'info',
-        message: 'Please complete your borrower profile before creating a project',
-      });
-      router.push('/profile');
-    }
-  }, [borrowerProfile, router, showNotification]);
-  
-  // Show welcome message only once
-  useEffect(() => {
-    if (!hasShownWelcome.current && borrowerProfile) {
+    if (!hasShownWelcome.current) {
       hasShownWelcome.current = true;
       
-      // Timeout to prevent showing too many notifications at once
-      setTimeout(() => {
-        showNotification({
-          type: 'info',
-          message: 'Your project will be saved automatically as you work.',
-        });
-      }, 500);
+      if (!borrowerProfile) {
+        // Just show a notification instead of redirecting
+        setTimeout(() => {
+          showNotification({
+            type: 'info',
+            message: 'Please complete your borrower profile when you can to improve lender matches',
+          });
+        }, 500);
+      } else {
+        // Show auto-save notification
+        setTimeout(() => {
+          showNotification({
+            type: 'info',
+            message: 'Your project will be saved automatically as you work.',
+          });
+        }, 500);
+      }
     }
   }, [showNotification, borrowerProfile]);
   
@@ -75,17 +74,13 @@ export default function CreateProjectPage() {
       <DashboardLayout title="New Project">
         <GlobalToast />
         
-        {borrowerProfile && (
-          <>
-            <div className="mb-6">
-              <h2 className="text-lg text-gray-600">
-                Your project is created automatically and will auto-save as you work.
-              </h2>
-            </div>
-            
-            <EnhancedProjectForm onComplete={handleFormSaved} />
-          </>
-        )}
+        <div className="mb-6">
+          <h2 className="text-lg text-gray-600">
+            Your project is created automatically and will auto-save as you work.
+          </h2>
+        </div>
+        
+        <EnhancedProjectForm onComplete={handleFormSaved} />
       </DashboardLayout>
     </RoleBasedRoute>
   );
