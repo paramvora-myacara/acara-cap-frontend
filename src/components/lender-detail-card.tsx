@@ -23,9 +23,8 @@ export default function LenderDetailCard({
   formData,
   onClose,
   color,
-  onContactLender,
 }: LenderDetailCardProps) {
-  const router = useRouter();
+  // Keep existing functionality
   const matchScore = lender.match_score || 0;
   const matchPercentage = Math.round(matchScore * 100);
 
@@ -61,21 +60,6 @@ export default function LenderDetailCard({
 
     const anyMatch = formCriteria.some((item) => lenderCriteria.includes(item));
     return anyMatch;
-  };
-
-  const handleContactLender = () => {
-    // Save form data to localStorage for persistence
-    if (formData) {
-      localStorage.setItem('lastFormData', JSON.stringify(formData));
-    }
-    
-    // If onContactLender is provided, call it
-    if (onContactLender) {
-      onContactLender();
-    }
-    
-    // Navigate to login page
-    router.push('/login');
   };
 
   return (
@@ -199,14 +183,7 @@ export default function LenderDetailCard({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="pt-0 pb-4 px-4">
-        <Button 
-          className="w-full rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium h-10 flex items-center justify-center"
-          onClick={handleContactLender}
-        >
-          Contact Lender <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
-      </CardFooter>
+      {/* CardFooter with contact button removed */}
     </Card>
   );
 }

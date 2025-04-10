@@ -1,10 +1,11 @@
-// components/graph/LenderGraph.tsx
+// src/components/graph/LenderGraph.tsx
 'use client';
 
 import type React from "react";
 import { useRef, useEffect, useState } from "react";
 import type { LenderProfile } from "../../types/lender";
 import LenderDetailCard from "../lender-detail-card";
+import { X, Check } from 'lucide-react';
 
 const filterKeys = ['asset_types', 'deal_types', 'capital_types', 'debt_ranges', 'locations'];
 
@@ -84,18 +85,19 @@ function getLenderColor(lender: LenderProfile, formData: any, isActive: boolean,
   return "hsl(220, 10%, 70%)"; // Default: gray
 }
 
-// In components/graph/LenderGraph.tsx
 interface LenderGraphProps {
   lenders: LenderProfile[];
   formData?: any;
   filtersApplied?: boolean;
+  allFiltersSelected?: boolean; // New prop to determine if detail card should be shown
   onLenderClick?: (lender: LenderProfile | null) => void;
 }
 
 export default function LenderGraph({
   lenders,
   formData,
-  filtersApplied,
+  filtersApplied = true, // Default to true to always show graph visualization
+  allFiltersSelected = false, // Default to false for all filters selected check
   onLenderClick,
 }: LenderGraphProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -105,6 +107,7 @@ export default function LenderGraph({
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [centerPoint, setCenterPoint] = useState({ x: 0, y: 0 });
   const [showIncompleteFiltersCard, setShowIncompleteFiltersCard] = useState(false);
+  const [isMouseDown, setIsMouseDown] = useState(false); // Initialize isMouseDown state
   const animationRef = useRef<number>(0);
   const lenderPositionsRef = useRef<Map<number, {
     x: number;
@@ -155,7 +158,7 @@ export default function LenderGraph({
     lenders.forEach((lender, index) => {
       const existingPos = lenderPositionsRef.current.get(lender.lender_id);
       const score = computeLenderScore(lender, formData);
-      const isActive = filtersApplied === true && score > 0;
+      const isActive = filtersApplied && score > 0;
       
       // Base radius now scales with score
       const baseRadius = isActive ? 8 + score * 8 : 8;
@@ -421,6 +424,7 @@ export default function LenderGraph({
     return () => { cancelAnimationFrame(animationRef.current); };
   }, [lenders, canvasSize, selectedLender, hoveredLenderId, centerPoint, filtersApplied, formData]);
 
+  // Handle mouse events
   function handleMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -438,67 +442,119 @@ export default function LenderGraph({
         break;
       }
     }
+    
     if (foundLender) {
       setHoveredLenderId(foundLender.lender_id);
+      
+      const containerRect = containerRef.current?.getBoundingClientRect();
+      if (containerRect) {
+        const relativeX = e.clientX - containerRect.left;
+        const relativeY = e.clientY - containerRect.top;
+        const cardWidth = 300, cardHeight = 300;
+        const adjustedX = Math.min(relativeX, containerRect.width - cardWidth);
+        const adjustedY = Math.min(relativeY, containerRect.height - cardHeight);
+        cardPositionRef.current = { x: adjustedX, y: adjustedY };
+        
+        if (allFiltersSelected) {
+          // Show lender detail card when all filters selected
+          setSelectedLender(foundLender);
+          if (onLenderClick) {
+            onLenderClick(foundLender);
+          }
+        } else {
+          // Show tooltip about needing to select all filters
+          setShowIncompleteFiltersCard(true);
+          setSelectedLender(null);
+        }
+      }
     } else {
       setHoveredLenderId(null);
+      setShowIncompleteFiltersCard(false);
+      if (!isMouseDown) {
+        setSelectedLender(null);
+      }
       canvas.style.cursor = "default";
     }
   }
 
   function handleMouseLeave() {
     setHoveredLenderId(null);
+    setShowIncompleteFiltersCard(false);
+    if (!isMouseDown) {
+      setSelectedLender(null);
+    }
     if (canvasRef.current) canvasRef.current.style.cursor = "default";
+  }
+
+  // Add mouse down/up handlers for isMouseDown state
+  function handleMouseDown() {
+    setIsMouseDown(true);
+  }
+
+  function handleMouseUp() {
+    setIsMouseDown(false);
+  }
+
+  function handleLenderClick(e: React.MouseEvent) {
+    // This is a fallback click handler - most functionality is now in handleMouseMove
+    // for showing details on hover
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Find clicked lender if any
+    let clickedLender: LenderProfile | null = null;
+    for (const lender of lenders) {
+      const pos = lenderPositionsRef.current.get(lender.lender_id);
+      if (!pos) continue;
+      const distance = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
+      if (distance <= pos.radius) {
+        clickedLender = lender;
+        break;
+      }
+    }
+    
+    // Set position for any potential tooltips or cards
+    if (containerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const relativeX = e.clientX - containerRect.left;
+      const relativeY = e.clientY - containerRect.top;
+      cardPositionRef.current = { x: relativeX, y: relativeY };
+    }
   }
 
   const activeLenderCount = lenders.filter(
     (lender) => filtersApplied && computeLenderScore(lender, formData) > 0
   ).length;
 
-  function handleLenderClick(e: React.MouseEvent) {
-    if (!canvasRef.current || !containerRef.current) return;
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const relativeX = e.clientX - containerRect.left;
-    const relativeY = e.clientY - containerRect.top;
-    const cardWidth = 300, cardHeight = 300;
-    const adjustedX = Math.min(relativeX, containerRect.width - cardWidth);
-    const adjustedY = Math.min(relativeY, containerRect.height - cardHeight);
-    cardPositionRef.current = { x: adjustedX, y: adjustedY };
-
-    const selectedCount = computeSelectedFilters(formData);
-    if (selectedCount < filterKeys.length) {
-      setShowIncompleteFiltersCard(true);
-      setSelectedLender(null);
-      return;
-    }
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    const canvasX = e.clientX - rect.left;
-    const canvasY = e.clientY - rect.top;
-    let clickedLender: LenderProfile | null = null;
-    for (const lender of lenders) {
-      const pos = lenderPositionsRef.current.get(lender.lender_id);
-      if (!pos) continue;
-      const distance = Math.sqrt((canvasX - pos.x) ** 2 + (canvasY - pos.y) ** 2);
-      if (distance <= pos.radius) {
-        clickedLender = lender;
-        break;
-      }
-    }
-    if (clickedLender && filtersApplied && activeLenderCount > 0) {
-      const pos = lenderPositionsRef.current.get(clickedLender.lender_id);
-      if (pos && pos.isActive) {
-        setSelectedLender(clickedLender === selectedLender ? null : clickedLender);
-        if (clickedLender !== selectedLender && onLenderClick) {
-          onLenderClick(clickedLender);
-        }
-      } else {
-        setSelectedLender(null);
-      }
-    } else {
-      setSelectedLender(null);
-    }
-  }
+  // Tooltip content
+  const incompleteFiltersTooltip = (
+    <div
+      className="absolute z-10"
+      style={{
+        top: cardPositionRef.current.y,
+        left: cardPositionRef.current.x,
+        maxWidth: '250px',
+      }}
+    >
+      <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="font-bold text-md text-gray-700">Select All Filters</h3>
+          <button
+            onClick={() => setShowIncompleteFiltersCard(false)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ×
+          </button>
+        </div>
+        <div className="text-sm text-gray-600">
+          Complete all filter categories to view detailed lender information and contact options.
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="h-full flex" ref={containerRef}>
@@ -511,9 +567,12 @@ export default function LenderGraph({
           onClick={handleLenderClick}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
         />
 
-        {selectedLender && filtersApplied && activeLenderCount > 0 && (
+        {/* Show lender detail card on hover when all filters selected */}
+        {selectedLender && allFiltersSelected && (
           <div
             className="absolute z-10 transition-all duration-300 ease-in-out"
             style={{
@@ -533,29 +592,8 @@ export default function LenderGraph({
           </div>
         )}
 
-        {showIncompleteFiltersCard && (
-          <div
-            className="absolute z-10"
-            style={{
-              top: cardPositionRef.current.y,
-              left: cardPositionRef.current.x,
-              maxWidth: '300px',
-            }}
-          >
-            <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-bold text-lg">Incomplete Filters</h3>
-                <button
-                  onClick={() => setShowIncompleteFiltersCard(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ×
-                </button>
-              </div>
-              <div>Please fill out all filters to see detailed lender information.</div>
-            </div>
-          </div>
-        )}
+        {/* Show tooltip when not all filters are selected */}
+        {showIncompleteFiltersCard && !allFiltersSelected && incompleteFiltersTooltip}
       </div>
     </div>
   );

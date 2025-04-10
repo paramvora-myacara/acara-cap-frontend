@@ -3,6 +3,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Building, CheckCircle, DollarSign } from 'lucide-react';
+import { useInView } from 'framer-motion';
 
 interface StatProps {
   value: number;
@@ -10,41 +11,21 @@ interface StatProps {
   icon: React.ReactNode;
   color: string;
   delay?: number;
+  inView: boolean;
 }
 
-const Stat: React.FC<StatProps> = ({ value, label, icon, color, delay = 0 }) => {
+const Stat: React.FC<StatProps> = ({ value, label, icon, color, delay = 0, inView }) => {
   const [count, setCount] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  // Intersection Observer for animation on scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
+  const [hasAnimated, setHasAnimated] = useState(false);
 
   // Number counter animation
   useEffect(() => {
-    let start = 0;
-    const duration = 2000; // 2 seconds
-    const step = Math.ceil(value / (duration / 16)); // ~60fps
+    if (inView && !hasAnimated) {
+      setHasAnimated(true);
+      let start = 0;
+      const duration = 2000; // 2 seconds
+      const step = Math.ceil(value / (duration / 16)); // ~60fps
 
-    if (isVisible) {
       const timer = setTimeout(() => {
         let animationFrame: number;
         
@@ -64,15 +45,14 @@ const Stat: React.FC<StatProps> = ({ value, label, icon, color, delay = 0 }) => 
       
       return () => clearTimeout(timer);
     }
-  }, [isVisible, value, delay]);
+  }, [inView, value, delay, hasAnimated]);
 
   return (
     <div 
-      ref={ref}
       className={`bg-white shadow-lg rounded-lg p-6 text-center ${color} transform transition-all duration-500`}
       style={{ 
-        opacity: isVisible ? 1 : 0, 
-        transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
+        opacity: inView ? 1 : 0, 
+        transform: inView ? 'translateY(0)' : 'translateY(20px)',
         transitionDelay: `${delay}ms`
       }}
     >
@@ -86,6 +66,10 @@ const Stat: React.FC<StatProps> = ({ value, label, icon, color, delay = 0 }) => 
 };
 
 export const HeroStats: React.FC = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  // Reduce threshold to make it appear earlier when scrolling
+  const isInView = useInView(ref, { once: true, amount: 0.1, margin: "0px 0px -100px 0px" });
+  
   const stats = [
     { 
       value: 500, 
@@ -114,9 +98,15 @@ export const HeroStats: React.FC = () => {
   ];
 
   return (
-    <section className="py-16 bg-gray-50" id="stats">
+    <section className="py-16 bg-gray-50" id="stats" ref={ref}>
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">Our Impact</h2>
+        <h2 className="text-4xl font-bold text-center mb-12 text-gray-800 transition-all duration-500 italic"
+           style={{ 
+             opacity: isInView ? 1 : 0, 
+             transform: isInView ? 'translateY(0)' : 'translateY(20px)'
+           }}>
+          Our Impact
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {stats.map((stat, index) => (
             <Stat
@@ -126,6 +116,7 @@ export const HeroStats: React.FC = () => {
               icon={stat.icon}
               color={stat.color}
               delay={stat.delay}
+              inView={isInView}
             />
           ))}
         </div>
