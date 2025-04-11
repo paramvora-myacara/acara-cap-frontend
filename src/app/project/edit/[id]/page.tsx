@@ -4,7 +4,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import DashboardLayout from '../../../../components/layout/DashboardLayout';
-import { ProjectForm } from '../../../../components/forms/ProjectForm';
+import { EnhancedProjectForm } from '../../../../components/forms/EnhancedProjectForm';
 import { ProtectedRoute } from '../../../../components/auth/ProtectedRoute';
 import { useProjects } from '../../../../hooks/useProjects';
 import { useUI } from '../../../../hooks/useUI';
@@ -71,9 +71,8 @@ export default function EditProjectPage() {
           </h2>
         </div>
         {project && (
-          <ProjectForm 
-            existingProject={project} 
-            onFormSaved={handleFormSaved} 
+          <EnhancedProjectForm 
+            existingProject={project}  
           />
         )}
       </DashboardLayout>

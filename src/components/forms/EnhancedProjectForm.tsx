@@ -15,6 +15,7 @@ import { useProjects } from '../../hooks/useProjects';
 import { useBorrowerProfile } from '../../hooks/useBorrowerProfile';
 import { useUI } from '../../hooks/useUI';
 import { useAuth } from '../../hooks/useAuth';
+import { ContextHelp } from '../ui/ContextHelp';
 
 import { 
   FileText, 

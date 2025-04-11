@@ -12,6 +12,8 @@ import { useBorrowerProfile } from '../../../hooks/useBorrowerProfile';
 import { useUI } from '../../../hooks/useUI';
 import { GlobalToast } from '../../../components/ui/GlobalToast';
 import { LoadingOverlay } from '../../../components/ui/LoadingOverlay';
+import { ProjectStatusPathway } from '../../../components/project/ProjectStatusPathway';
+
 import { 
   ChevronLeft, 
   MessageSquare, 
@@ -298,7 +300,7 @@ export default function ProjectDetailPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Document Requirements Card */}
           <Card className="shadow-md lg:col-span-1">
             <CardHeader className="pb-3 border-b bg-gray-50">

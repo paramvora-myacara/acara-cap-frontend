@@ -72,6 +72,52 @@ interface ProjectContextProps {
   autoSaveProject: () => Promise<void>;
 }
 
+// Create default context values
+const defaultProject: ProjectProfile = {
+  id: '',
+  borrowerProfileId: '',
+  assignedAdvisorUserId: null,
+  projectName: '',
+  name: '', // legacy field
+  propertyAddressStreet: '',
+  propertyAddressCity: '',
+  propertyAddressState: '',
+  propertyAddressCounty: '',
+  propertyAddressZip: '',
+  assetType: '',
+  projectDescription: '',
+  projectPhase: 'Acquisition',
+  loanAmountRequested: 0,
+  loanType: '',
+  targetLtvPercent: 0,
+  targetLtcPercent: 0,
+  amortizationYears: 0,
+  interestOnlyPeriodMonths: 0,
+  interestRateType: 'Not Specified',
+  targetCloseDate: '',
+  useOfProceeds: '',
+  recoursePreference: 'Flexible',
+  purchasePrice: null,
+  totalProjectCost: null,
+  capexBudget: null,
+  propertyNoiT12: null,
+  stabilizedNoiProjected: null,
+  exitStrategy: 'Undecided',
+  businessPlanSummary: '',
+  marketOverviewSummary: '',
+  equityCommittedPercent: 0,
+  projectStatus: 'Draft',
+  completenessPercent: 0,
+  internalAdvisorNotes: '',
+  borrowerProgress: 0,
+  projectProgress: 0,
+  createdAt: '',
+  updatedAt: '',
+  // Add necessary properties to match ProjectProfile interface
+  projectSections: {},
+  borrowerSections: {}
+};
+
 export const ProjectContext = createContext<ProjectContextProps>({
   projects: [],
   isLoading: true,
@@ -79,49 +125,7 @@ export const ProjectContext = createContext<ProjectContextProps>({
   projectMessages: [],
   projectPrincipals: [],
   documentRequirements: [],
-  createProject: async (projectData: Partial<ProjectProfile>) => {
-    return ({
-      id: '',
-      borrowerProfileId: '',
-      assignedAdvisorUserId: null,
-      projectName: '',
-      name: '', // legacy field
-      propertyAddressStreet: '',
-      propertyAddressCity: '',
-      propertyAddressState: '',
-      propertyAddressCounty: '',
-      propertyAddressZip: '',
-      assetType: '',
-      projectDescription: '',
-      projectPhase: 'Acquisition',
-      loanAmountRequested: 0,
-      loanType: '',
-      targetLtvPercent: 0,
-      targetLtcPercent: 0,
-      amortizationYears: 0,
-      interestOnlyPeriodMonths: 0,
-      interestRateType: 'Not Specified',
-      targetCloseDate: '',
-      useOfProceeds: '',
-      recoursePreference: 'Flexible',
-      purchasePrice: null,
-      totalProjectCost: null,
-      capexBudget: null,
-      propertyNoiT12: null,
-      stabilizedNoiProjected: null,
-      exitStrategy: 'Undecided',
-      businessPlanSummary: '',
-      marketOverviewSummary: '',
-      equityCommittedPercent: 0,
-      projectStatus: 'Draft',
-      completenessPercent: 0,
-      internalAdvisorNotes: '',
-      borrowerProgress: 0,
-      projectProgress: 0,
-      createdAt: '',
-      updatedAt: '',
-    });
-  },
+  createProject: async () => defaultProject,
   updateProject: async () => null,
   deleteProject: async () => false,
   getProject: () => null,
@@ -404,16 +408,45 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
     };
   }, [projects]);
 
-  // --- Helper Functions (declared in order) ---
+  // These functions need to be defined before they're used by other functions (breaking the circular dependency)
+  
+  // Define updateProjectStatus function
+  const updateProjectStatus = useCallback(async (id: string, status: ProjectStatus) => {
+    const projectIndex = projects.findIndex((p) => p.id === id);
+    if (projectIndex === -1) return null;
+    
+    const now = new Date().toISOString();
+    const updatedProject: ProjectProfile = {
+      ...projects[projectIndex],
+      projectStatus: status,
+      updatedAt: now,
+    };
+    
+    const updatedProjects = [...projects];
+    updatedProjects[projectIndex] = updatedProject;
+    setProjects(updatedProjects);
+    
+    if (activeProject?.id === id) {
+      setActiveProject(updatedProject);
+      
+      // We can't call addProjectMessage here directly because it would create
+      // a circular dependency. Instead, we'll post status messages separately
+      // when this function is called.
+    }
+    
+    return updatedProject;
+  }, [projects, activeProject]);
 
-  // addProjectMessage: Declared before updateProjectStatus uses it.
+  // Define addProjectMessage function
   const addProjectMessage = useCallback(async (message: string, isAdvisor = false) => {
     if (!activeProject) throw new Error('No active project to add message to');
+    
     const now = new Date().toISOString();
     const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const senderId = isAdvisor
       ? activeProject.assignedAdvisorUserId || 'advisor@acaracap.com'
       : user?.email || 'borrower@example.com';
+    
     const newMessage: ProjectMessage = {
       id: messageId,
       projectId: activeProject.id,
@@ -423,133 +456,164 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
       isRead: false,
       createdAt: now,
     };
+    
     setProjectMessages((prev) => [...prev, newMessage]);
+    
     const allMessages = (await storageService.getItem<ProjectMessage[]>('projectMessages')) || [];
     await storageService.setItem('projectMessages', [...allMessages, newMessage]);
+    
+    // Check if project is in draft status and send to info gathering if needed
     if (activeProject.projectStatus === 'Draft') {
+      // Call updateProjectStatus directly without waiting for the status message
       await updateProjectStatus(activeProject.id, 'Info Gathering');
-    }
-    return newMessage;
-  }, [activeProject, user, storageService, /* updateProjectStatus will be added as dependency below */]);
-
-  // updateProjectStatus: Uses addProjectMessage
-  const updateProjectStatus = useCallback(async (id: string, status: ProjectStatus) => {
-    const projectIndex = projects.findIndex((p) => p.id === id);
-    if (projectIndex === -1) return null;
-    const now = new Date().toISOString();
-    const updatedProject: ProjectProfile = {
-      ...projects[projectIndex],
-      projectStatus: status,
-      updatedAt: now,
-    };
-    if (activeProject?.id === id) {
-      const statusMessages: Record<ProjectStatus, string> = {
-        Draft: 'Your project has been saved as a draft.',
-        'Info Gathering': "We're now gathering information about your project.",
-        'Advisor Review': 'Your project is now under review by your capital advisor.',
-        'Matches Curated': "We've curated lender matches for your project.",
-        'Introductions Sent': 'Introductions have been sent to matching lenders.',
-        'Term Sheet Received': "Congratulations! You've received a term sheet.",
-        Closed: 'Congratulations! Your project has successfully closed.',
-        Withdrawn: 'Your project has been withdrawn.',
-        Stalled: 'Your project is currently stalled. Please contact your advisor for assistance.',
-      };
-      if (statusMessages[status]) {
-        await addProjectMessage(statusMessages[status], true);
-      }
-    }
-    const updatedProjects = [...projects];
-    updatedProjects[projectIndex] = updatedProject;
-    setProjects(updatedProjects);
-    if (activeProject?.id === id) {
-      setActiveProject(updatedProject);
-    }
-    return updatedProject;
-  }, [projects, activeProject, addProjectMessage]);
-
-  const createProject = useCallback(
-    async (projectData: Partial<ProjectProfile>) => {
-      if (!user)
-        throw new Error("User must be logged in to create a project");
-      if (!borrowerProfile)
-        throw new Error("Borrower profile must exist to create a project");
-  
-      const now = new Date().toISOString();
-      const projName = projectData.projectName || "New Project";
-      let uniqueId = generateUniqueId();
-      while (loadedProjectsRef.current.has(uniqueId)) {
-        uniqueId = generateUniqueId();
-      }
-      // Pick a random advisor for demo purposes.
-      const advisors = [
-        { id: "advisor1@acaracap.com", name: "Sarah Adams" },
-        { id: "advisor2@acaracap.com", name: "Michael Chen" },
-        { id: "advisor3@acaracap.com", name: "Jessica Williams" },
-      ];
-      const randomAdvisor =
-        advisors[Math.floor(Math.random() * advisors.length)];
-      loadedProjectsRef.current.add(uniqueId);
-  
-      const createdProject: ProjectProfile = {
-        id: uniqueId,
-        borrowerProfileId: borrowerProfile.id,
-        assignedAdvisorUserId: randomAdvisor.id,
-        projectName: projName,
-        name: projName, // legacy field
-        propertyAddressStreet: projectData.propertyAddressStreet || "",
-        propertyAddressCity: projectData.propertyAddressCity || "",
-        propertyAddressState: projectData.propertyAddressState || "",
-        propertyAddressCounty: projectData.propertyAddressCounty || "",
-        propertyAddressZip: projectData.propertyAddressZip || "",
-        assetType: projectData.assetType || "",
-        projectDescription: projectData.projectDescription || "",
-        projectPhase: projectData.projectPhase || "Acquisition",
-        loanAmountRequested: projectData.loanAmountRequested || 0,
-        loanType: projectData.loanType || "",
-        targetLtvPercent: projectData.targetLtvPercent || 70,
-        targetLtcPercent: projectData.targetLtcPercent || 80,
-        amortizationYears: projectData.amortizationYears || 30,
-        interestOnlyPeriodMonths: projectData.interestOnlyPeriodMonths || 0,
-        interestRateType: projectData.interestRateType || "Not Specified",
-        targetCloseDate: projectData.targetCloseDate || "",
-        useOfProceeds: projectData.useOfProceeds || "",
-        recoursePreference: projectData.recoursePreference || "Flexible",
-        purchasePrice: projectData.purchasePrice || null,
-        totalProjectCost: projectData.totalProjectCost || null,
-        capexBudget: projectData.capexBudget || null,
-        propertyNoiT12: projectData.propertyNoiT12 || null,
-        stabilizedNoiProjected: projectData.stabilizedNoiProjected || null,
-        exitStrategy: projectData.exitStrategy || "Undecided",
-        businessPlanSummary: projectData.businessPlanSummary || "",
-        marketOverviewSummary: projectData.marketOverviewSummary || "",
-        equityCommittedPercent: projectData.equityCommittedPercent || 0,
-        projectStatus: "Draft",
-        completenessPercent: 0,
-        internalAdvisorNotes: "",
-        borrowerProgress: 0,
-        projectProgress: 0,
+      
+      // Then add a separate status message
+      const statusMessage: ProjectMessage = {
+        id: `msg_status_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        projectId: activeProject.id,
+        senderId: 'system',
+        senderType: 'Advisor',
+        message: "We're now gathering information about your project.",
+        isRead: false,
         createdAt: now,
-        updatedAt: now,
-        ...projectData,
       };
-  
-      const progress = calculateProgress(createdProject);
-      createdProject.borrowerProgress = progress.borrowerProgress;
-      createdProject.projectProgress = progress.projectProgress;
-      createdProject.completenessPercent = progress.totalProgress;
-  
-      setProjects((prevProjects) => {
-        if (prevProjects.some((p) => p.id === uniqueId)) {
-          console.warn(`Prevented duplicate project: ${uniqueId}`);
-          return prevProjects;
-        }
-        return [...prevProjects, createdProject];
-      });
-  
-      return createdProject;
-    },
-    [user, borrowerProfile, calculateProgress]
-  );
+      
+      setProjectMessages((prev) => [...prev, statusMessage]);
+      await storageService.setItem('projectMessages', [...allMessages, newMessage, statusMessage]);
+    }
+    
+    return newMessage;
+  }, [activeProject, user, storageService, updateProjectStatus]);
+
+  // Function to add a status message after status changes
+  const addStatusMessage = useCallback(async (projectId: string, status: ProjectStatus) => {
+    const statusMessages: Record<ProjectStatus, string> = {
+      Draft: 'Your project has been saved as a draft.',
+      'Info Gathering': "We're now gathering information about your project.",
+      'Advisor Review': 'Your project is now under review by your capital advisor.',
+      'Matches Curated': "We've curated lender matches for your project.",
+      'Introductions Sent': 'Introductions have been sent to matching lenders.',
+      'Term Sheet Received': "Congratulations! You've received a term sheet.",
+      Closed: 'Congratulations! Your project has successfully closed.',
+      Withdrawn: 'Your project has been withdrawn.',
+      Stalled: 'Your project is currently stalled. Please contact your advisor for assistance.',
+    };
+    
+    if (statusMessages[status]) {
+      const now = new Date().toISOString();
+      const messageId = `msg_status_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      
+      const statusMessage: ProjectMessage = {
+        id: messageId,
+        projectId: projectId,
+        senderId: 'system',
+        senderType: 'Advisor',
+        message: statusMessages[status],
+        isRead: false,
+        createdAt: now,
+      };
+      
+      setProjectMessages((prev) => [...prev, statusMessage]);
+      
+      const allMessages = (await storageService.getItem<ProjectMessage[]>('projectMessages')) || [];
+      await storageService.setItem('projectMessages', [...allMessages, statusMessage]);
+    }
+  }, [storageService]);
+
+  // Create a new project
+  const createProject = useCallback(async (projectData: Partial<ProjectProfile>) => {
+    if (!user)
+      throw new Error("User must be logged in to create a project");
+    if (!borrowerProfile)
+      throw new Error("Borrower profile must exist to create a project");
+
+    const now = new Date().toISOString();
+    const projName = projectData.projectName || "New Project";
+    let uniqueId = generateUniqueId();
+    while (loadedProjectsRef.current.has(uniqueId)) {
+      uniqueId = generateUniqueId();
+    }
+    
+    // Pick a random advisor for demo purposes.
+    const advisors = [
+      { id: "advisor1@acaracap.com", name: "Sarah Adams" },
+      { id: "advisor2@acaracap.com", name: "Michael Chen" },
+      { id: "advisor3@acaracap.com", name: "Jessica Williams" },
+    ];
+    const randomAdvisor = advisors[Math.floor(Math.random() * advisors.length)];
+    loadedProjectsRef.current.add(uniqueId);
+
+    const newProject: ProjectProfile = {
+      id: uniqueId,
+      borrowerProfileId: borrowerProfile.id,
+      assignedAdvisorUserId: randomAdvisor.id,
+      projectName: projName,
+      name: projName, // legacy field
+      propertyAddressStreet: projectData.propertyAddressStreet || "",
+      propertyAddressCity: projectData.propertyAddressCity || "",
+      propertyAddressState: projectData.propertyAddressState || "",
+      propertyAddressCounty: projectData.propertyAddressCounty || "",
+      propertyAddressZip: projectData.propertyAddressZip || "",
+      assetType: projectData.assetType || "",
+      projectDescription: projectData.projectDescription || "",
+      projectPhase: projectData.projectPhase || "Acquisition",
+      loanAmountRequested: projectData.loanAmountRequested || 0,
+      loanType: projectData.loanType || "",
+      targetLtvPercent: projectData.targetLtvPercent || 70,
+      targetLtcPercent: projectData.targetLtcPercent || 80,
+      amortizationYears: projectData.amortizationYears || 30,
+      interestOnlyPeriodMonths: projectData.interestOnlyPeriodMonths || 0,
+      interestRateType: projectData.interestRateType || "Not Specified",
+      targetCloseDate: projectData.targetCloseDate || "",
+      useOfProceeds: projectData.useOfProceeds || "",
+      recoursePreference: projectData.recoursePreference || "Flexible",
+      purchasePrice: projectData.purchasePrice || null,
+      totalProjectCost: projectData.totalProjectCost || null,
+      capexBudget: projectData.capexBudget || null,
+      propertyNoiT12: projectData.propertyNoiT12 || null,
+      stabilizedNoiProjected: projectData.stabilizedNoiProjected || null,
+      exitStrategy: projectData.exitStrategy || "Undecided",
+      businessPlanSummary: projectData.businessPlanSummary || "",
+      marketOverviewSummary: projectData.marketOverviewSummary || "",
+      equityCommittedPercent: projectData.equityCommittedPercent || 0,
+      projectStatus: "Draft",
+      completenessPercent: 0,
+      internalAdvisorNotes: "",
+      borrowerProgress: 0,
+      projectProgress: 0,
+      createdAt: now,
+      updatedAt: now,
+      ...projectData,
+      // Add these required properties to match the ProjectProfile interface
+      projectSections: projectData.projectSections || {},
+      borrowerSections: projectData.borrowerSections || {}
+    };
+
+    const progress = calculateProgress(newProject);
+    newProject.borrowerProgress = progress.borrowerProgress;
+    newProject.projectProgress = progress.projectProgress;
+    newProject.completenessPercent = progress.totalProgress;
+
+    // Update projects state
+    setProjects((prevProjects) => {
+      if (prevProjects.some((p) => p.id === uniqueId)) {
+        console.warn(`Prevented duplicate project: ${uniqueId}`);
+        return prevProjects;
+      }
+      return [...prevProjects, newProject];
+    });
+
+    // Set this as the active project
+    setActiveProject(newProject);
+    
+    // Add welcome message
+    if (projectData.projectStatus === 'Info Gathering') {
+      // Add status message without creating circular dependency
+      await addStatusMessage(newProject.id, 'Info Gathering');
+    }
+
+    return newProject;
+  }, [user, borrowerProfile, calculateProgress, addStatusMessage]);
 
   // Update an existing project
   const updateProject = useCallback(async (id: string, updates: Partial<ProjectProfile>, manual = false) => {
@@ -581,8 +645,13 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
       setActiveProject(updatedProject);
     }
 
+    // If status was updated, add appropriate status message
+    if (updates.projectStatus && updates.projectStatus !== projects[projectIndex].projectStatus) {
+      await addStatusMessage(id, updates.projectStatus);
+    }
+
     return updatedProject;
-  }, [projects, activeProject, calculateProgress]);
+  }, [projects, activeProject, calculateProgress, addStatusMessage]);
 
   // Add a document requirement
   const addDocumentRequirement = useCallback(async (requirement: Partial<ProjectDocumentRequirement>) => {

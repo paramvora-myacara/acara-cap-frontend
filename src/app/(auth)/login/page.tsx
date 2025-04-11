@@ -48,6 +48,7 @@ export default function LoginPage() {
     setLoading(authLoading);
   }, [authLoading, setLoading]);
 
+  // Update the handleLogin function in login page
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
@@ -62,7 +63,6 @@ export default function LoginPage() {
       setLoading(true);
       
       // Detect if this should be an advisor login based on email
-      // In a real app, this would be determined by the backend
       const isAdvisor = email.includes('advisor') || email.endsWith('@acaracap.com');
       const role = isAdvisor ? 'advisor' : 'borrower';
       
@@ -73,19 +73,12 @@ export default function LoginPage() {
         message: 'Successfully signed in!',
       });
       
-      // Redirect based on role
+      // Always redirect to dashboard first, regardless of user type
       if (role === 'advisor') {
         router.push('/advisor/dashboard');
       } else {
-        // For borrowers, redirect to dashboard or project creation based on existing projects
-        const projectsStr = localStorage.getItem('acara_projects');
-        const hasExistingProjects = projectsStr ? JSON.parse(projectsStr).length > 0 : false;
-        
-        if (hasExistingProjects) {
-          router.push('/dashboard');
-        } else {
-          router.push('/project/create');
-        }
+        // For borrowers, always go to dashboard
+        router.push('/dashboard');
       }
     } catch (err) {
       showNotification({
