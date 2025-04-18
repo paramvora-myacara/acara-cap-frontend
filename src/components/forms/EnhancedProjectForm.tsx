@@ -41,6 +41,7 @@ import {
 interface EnhancedProjectFormProps {
   existingProject?: ProjectProfile | null;
   onComplete?: (project: ProjectProfile) => void;
+  compact?: boolean;
 }
 
 export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({ 

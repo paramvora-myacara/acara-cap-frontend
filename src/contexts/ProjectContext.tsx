@@ -18,6 +18,7 @@ import {
   ProjectPrincipal,
   ProjectDocumentRequirement,
   ProjectMessage,
+  ProjectPhase,
 } from '../types/enhanced-types';
 
 // Define context interface
@@ -70,6 +71,7 @@ interface ProjectContextProps {
   projectChanges: boolean;
   setProjectChanges: (hasChanges: boolean) => void;
   autoSaveProject: () => Promise<void>;
+  createInitialProject: () => Promise<ProjectProfile | null>;
 }
 
 // Create default context values
@@ -174,6 +176,7 @@ export const ProjectContext = createContext<ProjectContextProps>({
   projectChanges: false,
   setProjectChanges: () => {},
   autoSaveProject: async () => {},
+  createInitialProject: async () => null,
 });
 
 interface ProjectProviderProps {
@@ -807,6 +810,92 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
     }
   }, [loadProjectData]);
 
+  // Create initial project for new user
+  const createInitialProject = useCallback(async () => {
+    if (!user || !borrowerProfile) return null;
+    
+    try {
+      // Check if user has any projects already
+      if (projects.length > 0) return null;
+      
+      // Get LenderLine data if available
+      let formData: Partial<ProjectProfile> = {
+        projectName: "Unnamed Project",
+        assetType: "",
+        projectPhase: "Acquisition",
+        loanAmountRequested: 10000000,
+        targetLtvPercent: 70,
+        projectStatus: "Info Gathering",
+      };
+      
+      // Try to get data from LenderLine
+      const lastFormDataStr = localStorage.getItem('lastFormData');
+      if (lastFormDataStr) {
+        try {
+          const lastFormData = JSON.parse(lastFormDataStr);
+          
+          // Pre-fill asset type
+          if (lastFormData.asset_types && lastFormData.asset_types.length > 0) {
+            formData.assetType = lastFormData.asset_types[0];
+            formData.projectName = `${lastFormData.asset_types[0]} Project`;
+          }
+          
+          // Pre-fill deal type / project phase
+          if (lastFormData.deal_types && lastFormData.deal_types.length > 0) {
+            formData.projectPhase = lastFormData.deal_types[0] as ProjectPhase;
+          }
+          
+          // Pre-fill loan type / capital type
+          if (lastFormData.capital_types && lastFormData.capital_types.length > 0) {
+            formData.loanType = lastFormData.capital_types[0];
+          }
+          
+          // Pre-fill debt range (parse to get amount)
+          if (lastFormData.debt_ranges && lastFormData.debt_ranges.length > 0) {
+            const debtRange = lastFormData.debt_ranges[0];
+            // Extract numbers from string like "$5M - $25M"
+            const match = debtRange.match(/\$(\d+)M/);
+            if (match && match[1]) {
+              const amount = parseInt(match[1]) * 1000000; // Convert $XM to actual number
+              formData.loanAmountRequested = amount;
+            }
+          }
+          
+          // Pre-fill location
+          if (lastFormData.locations && lastFormData.locations.length > 0) {
+            const location = lastFormData.locations[0];
+            // We don't have a direct place to store this, but could add to description
+            formData.projectDescription = `Property located in ${location}.`;
+          }
+        } catch (error) {
+          console.error('Error parsing LenderLine data:', error);
+        }
+      }
+      
+      // Create the project
+      const newProject = await createProject({
+        ...formData,
+        borrowerProfileId: borrowerProfile.id,
+      });
+      
+      // Add initial message from advisor
+      if (newProject) {
+        try {
+          const welcomeMessage = `Hello! I'm your Capital Advisor assigned to this ${formData.assetType || 'new'} project. I'm here to help guide you through the financing process. Please complete your project details, and feel free to ask me any questions along the way.`;
+          
+          await addProjectMessage(welcomeMessage, true);
+        } catch (error) {
+          console.error('Error adding welcome message:', error);
+        }
+      }
+      
+      return newProject;
+    } catch (error) {
+      console.error('Error creating initial project:', error);
+      return null;
+    }
+  }, [user, borrowerProfile, projects, createProject, addProjectMessage]);
+
   return (
     <ProjectContext.Provider
       value={{
@@ -833,6 +922,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({
         projectChanges,
         setProjectChanges,
         autoSaveProject,
+        createInitialProject,
       }}
     >
       {children}

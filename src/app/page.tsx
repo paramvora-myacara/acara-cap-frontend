@@ -286,10 +286,13 @@ export default function HomePage() {
                     >
                       Use LenderLine™
                     </Button>
-                    <Button
+                    <Button 
                       variant="outline"
                       size="lg"
-                      onClick={() => router.push('/login')}
+                      onClick={() => {
+                        localStorage.setItem('cameFromLenderLine', 'true');
+                        router.push('/login');
+                      }}
                       className="rounded-full shadow-md"
                     >
                       Access Deal Room™
@@ -378,11 +381,12 @@ export default function HomePage() {
                             rightIcon={<ArrowRight size={16} />}
                             onClick={() => {
                               localStorage.setItem('lastFormData', JSON.stringify(filters));
+                              localStorage.setItem('cameFromLenderLine', 'true');
                               router.push('/login');
                             }}
                             className="shadow-xl bg-red-600 hover:bg-red-700 text-white rounded-full px-8 py-3 text-lg font-medium"
                           >
-                            Contact your top {topLenders.length} lenders
+                            Contact your Top {topLenders.length} Lenders!
                           </Button>
                         </div>
                       )}

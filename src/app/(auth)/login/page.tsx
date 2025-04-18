@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../hooks/useAuth';
 import { useUI } from '../../../hooks/useUI';
 import AuthLayout from '../../../components/layout/AuthLayout';
-import { Form, FormGroup, FormLabel, FormHelperText } from '../../../components/ui/Form';
+import { Form, FormGroup } from '../../../components/ui/Form';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
-import { Sparkles, Mail, Lock } from 'lucide-react';
+import { Sparkles, Mail } from 'lucide-react';
 import { GlobalToast } from '../../../components/ui/GlobalToast';
 import { LoadingOverlay } from '../../../components/ui/LoadingOverlay';
 
@@ -20,35 +20,40 @@ export default function LoginPage() {
   const { showNotification, setLoading } = useUI();
   const router = useRouter();
 
+  useEffect(() => {
+    // Check if user is coming from LenderLine
+    const lastFormData = localStorage.getItem('lastFormData');
+    if (lastFormData) {
+      localStorage.setItem('cameFromLenderLine', 'true');
+    }
+  }, []);
+
   // Check for existing user session
   useEffect(() => {
     if (isAuthenticated) {
       // Redirect based on user role
       if (user?.role === 'advisor') {
         router.push('/advisor/dashboard');
-      } else if (user?.role === 'admin') {
-        router.push('/admin/dashboard');
       } else {
-        router.push('/dashboard');
+        // For borrowers, check if they have any projects
+        const hasProjects = localStorage.getItem('acara_projects');
+        const cameFromLenderLine = localStorage.getItem('cameFromLenderLine');
+        
+        if (cameFromLenderLine || !hasProjects) {
+          // First-time user or coming from LenderLine - create a new project
+          router.push('/project/create');
+        } else {
+          router.push('/dashboard');
+        }
       }
     }
   }, [isAuthenticated, router, user]);
-
-  // Check if user is coming from lender selection
-  useEffect(() => {
-    const formData = localStorage.getItem('lastFormData');
-    if (formData) {
-      // We'll use this data later when creating a project
-      console.log('Form data available from previous selection');
-    }
-  }, []);
 
   // Update loading state
   useEffect(() => {
     setLoading(authLoading);
   }, [authLoading, setLoading]);
 
-  // Update the handleLogin function in login page
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
@@ -73,13 +78,7 @@ export default function LoginPage() {
         message: 'Successfully signed in!',
       });
       
-      // Always redirect to dashboard first, regardless of user type
-      if (role === 'advisor') {
-        router.push('/advisor/dashboard');
-      } else {
-        // For borrowers, always go to dashboard
-        router.push('/dashboard');
-      }
+      // Redirection will be handled by the useEffect above
     } catch (err) {
       showNotification({
         type: 'error',
@@ -100,9 +99,9 @@ export default function LoginPage() {
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
             <div className="flex items-center space-x-2">
               <Sparkles className="h-6 w-6" />
-              <h2 className="text-2xl font-bold">Welcome to ACARA-Cap</h2>
+              <h2 className="text-2xl font-bold">ACARA-Cap Deal Room™</h2>
             </div>
-            <p className="mt-2 opacity-90">Sign in to access the lender matching platform</p>
+            <p className="mt-2 opacity-90">Sign in to access your projects and lender matches</p>
           </div>
           
           <div className="p-6">
@@ -133,7 +132,9 @@ export default function LoginPage() {
                   <strong>Demo account options:</strong>
                 </p>
                 <ul className="mt-1 space-y-1">
-                  <li>Borrower: <span className="text-blue-600">borrower@example.com</span></li>
+                  <li>Borrower (100% complete): <span className="text-blue-600">complete@example.com</span></li>
+                  <li>Borrower (50% complete): <span className="text-blue-600">partial@example.com</span></li>
+                  <li>New Borrower: <span className="text-blue-600">borrower@example.com</span></li>
                   <li>Advisor: <span className="text-blue-600">advisor@acaracap.com</span></li>
                 </ul>
               </div>
