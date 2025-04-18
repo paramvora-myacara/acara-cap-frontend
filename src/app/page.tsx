@@ -104,6 +104,44 @@ export default function HomePage() {
     lender.match_score > 0.7
   );
 
+  // Number animation for stats
+  const [animatedStats, setAnimatedStats] = useState({
+    lenders: 0,
+    deals: 0,
+    revenue: 0
+  });
+
+  useEffect(() => {
+    if (statsVisible) {
+      const duration = 2000; // 2 seconds
+      const interval = 20; // update every 20ms
+      const steps = duration / interval;
+      
+      let step = 0;
+      const timer = setInterval(() => {
+        step++;
+        const progress = step / steps;
+        
+        setAnimatedStats({
+          lenders: Math.floor(progress * 513),
+          deals: Math.floor(progress * 1273),
+          revenue: parseFloat((progress * 5.7).toFixed(1))
+        });
+        
+        if (step >= steps) {
+          clearInterval(timer);
+          setAnimatedStats({
+            lenders: 513,
+            deals: 1273,
+            revenue: 5.7
+          });
+        }
+      }, interval);
+      
+      return () => clearInterval(timer);
+    }
+  }, [statsVisible]);
+
   return (
     <div className="min-h-screen flex flex-col">
       {!splashComplete && (
@@ -116,117 +154,164 @@ export default function HomePage() {
           <GlobalToast />
           
           <main className="pt-16 flex-grow">
-            <div className="container mx-auto px-4 pt-12 md:pt-20">
-              {/* Heading that fades in */}
-              <motion.h1
-                className="text-4xl font-bold text-center mb-10 text-gray-800"
-                initial={{ opacity: 0, y: -20 }}
-                animate={contentVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: -20 }}
-                transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
-              >
-                Lender Matching
-              </motion.h1>
-              
-              <div className="flex flex-col lg:flex-row">
-                {/* Left sidebar with filters - 40% width on large screens */}
-                <motion.div 
-                  className="w-full lg:w-2/5 pr-0 lg:pr-6 mb-8 lg:mb-0"
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={contentVisible ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
+            {/* Hero Section - 80% height, centered content, no image */}
+            <section className="py-32 bg-gradient-to-b from-white to-gray-50" style={{minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+              <div className="container mx-auto px-4 max-w-3xl text-center">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6 }}
                 >
-                  <div className="space-y-4">
-                    {/* Subtle guide for users to select all filters */}
-                    <div className="bg-blue-50 p-3 rounded-lg mb-4 text-sm text-blue-800">
-                      Select options in all categories to view and contact matching lenders
-                    </div>
-                    
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <FilterSection 
-                        formData={filters} 
-                        onChange={(newData) => handleFilterChange(newData)}
-                        filterType="asset_types" 
-                      />
-                    </div>
-                    
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <FilterSection 
-                        formData={filters} 
-                        onChange={(newData) => handleFilterChange(newData)}
-                        filterType="deal_types" 
-                      />
-                    </div>
-                    
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <FilterSection 
-                        formData={filters} 
-                        onChange={(newData) => handleFilterChange(newData)}
-                        filterType="capital_types" 
-                      />
-                    </div>
-                    
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <FilterSection 
-                        formData={filters} 
-                        onChange={(newData) => handleFilterChange(newData)}
-                        filterType="locations" 
-                      />
-                    </div>
-                    
-                    <div className="p-4 bg-gray-50 rounded-lg">
-                      <FilterSection 
-                        formData={filters} 
-                        onChange={(newData) => handleFilterChange(newData)}
-                        filterType="debt_ranges" 
-                      />
-                    </div>
+                  <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
+                    <span className="text-blue-600">AI</span>-Powered. Borrower-Controlled.
+                  </h1>
+                  <h2 className="text-5xl md:text-6xl font-bold leading-tight mb-8 font-sans">
+                    <span className="text-blue-800 font-display">Commercial Lending, Simplified.</span>
+                  </h2>
+                  
+                  <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+                    Our platform connects you with the perfect lenders for your commercial real estate projects through our proprietary <span className="font-semibold">LenderLine™</span> technology, via giving access to the exclusive <span className="font-semibold">ACARA Cap Deal Room™</span>.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
+                    <Button 
+                      variant="primary" 
+                      size="lg"
+                      className="bg-red-600 hover:bg-red-700 text-white rounded-full px-8 shadow-lg"
+                      onClick={() => {
+                        const filterSection = document.getElementById('lenderline-section');
+                        filterSection?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                    >
+                      Use LenderLine™
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => router.push('/login')}
+                      className="rounded-full shadow-md"
+                    >
+                      Access Deal Room™
+                    </Button>
                   </div>
                 </motion.div>
-                
-                {/* Right side with graph visualization - 60% width on large screens */}
-                <motion.div 
-                  className="w-full lg:w-3/5 h-[60vh] lg:h-[70vh] relative"
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={contentVisible ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                >
-                  <LenderGraph
-                    lenders={filteredLenders}
-                    formData={filters}
-                    filtersApplied={true}
-                    onLenderClick={(lender: LenderProfile | null) => {
-                      selectLender(lender);
-                      localStorage.setItem('lastFormData', JSON.stringify(filters));
-                    }}
-                    allFiltersSelected={allFiltersSelected}
-                  />
-                </motion.div>
               </div>
-              
-              {/* Contact top lenders button - only shows when all filters are selected */}
-              <motion.div 
-                className="mt-4 flex justify-center mb-12"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: allFiltersSelected ? 1 : 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {allFiltersSelected && topLenders.length > 0 && (
-                  <Button
-                    variant="primary"
-                    rightIcon={<ArrowRight size={16} />}
-                    onClick={() => {
-                      localStorage.setItem('lastFormData', JSON.stringify(filters));
-                      router.push('/login');
-                    }}
-                    className="shadow-md"
+            </section>
+
+            {/* LenderLine Section */}
+            <section id="lenderline-section" className="py-16 bg-white">
+              <div className="container mx-auto px-4">
+                <div className="text-center mb-12">
+                  <div className="flex items-center justify-center mb-4">
+                    <img 
+                      src="/acara-logo.png" 
+                      alt="ACARA-CAP" 
+                      className="h-10 mr-2"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.style.display = 'none';
+                      }}
+                    />
+                    <h2 className="text-3xl font-bold text-gray-900">
+                      <span className="text-blue-700 font-semibold text-4xl">LenderLine</span>
+                      <sup className="text-xs">™</sup>
+                      <span className="ml-2">Matching Engine</span>
+                    </h2>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col lg:flex-row">
+                  {/* Left sidebar with filters - 50% width on large screens */}
+                  <motion.div 
+                    className="w-full lg:w-1/2 pr-0 lg:pr-6 mb-8 lg:mb-0"
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={contentVisible ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
                   >
-                    Contact your top {topLenders.length} lenders
-                  </Button>
-                )}
-              </motion.div>
-            </div>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <FilterSection 
+                          formData={filters} 
+                          onChange={(newData) => handleFilterChange(newData)}
+                          filterType="asset_types" 
+                        />
+                      </div>
+                      
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <FilterSection 
+                          formData={filters} 
+                          onChange={(newData) => handleFilterChange(newData)}
+                          filterType="deal_types" 
+                        />
+                      </div>
+                      
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <FilterSection 
+                          formData={filters} 
+                          onChange={(newData) => handleFilterChange(newData)}
+                          filterType="capital_types" 
+                        />
+                      </div>
+                      
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <FilterSection 
+                          formData={filters} 
+                          onChange={(newData) => handleFilterChange(newData)}
+                          filterType="locations" 
+                        />
+                      </div>
+                      
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <FilterSection 
+                          formData={filters} 
+                          onChange={(newData) => handleFilterChange(newData)}
+                          filterType="debt_ranges" 
+                        />
+                      </div>
+                      
+                      {/* Contact top lenders button - moved higher up */}
+                      {allFiltersSelected && topLenders.length > 0 && (
+                        <div className="mt-6 text-center">
+                          <Button
+                            variant="primary"
+                            rightIcon={<ArrowRight size={16} />}
+                            onClick={() => {
+                              localStorage.setItem('lastFormData', JSON.stringify(filters));
+                              router.push('/login');
+                            }}
+                            className="shadow-xl bg-red-600 hover:bg-red-700 text-white rounded-full px-8 py-3 text-lg font-medium"
+                          >
+                            Contact your top {topLenders.length} lenders
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                  
+                  {/* Right side with graph visualization - 50% width on large screens */}
+                  <motion.div 
+                    className="w-full lg:w-1/2 h-[60vh] lg:h-[70vh] relative"
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={contentVisible ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  >
+                    <LenderGraph
+                      lenders={filteredLenders}
+                      formData={filters}
+                      filtersApplied={true}
+                      onLenderClick={(lender: LenderProfile | null) => {
+                        selectLender(lender);
+                        localStorage.setItem('lastFormData', JSON.stringify(filters));
+                      }}
+                      allFiltersSelected={allFiltersSelected}
+                    />
+                  </motion.div>
+                </div>
+              </div>
+            </section>
             
-            {/* Hero Stats Section with Basic CSS Transitions */}
+            {/* Stats Section - No background cards, just numbers with animation */}
             <section 
               ref={statsRef}
               className="py-16 bg-gradient-to-b from-gray-50 to-blue-50"
@@ -234,7 +319,7 @@ export default function HomePage() {
               <div className="container mx-auto px-4">
                 {/* Title with CSS transition */}
                 <h2 
-                  className={`text-4xl font-bold text-center mb-12 text-gray-800 italic transition-all duration-1000 ${
+                  className={`text-4xl font-bold text-center mb-16 text-gray-800 italic transition-all duration-1000 ${
                     statsVisible ? 'opacity-100 transform-none' : 'opacity-0 translate-y-8'
                   }`}
                 >
@@ -242,47 +327,75 @@ export default function HomePage() {
                 </h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {/* First Stat with CSS transition */}
-                  <div 
-                    className={`bg-white shadow-lg rounded-lg p-6 text-center hover:shadow-xl transition-all duration-1000 ${
-                      statsVisible ? 'opacity-100 transform-none' : 'opacity-0 translate-y-8'
-                    }`}
-                    style={{ transitionDelay: '100ms' }}
+                  {/* First Stat with animation */}
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={statsVisible ? { opacity: 1 } : { opacity: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="text-center"
                   >
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-blue-100">
                       <Building className="h-8 w-8 text-blue-600" />
                     </div>
-                    <div className="text-4xl font-bold mb-2 text-blue-600">500+</div>
+                    <div className="text-5xl font-bold mb-2 text-blue-600">{animatedStats.lenders}</div>
                     <div className="text-gray-700 font-medium">Lenders</div>
-                  </div>
+                  </motion.div>
                   
-                  {/* Second Stat with CSS transition */}
-                  <div 
-                    className={`bg-white shadow-lg rounded-lg p-6 text-center hover:shadow-xl transition-all duration-1000 ${
-                      statsVisible ? 'opacity-100 transform-none' : 'opacity-0 translate-y-8'
-                    }`}
-                    style={{ transitionDelay: '200ms' }}
+                  {/* Second Stat with animation */}
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={statsVisible ? { opacity: 1 } : { opacity: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="text-center"
                   >
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-green-100">
                       <CheckCircle className="h-8 w-8 text-green-600" />
                     </div>
-                    <div className="text-4xl font-bold mb-2 text-green-600">1,250+</div>
+                    <div className="text-5xl font-bold mb-2 text-green-600">{animatedStats.deals}</div>
                     <div className="text-gray-700 font-medium">Deals Closed</div>
-                  </div>
+                  </motion.div>
                   
-                  {/* Third Stat with CSS transition */}
-                  <div 
-                    className={`bg-white shadow-lg rounded-lg p-6 text-center hover:shadow-xl transition-all duration-1000 ${
-                      statsVisible ? 'opacity-100 transform-none' : 'opacity-0 translate-y-8'
-                    }`}
-                    style={{ transitionDelay: '300ms' }}
+                  {/* Third Stat with animation */}
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={statsVisible ? { opacity: 1 } : { opacity: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="text-center"
                   >
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 bg-amber-100">
                       <DollarSign className="h-8 w-8 text-amber-600" />
                     </div>
-                    <div className="text-4xl font-bold mb-2 text-amber-600">$5B+</div>
+                    <div className="text-5xl font-bold mb-2 text-amber-600">${animatedStats.revenue}B</div>
                     <div className="text-gray-700 font-medium">In Revenue</div>
-                  </div>
+                  </motion.div>
+                </div>
+              </div>
+            </section>
+
+            {/* Client Logo Section */}
+            <section className="py-16 bg-white">
+              <div className="container mx-auto px-4">
+                <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+                  Trusted By Leading Companies
+                </h2>
+
+                <div className="flex flex-wrap justify-center items-center gap-8 opacity-80">
+                  {/* Sample client logos - replace with actual client logos */}
+                  {[1, 2, 3, 4, 5, 6].map((index) => (
+                    <div key={index} className="w-32 h-16 bg-gray-200 rounded flex items-center justify-center">
+                      <span className="text-gray-500 font-semibold">Client {index}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-12 text-center">
+                  <Button 
+                    variant="outline"
+                    onClick={() => router.push('/contact')}
+                    className="rounded-full"
+                  >
+                    Become a Partner
+                  </Button>
                 </div>
               </div>
             </section>

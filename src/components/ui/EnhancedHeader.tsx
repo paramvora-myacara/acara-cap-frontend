@@ -22,7 +22,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
         setMobileMenuOpen(false);
       }
     };
-
+    
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [mobileMenuOpen]);
@@ -43,12 +43,12 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
             alt="ACARA-CAP" 
             className={cn(
               "transition-all duration-300 object-contain",
-              scrolled ? "h-10" : "h-12"
+              scrolled ? "h-16" : "h-20"  // Increased size significantly
             )}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.onerror = null;
-              target.style.fontSize = scrolled ? '1.25rem' : '1.5rem';
+              target.style.fontSize = scrolled ? '1.75rem' : '2rem'; // Increased font size
               target.style.fontWeight = 'bold';
               target.style.color = '#3B82F6';
               target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMjAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjE2Ij5BQ0FSQS1DQVA8L3RleHQ+PC9zdmc+';
@@ -56,14 +56,15 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
           />
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation - Removed About, reordered items */}
         <div className="hidden md:flex items-center space-x-6">
           <nav className="flex items-center space-x-6">
-            <Link href="/about" className={cn(
+            <Link href="#lenderline-section" className={cn(
               "text-sm font-medium transition-colors",
               scrolled ? "text-gray-700 hover:text-blue-600" : "text-gray-800 hover:text-blue-700"
             )}>
-              About ACARA-Cap
+              <span className="font-semibold">LenderLine</span>
+              <sup className="text-xs">™</sup>
             </Link>
             <Link href="/process" className={cn(
               "text-sm font-medium transition-colors",
@@ -84,9 +85,12 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
             size="sm" 
             leftIcon={<LogIn size={16} />}
             onClick={() => router.push('/login')}
-            className={scrolled ? "bg-blue-600" : "bg-blue-700"}
+            className={cn(
+              scrolled ? "bg-blue-600" : "bg-blue-700",
+              "font-medium"
+            )}
           >
-            Sign In
+            <span>Access <span className="font-bold">Deal Room</span><sup className="text-xs">™</sup></span>
           </Button>
         </div>
 
@@ -102,17 +106,18 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Removed About */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t shadow-lg">
           <div className="container mx-auto py-4 px-4">
             <nav className="flex flex-col space-y-4">
               <Link 
-                href="/about" 
+                href="#lenderline-section" 
                 className="text-gray-700 hover:text-blue-600 py-2 text-sm font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                About ACARA-Cap
+                <span className="font-semibold">LenderLine</span>
+                <sup className="text-xs">™</sup>
               </Link>
               <Link 
                 href="/process" 
@@ -138,7 +143,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
                 }}
                 className="mt-2"
               >
-                Sign In
+                <span>Access <span className="font-bold">Deal Room</span><sup className="text-xs">™</sup></span>
               </Button>
             </nav>
           </div>

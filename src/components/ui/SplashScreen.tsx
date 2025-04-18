@@ -62,10 +62,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
               }}
             />
           </div>
-          <h1 className="text-lg md:text-2xl text-gray-800 font-normal max-w-2xl mx-auto leading-relaxed tracking-wide">
-            AI-Powered. Borrower-Controlled. 
-            Commercial Lending, Simplified.
-          </h1>
         </div>
       </motion.div>
     </AnimatePresence>

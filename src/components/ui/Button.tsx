@@ -25,19 +25,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     type = 'button',
     ...props 
   }, ref) => {
-    const baseStyles = "inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500";
+    const baseStyles = "inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500";
     
     const variantStyles = {
-      primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-sm",
-      secondary: "bg-gray-200 hover:bg-gray-300 text-gray-800",
-      outline: "border border-gray-300 bg-white hover:bg-gray-50 text-gray-700",
-      ghost: "bg-transparent hover:bg-gray-100 text-gray-700",
-      danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm",
-      success: "bg-green-600 hover:bg-green-700 text-white shadow-sm",
+      primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-sm rounded-md",
+      secondary: "bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md",
+      outline: "border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 rounded-md",
+      ghost: "bg-transparent hover:bg-gray-100 text-gray-700 rounded-md",
+      danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm rounded-md",
+      success: "bg-green-600 hover:bg-green-700 text-white shadow-sm rounded-md",
     };
     
     const sizeStyles = {
-      sm: "text-xs px-2.5 py-1.5 rounded",
+      sm: "text-xs px-2.5 py-1.5",
       md: "text-sm px-4 py-2",
       lg: "text-base px-6 py-3",
       icon: "p-2",
