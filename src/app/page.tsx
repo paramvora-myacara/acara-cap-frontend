@@ -1,9 +1,9 @@
-// src/app/page.tsx - Hero section and LenderLine section update
+// src/app/page.tsx - Main component fix
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SplashScreen } from '../components/ui/SplashScreen';
 import { EnhancedHeader } from '../components/ui/EnhancedHeader';
 import { Footer } from '../components/ui/Footer';
@@ -32,6 +32,8 @@ export default function HomePage() {
   const [splashComplete, setSplashComplete] = useState(false);
   const [contentVisible, setContentVisible] = useState(false);
   const [statsVisible, setStatsVisible] = useState(false);
+  const [logoAnimating, setLogoAnimating] = useState(false);
+  const [logoStartPosition, setLogoStartPosition] = useState({ x: 0, y: 0, width: 0, height: 0 });
   
   // Animation sequence for heading
   const [textAnimation, setTextAnimation] = useState({
@@ -42,6 +44,7 @@ export default function HomePage() {
   
   // Ref for stats section with explicit type annotation
   const statsRef = useRef<HTMLElement | null>(null);
+  const headerLogoRef = useRef<HTMLImageElement | null>(null);
   
   // Handle scroll events and check for stats visibility
   useEffect(() => {
@@ -65,16 +68,23 @@ export default function HomePage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Handle logo animation start
+  const handleLogoAnimationStart = (position: { x: number, y: number, width: number, height: number }) => {
+    setLogoStartPosition(position);
+    setLogoAnimating(true);
+  };
+
   // Add slight delay after splash screen before showing content
   useEffect(() => {
     if (splashComplete) {
+      console.log("Splash complete, showing content");
       const timer = setTimeout(() => {
         setContentVisible(true);
         
         // Start text animation sequence
         setTimeout(() => setTextAnimation(prev => ({ ...prev, part1Visible: true })), 300);
-        setTimeout(() => setTextAnimation(prev => ({ ...prev, part2Visible: true })), 1200);
-        setTimeout(() => setTextAnimation(prev => ({ ...prev, part3Visible: true })), 2100);
+        setTimeout(() => setTextAnimation(prev => ({ ...prev, part2Visible: true })), 800);
+        setTimeout(() => setTextAnimation(prev => ({ ...prev, part3Visible: true })), 1300);
       }, 100);
       return () => clearTimeout(timer);
     }
@@ -127,12 +137,11 @@ export default function HomePage() {
     if (statsVisible) {
       const duration = 2000; // 2 seconds
       const interval = 20; // update every 20ms
-      const steps = duration / interval;
       
       let step = 0;
       const timer = setInterval(() => {
         step++;
-        const progress = step / steps;
+        const progress = step / (duration / interval);
         
         setAnimatedStats({
           lenders: Math.floor(progress * 513),
@@ -140,7 +149,7 @@ export default function HomePage() {
           revenue: parseFloat((progress * 5.7).toFixed(1))
         });
         
-        if (step >= steps) {
+        if (step >= duration / interval) {
           clearInterval(timer);
           setAnimatedStats({
             lenders: 513,
@@ -157,19 +166,59 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col">
       {!splashComplete && (
-        <SplashScreen onComplete={() => setSplashComplete(true)} />
+        <SplashScreen 
+          onComplete={() => {
+            console.log("Splash screen animation complete");
+            setSplashComplete(true);
+          }} 
+          onLogoAnimationStart={handleLogoAnimationStart}
+        />
       )}
       
       {splashComplete && (
         <>
-          <EnhancedHeader scrolled={scrolled} />
+          <EnhancedHeader 
+            scrolled={scrolled} 
+            logoRef={headerLogoRef}
+          />
           <GlobalToast />
           
+          {/* Animating logo that transitions from splash to header */}
+          {logoAnimating && headerLogoRef.current && (
+            <AnimatePresence>
+              <motion.img
+                src="/acara-logo.png"
+                alt="ACARA CAP"
+                className="fixed z-50 object-contain"
+                initial={{
+                  x: logoStartPosition.x,
+                  y: logoStartPosition.y,
+                  width: logoStartPosition.width,
+                  height: logoStartPosition.height,
+                  opacity: 1
+                }}
+                animate={{
+                  x: headerLogoRef.current.getBoundingClientRect().x,
+                  y: headerLogoRef.current.getBoundingClientRect().y,
+                  width: headerLogoRef.current.getBoundingClientRect().width,
+                  height: headerLogoRef.current.getBoundingClientRect().height,
+                  opacity: 0
+                }}
+                transition={{
+                  duration: 0.8,
+                  ease: "easeInOut"
+                }}
+                onAnimationComplete={() => setLogoAnimating(false)}
+                style={{ pointerEvents: 'none' }}
+              />
+            </AnimatePresence>
+          )}
+          
           <main className="pt-16 flex-grow">
-            {/* Hero Section - 80% height, centered content, no image */}
-            <section className="py-32 bg-gradient-to-b from-white to-gray-50" style={{minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            {/* Hero Section - 90% height, centered content */}
+            <section className="py-32 bg-gradient-to-b from-white to-gray-50" style={{minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
               <div className="container mx-auto px-4 max-w-3xl text-center">
-                {/* Animated text elements */}
+                {/* Animated text elements - Modified for AI-Powered and Borrower-Controlled to be on same line */}
                 <motion.div className="mb-8">
                   <div className="overflow-hidden">
                     <motion.div
@@ -185,7 +234,7 @@ export default function HomePage() {
                     </motion.div>
                   </div>
                   
-                  <div className="overflow-hidden">
+                  <div className="overflow-hidden mt-2">
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ 
@@ -193,7 +242,7 @@ export default function HomePage() {
                         y: textAnimation.part2Visible ? 0 : 20 
                       }}
                       transition={{ duration: 0.6 }}
-                      className="text-5xl md:text-6xl font-bold leading-tight mt-2"
+                      className="text-5xl md:text-6xl font-bold leading-tight"
                     >
                       <span className="text-blue-800 font-display">Commercial Lending,</span>
                     </motion.div>
@@ -258,7 +307,7 @@ export default function HomePage() {
                     <img 
                       src="/acara-logo.png" 
                       alt="ACARA-CAP" 
-                      className="h-10 mr-2"
+                      className="h-8 mr-2" // Made the logo smaller
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.onerror = null;
@@ -367,7 +416,6 @@ export default function HomePage() {
               ref={statsRef}
               className="py-16 bg-gradient-to-b from-gray-50 to-blue-50"
             >
-              {/* Rest of the stats section remains unchanged */}
               <div className="container mx-auto px-4">
                 <h2 
                   className={`text-4xl font-bold text-center mb-16 text-gray-800 italic transition-all duration-1000 ${
@@ -436,7 +484,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="mt-12 text-center">
-                  <Button 
+                <Button 
                     variant="outline"
                     onClick={() => router.push('/contact')}
                     className="rounded-full"

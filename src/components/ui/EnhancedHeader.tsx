@@ -1,7 +1,7 @@
 // src/components/ui/EnhancedHeader.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, MutableRefObject } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogIn, Menu, X } from 'lucide-react';
@@ -10,9 +10,13 @@ import { cn } from '@/utils/cn';
 
 interface EnhancedHeaderProps {
   scrolled: boolean;
+  logoRef?: MutableRefObject<HTMLImageElement | null>;
 }
 
-export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
+export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ 
+  scrolled,
+  logoRef 
+}) => {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -39,11 +43,12 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
       <div className="container mx-auto flex justify-between items-center px-4">
         <Link href="/" className="flex items-center">
           <img 
+            ref={logoRef}
             src="/acara-logo.png" 
             alt="ACARA-CAP" 
             className={cn(
               "transition-all duration-300 object-contain",
-              scrolled ? "h-10" : "h-12"
+              scrolled ? "h-8" : "h-10" // Made the logo smaller
             )}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
@@ -56,7 +61,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
           />
         </Link>
 
-        {/* Desktop Navigation - Removed Contact Us */}
+        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-6">
           <nav className="flex items-center space-x-6">
             <Link href="#lenderline-section" className={cn(
@@ -100,7 +105,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
         </button>
       </div>
 
-      {/* Mobile Menu - Removed Contact Us */}
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t shadow-lg">
           <div className="container mx-auto py-4 px-4">
