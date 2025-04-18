@@ -43,12 +43,12 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
             alt="ACARA-CAP" 
             className={cn(
               "transition-all duration-300 object-contain",
-              scrolled ? "h-16" : "h-20"  // Increased size significantly
+              scrolled ? "h-10" : "h-12"
             )}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.onerror = null;
-              target.style.fontSize = scrolled ? '1.75rem' : '2rem'; // Increased font size
+              target.style.fontSize = scrolled ? '1.5rem' : '1.75rem';
               target.style.fontWeight = 'bold';
               target.style.color = '#3B82F6';
               target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMjAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjE2Ij5BQ0FSQS1DQVA8L3RleHQ+PC9zdmc+';
@@ -56,7 +56,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
           />
         </Link>
 
-        {/* Desktop Navigation - Removed About, reordered items */}
+        {/* Desktop Navigation - Removed Contact Us */}
         <div className="hidden md:flex items-center space-x-6">
           <nav className="flex items-center space-x-6">
             <Link href="#lenderline-section" className={cn(
@@ -71,12 +71,6 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
               scrolled ? "text-gray-700 hover:text-blue-600" : "text-gray-800 hover:text-blue-700"
             )}>
               Process
-            </Link>
-            <Link href="/contact" className={cn(
-              "text-sm font-medium transition-colors",
-              scrolled ? "text-gray-700 hover:text-blue-600" : "text-gray-800 hover:text-blue-700"
-            )}>
-              Contact Us
             </Link>
           </nav>
           
@@ -106,7 +100,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
         </button>
       </div>
 
-      {/* Mobile Menu - Removed About */}
+      {/* Mobile Menu - Removed Contact Us */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-t shadow-lg">
           <div className="container mx-auto py-4 px-4">
@@ -125,13 +119,6 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ scrolled }) => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Process
-              </Link>
-              <Link 
-                href="/contact" 
-                className="text-gray-700 hover:text-blue-600 py-2 text-sm font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Contact Us
               </Link>
               <Button 
                 variant="primary" 

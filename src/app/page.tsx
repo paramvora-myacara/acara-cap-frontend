@@ -1,4 +1,4 @@
-// src/app/page.tsx
+// src/app/page.tsx - Hero section and LenderLine section update
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -33,6 +33,13 @@ export default function HomePage() {
   const [contentVisible, setContentVisible] = useState(false);
   const [statsVisible, setStatsVisible] = useState(false);
   
+  // Animation sequence for heading
+  const [textAnimation, setTextAnimation] = useState({
+    part1Visible: false,
+    part2Visible: false,
+    part3Visible: false
+  });
+  
   // Ref for stats section with explicit type annotation
   const statsRef = useRef<HTMLElement | null>(null);
   
@@ -63,6 +70,11 @@ export default function HomePage() {
     if (splashComplete) {
       const timer = setTimeout(() => {
         setContentVisible(true);
+        
+        // Start text animation sequence
+        setTimeout(() => setTextAnimation(prev => ({ ...prev, part1Visible: true })), 300);
+        setTimeout(() => setTextAnimation(prev => ({ ...prev, part2Visible: true })), 1200);
+        setTimeout(() => setTextAnimation(prev => ({ ...prev, part3Visible: true })), 2100);
       }, 100);
       return () => clearTimeout(timer);
     }
@@ -157,18 +169,58 @@ export default function HomePage() {
             {/* Hero Section - 80% height, centered content, no image */}
             <section className="py-32 bg-gradient-to-b from-white to-gray-50" style={{minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
               <div className="container mx-auto px-4 max-w-3xl text-center">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6">
-                    <span className="text-blue-600">AI</span>-Powered. Borrower-Controlled.
-                  </h1>
-                  <h2 className="text-5xl md:text-6xl font-bold leading-tight mb-8 font-sans">
-                    <span className="text-blue-800 font-display">Commercial Lending, Simplified.</span>
-                  </h2>
+                {/* Animated text elements */}
+                <motion.div className="mb-8">
+                  <div className="overflow-hidden">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ 
+                        opacity: textAnimation.part1Visible ? 1 : 0, 
+                        y: textAnimation.part1Visible ? 0 : 20 
+                      }}
+                      transition={{ duration: 0.6 }}
+                      className="text-5xl md:text-6xl font-bold leading-tight"
+                    >
+                      <span className="text-blue-600">AI</span>-Powered. <span className="text-blue-600">Borrower</span>-Controlled.
+                    </motion.div>
+                  </div>
                   
+                  <div className="overflow-hidden">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ 
+                        opacity: textAnimation.part2Visible ? 1 : 0, 
+                        y: textAnimation.part2Visible ? 0 : 20 
+                      }}
+                      transition={{ duration: 0.6 }}
+                      className="text-5xl md:text-6xl font-bold leading-tight mt-2"
+                    >
+                      <span className="text-blue-800 font-display">Commercial Lending,</span>
+                    </motion.div>
+                  </div>
+                  
+                  <div className="overflow-hidden">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ 
+                        opacity: textAnimation.part3Visible ? 1 : 0, 
+                        y: textAnimation.part3Visible ? 0 : 20 
+                      }}
+                      transition={{ duration: 0.6 }}
+                      className="text-5xl md:text-6xl font-bold leading-tight italic"
+                    >
+                      <span className="text-blue-800 font-display">Simplified.</span>
+                    </motion.div>
+                  </div>
+                </motion.div>
+                
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ 
+                    opacity: textAnimation.part3Visible ? 1 : 0 
+                  }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                >
                   <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
                     Our platform connects you with the perfect lenders for your commercial real estate projects through our proprietary <span className="font-semibold">LenderLine™</span> technology, via giving access to the exclusive <span className="font-semibold">ACARA Cap Deal Room™</span>.
                   </p>
@@ -177,7 +229,7 @@ export default function HomePage() {
                     <Button 
                       variant="primary" 
                       size="lg"
-                      className="bg-red-600 hover:bg-red-700 text-white rounded-full px-8 shadow-lg"
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 shadow-lg"
                       onClick={() => {
                         const filterSection = document.getElementById('lenderline-section');
                         filterSection?.scrollIntoView({ behavior: 'smooth' });
@@ -213,10 +265,9 @@ export default function HomePage() {
                         target.style.display = 'none';
                       }}
                     />
-                    <h2 className="text-3xl font-bold text-gray-900">
-                      <span className="text-blue-700 font-semibold text-4xl">LenderLine</span>
+                    <h2 className="text-4xl font-bold text-gray-900">
+                      <span className="text-blue-700 font-semibold text-5xl">LenderLine</span>
                       <sup className="text-xs">™</sup>
-                      <span className="ml-2">Matching Engine</span>
                     </h2>
                   </div>
                 </div>
@@ -311,13 +362,13 @@ export default function HomePage() {
               </div>
             </section>
             
-            {/* Stats Section - No background cards, just numbers with animation */}
+            {/* Stats Section */}
             <section 
               ref={statsRef}
               className="py-16 bg-gradient-to-b from-gray-50 to-blue-50"
             >
+              {/* Rest of the stats section remains unchanged */}
               <div className="container mx-auto px-4">
-                {/* Title with CSS transition */}
                 <h2 
                   className={`text-4xl font-bold text-center mb-16 text-gray-800 italic transition-all duration-1000 ${
                     statsVisible ? 'opacity-100 transform-none' : 'opacity-0 translate-y-8'
@@ -327,7 +378,6 @@ export default function HomePage() {
                 </h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {/* First Stat with animation */}
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={statsVisible ? { opacity: 1 } : { opacity: 0 }}
@@ -341,7 +391,6 @@ export default function HomePage() {
                     <div className="text-gray-700 font-medium">Lenders</div>
                   </motion.div>
                   
-                  {/* Second Stat with animation */}
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={statsVisible ? { opacity: 1 } : { opacity: 0 }}
@@ -355,7 +404,6 @@ export default function HomePage() {
                     <div className="text-gray-700 font-medium">Deals Closed</div>
                   </motion.div>
                   
-                  {/* Third Stat with animation */}
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={statsVisible ? { opacity: 1 } : { opacity: 0 }}
@@ -372,7 +420,7 @@ export default function HomePage() {
               </div>
             </section>
 
-            {/* Client Logo Section */}
+            {/* Client Logo Section - unchanged */}
             <section className="py-16 bg-white">
               <div className="container mx-auto px-4">
                 <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
@@ -380,7 +428,6 @@ export default function HomePage() {
                 </h2>
 
                 <div className="flex flex-wrap justify-center items-center gap-8 opacity-80">
-                  {/* Sample client logos - replace with actual client logos */}
                   {[1, 2, 3, 4, 5, 6].map((index) => (
                     <div key={index} className="w-32 h-16 bg-gray-200 rounded flex items-center justify-center">
                       <span className="text-gray-500 font-semibold">Client {index}</span>
@@ -401,7 +448,6 @@ export default function HomePage() {
             </section>
           </main>
 
-          {/* Footer */}
           <Footer />
         </>
       )}
