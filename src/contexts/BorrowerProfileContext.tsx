@@ -1,460 +1,259 @@
 // src/contexts/BorrowerProfileContext.tsx
-
 'use client';
 
-import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import { StorageService } from '../services/storage/StorageService';
 import { useAuth } from '../hooks/useAuth';
 import { BorrowerProfile, Principal } from '../types/enhanced-types';
 
-// Define context interface
+// Define context interface - ADD reset function
 interface BorrowerProfileContextProps {
   borrowerProfile: BorrowerProfile | null;
   principals: Principal[];
   isLoading: boolean;
-  createBorrowerProfile: (profile: Partial<BorrowerProfile>) => Promise<BorrowerProfile>;
+  createBorrowerProfile: (profileData: Partial<BorrowerProfile>) => Promise<BorrowerProfile>; // Keep return type
   updateBorrowerProfile: (updates: Partial<BorrowerProfile>, manual?: boolean) => Promise<BorrowerProfile | null>;
   addPrincipal: (principal: Partial<Principal>) => Promise<Principal>;
   updatePrincipal: (id: string, updates: Partial<Principal>) => Promise<Principal | null>;
   removePrincipal: (id: string) => Promise<boolean>;
-  calculateCompleteness: (profile: BorrowerProfile, principals: Principal[]) => number;
+  calculateCompleteness: (profile: BorrowerProfile | null, principals: Principal[]) => number; // Allow null profile
   profileChanges: boolean;
   setProfileChanges: (hasChanges: boolean) => void;
   autoSaveBorrowerProfile: () => Promise<void>;
+  resetProfileState: () => void; // Add reset function type
 }
 
-// Create context with default values
+// Create context with default values - ADD reset function default
 export const BorrowerProfileContext = createContext<BorrowerProfileContextProps>({
-  borrowerProfile: null,
-  principals: [],
-  isLoading: true,
-  createBorrowerProfile: async () => ({ id: '', userId: '', fullLegalName: '', primaryEntityName: '', primaryEntityStructure: 'LLC', contactEmail: '', contactPhone: '', contactAddress: '', bioNarrative: '', linkedinUrl: '', websiteUrl: '', yearsCREExperienceRange: '0-2', assetClassesExperience: [], geographicMarketsExperience: [], totalDealValueClosedRange: 'N/A', existingLenderRelationships: '', creditScoreRange: 'N/A', netWorthRange: '<$1M', liquidityRange: '<$100k', bankruptcyHistory: false, foreclosureHistory: false, litigationHistory: false, completenessPercent: 0, createdAt: '', updatedAt: '' }),
+  borrowerProfile: null, principals: [], isLoading: true,
+  createBorrowerProfile: async () => ({ id: '', userId: '', fullLegalName: '', primaryEntityName: '', /*...*/ } as BorrowerProfile), // Provide full default obj structure
   updateBorrowerProfile: async () => null,
-  addPrincipal: async () => ({ id: '', borrowerProfileId: '', principalLegalName: '', principalRoleDefault: 'Key Principal', principalBio: '', principalEmail: '', ownershipPercentage: 0, creditScoreRange: 'N/A', netWorthRange: '<$1M', liquidityRange: '<$100k', bankruptcyHistory: false, foreclosureHistory: false, pfsDocumentId: null, createdAt: '', updatedAt: '' }),
-  updatePrincipal: async () => null,
-  removePrincipal: async () => false,
-  calculateCompleteness: () => 0,
-  profileChanges: false,
-  setProfileChanges: () => {},
+  addPrincipal: async () => ({ id: '', borrowerProfileId: '', /*...*/ } as Principal), // Provide full default obj structure
+  updatePrincipal: async () => null, removePrincipal: async () => false,
+  calculateCompleteness: () => 0, profileChanges: false, setProfileChanges: () => {},
   autoSaveBorrowerProfile: async () => {},
+  resetProfileState: () => {}, // Add default empty reset function
 });
 
-interface BorrowerProfileProviderProps {
-  children: ReactNode;
-  storageService: StorageService;
-}
-
-// Auto-save interval in milliseconds (3 seconds)
+interface BorrowerProfileProviderProps { children: ReactNode; storageService: StorageService; }
 const AUTO_SAVE_INTERVAL = 3000;
+const generateUniqueId = (): string => `profile_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
-// Generate a truly unique ID
-const generateUniqueId = (): string => {
-  return `profile_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-};
-
-export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = ({ 
-  children, 
-  storageService 
-}) => {
-  const { user } = useAuth();
+export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = ({ children, storageService }) => {
+  const { user } = useAuth(); // Use user from auth context
   const [borrowerProfile, setBorrowerProfile] = useState<BorrowerProfile | null>(null);
   const [principals, setPrincipals] = useState<Principal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [profileChanges, setProfileChanges] = useState(false);
-  
-  const autoSaveTimerRef = React.useRef<NodeJS.Timeout | null>(null);
-  const lastSavedRef = React.useRef<string | null>(null);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedRef = useRef<string | null>(null);
 
-  // Load borrower profile from storage on mount or when user changes
-  useEffect(() => {
-    const loadBorrowerProfile = async () => {
-      if (!user) {
+   // Reset State Function
+   const resetProfileState = useCallback(() => {
+        console.log("[BorrowerProfileContext] Resetting state.");
         setBorrowerProfile(null);
         setPrincipals([]);
+        setProfileChanges(false);
+        lastSavedRef.current = null;
+        if (autoSaveTimerRef.current) { clearInterval(autoSaveTimerRef.current); autoSaveTimerRef.current = null; }
+        // No need to set isLoading here, loading effect handles it
+    }, []); // No dependencies
+
+  // Load borrower profile based on user
+  useEffect(() => {
+    const loadBorrowerProfile = async () => {
+      if (!user || user.role !== 'borrower') {
+        resetProfileState(); // Reset if no user or not borrower
         setIsLoading(false);
         return;
       }
-      
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        
-        // Try to load existing profile for this user
-        const userProfiles = await storageService.getItem<BorrowerProfile[]>('borrowerProfiles') || [];
-        const userProfile = userProfiles.find(profile => profile.userId === user.email);
-        
-        if (userProfile) {
-          setBorrowerProfile(userProfile);
-          
-          // Load principals for this profile
-          const allPrincipals = await storageService.getItem<Principal[]>('principals') || [];
-          const profilePrincipals = allPrincipals.filter(p => p.borrowerProfileId === userProfile.id);
-          setPrincipals(profilePrincipals);
+        const profiles = await storageService.getItem<BorrowerProfile[]>('borrowerProfiles') || [];
+        const currentProfile = profiles.find(profile => profile.userId === user.email);
+        if (currentProfile) {
+            setBorrowerProfile(currentProfile);
+             // Load associated principals
+            const allPrincipals = await storageService.getItem<Principal[]>('principals') || [];
+            setPrincipals(allPrincipals.filter(p => p.borrowerProfileId === currentProfile.id));
+            lastSavedRef.current = JSON.stringify(currentProfile); // Update last saved state on load
         } else {
-          setBorrowerProfile(null);
+           resetProfileState(); // Reset if profile not found for user
         }
-      } catch (error) {
-        console.error('Failed to load borrower profile:', error);
-      } finally {
-        setIsLoading(false);
-      }
+      } catch (error) { console.error('[ProfileContext] Failed load profile:', error); resetProfileState(); }
+      finally { setIsLoading(false); }
     };
-
     loadBorrowerProfile();
-  }, [user, storageService]);
+  }, [user, storageService, resetProfileState]); // Depend on user
 
-  // Save borrower profile to storage whenever it changes
-  useEffect(() => {
-    const saveBorrowerProfile = async () => {
-      if (!borrowerProfile) return;
-      
-      try {
-        // Get existing profiles
-        const existingProfiles = await storageService.getItem<BorrowerProfile[]>('borrowerProfiles') || [];
-        
-        // Replace or add the current profile
-        const updatedProfiles = borrowerProfile.id 
-          ? existingProfiles.map(p => p.id === borrowerProfile.id ? borrowerProfile : p)
-          : [...existingProfiles, borrowerProfile];
-        
-        if (!updatedProfiles.some(p => p.id === borrowerProfile.id)) {
-          updatedProfiles.push(borrowerProfile);
-        }
-        
-        await storageService.setItem('borrowerProfiles', updatedProfiles);
-      } catch (error) {
-        console.error('Failed to save borrower profile:', error);
-      }
-    };
+  // Calculate Completeness
+  const calculateCompleteness = useCallback((profile: BorrowerProfile | null, profilePrincipals: Principal[]): number => {
+        if (!profile) return 0;
+        const requiredFields: (keyof BorrowerProfile)[] = [ 'fullLegalName', 'primaryEntityName', 'primaryEntityStructure', 'contactEmail', 'contactPhone', 'contactAddress', 'yearsCREExperienceRange', 'assetClassesExperience', 'geographicMarketsExperience', 'creditScoreRange', 'netWorthRange', 'liquidityRange' ];
+        let filledCount = 0;
+        requiredFields.forEach(field => { const value = profile[field]; if (value && (Array.isArray(value) ? value.length > 0 : String(value).trim() !== '')) filledCount++; });
+        const optionalFields: (keyof BorrowerProfile)[] = [ 'bioNarrative', 'linkedinUrl', 'websiteUrl', 'totalDealValueClosedRange', 'existingLenderRelationships' ];
+        optionalFields.forEach(field => { const value = profile[field]; if (value && String(value).trim() !== '') filledCount += 0.5; });
+        if (profilePrincipals.length > 0) filledCount += 1 + (Math.min(profilePrincipals.length, 3) * 0.5);
+        const maxPoints = requiredFields.length + optionalFields.length * 0.5 + 2.5; // Adjusted max points
+        return Math.min(100, Math.round((filledCount / maxPoints) * 100));
+   }, []);
 
-    // Save principals to storage
-    const savePrincipals = async () => {
-      if (!principals.length) return;
-      
-      try {
-        // Get existing principals
-        const existingPrincipals = await storageService.getItem<Principal[]>('principals') || [];
-        
-        // Find principals not associated with this profile
-        const otherPrincipals = existingPrincipals.filter(
-          p => !principals.some(current => current.id === p.id)
-        );
-        
-        // Combine with current principals
-        const updatedPrincipals = [...otherPrincipals, ...principals];
-        
-        await storageService.setItem('principals', updatedPrincipals);
-      } catch (error) {
-        console.error('Failed to save principals:', error);
-      }
-    };
+   // Auto Save Profile
+   const autoSaveBorrowerProfile = useCallback(async () => {
+        if (!borrowerProfile || !profileChanges) return;
+        try {
+            const profileStateStr = JSON.stringify(borrowerProfile);
+            if (profileStateStr !== lastSavedRef.current) {
+                const now = new Date().toISOString();
+                const completeness = calculateCompleteness(borrowerProfile, principals);
+                const updatedProfile = { ...borrowerProfile, completenessPercent: completeness, updatedAt: now };
+                setBorrowerProfile(updatedProfile); // Update local state first
 
-    if (borrowerProfile) {
-      saveBorrowerProfile();
-    }
-    
-    if (principals.length) {
-      savePrincipals();
-    }
-  }, [borrowerProfile, principals, storageService]);
+                 // Save updated profile to storage
+                 const profiles = await storageService.getItem<BorrowerProfile[]>('borrowerProfiles') || [];
+                 const updatedProfiles = profiles.map(p => p.id === updatedProfile.id ? updatedProfile : p);
+                 if (!updatedProfiles.some(p => p.id === updatedProfile.id)) updatedProfiles.push(updatedProfile); // Add if new
+                 await storageService.setItem('borrowerProfiles', updatedProfiles);
 
-  // Set up auto-save for profile
-  useEffect(() => {
-    // Clear any existing auto-save timer
-    if (autoSaveTimerRef.current) {
-      clearInterval(autoSaveTimerRef.current);
-      autoSaveTimerRef.current = null;
-    }
+                 // Save principals associated with this profile
+                 const allPrincipals = await storageService.getItem<Principal[]>('principals') || [];
+                 const otherPrincipals = allPrincipals.filter(p => p.borrowerProfileId !== updatedProfile.id);
+                 await storageService.setItem('principals', [...otherPrincipals, ...principals]);
 
-    // If there's a profile and unsaved changes, set up auto-save timer
-    if (borrowerProfile && profileChanges) {
-      autoSaveTimerRef.current = setInterval(() => {
-        autoSaveBorrowerProfile();
-      }, AUTO_SAVE_INTERVAL);
-    }
 
-    // Cleanup function
-    return () => {
-      if (autoSaveTimerRef.current) {
-        clearInterval(autoSaveTimerRef.current);
-        autoSaveTimerRef.current = null;
-      }
-    };
-  }, [borrowerProfile, profileChanges]);
+                lastSavedRef.current = JSON.stringify(updatedProfile);
+                setProfileChanges(false);
+                console.log(`[ProfileContext] Auto-saved profile: ${updatedProfile.fullLegalName}`);
+            }
+        } catch (error) { console.error('[ProfileContext] Auto-save failed:', error); }
+    }, [borrowerProfile, principals, profileChanges, storageService, calculateCompleteness]);
 
-  // Auto-save the borrower profile
-  const autoSaveBorrowerProfile = useCallback(async () => {
-    if (!borrowerProfile || !profileChanges) return;
-    
-    try {
-      // Create a serializable version of the profile for comparison
-      const profileStateStr = JSON.stringify(borrowerProfile);
-      
-      // Only save if profile state has changed since last save
-      if (profileStateStr !== lastSavedRef.current) {
+   // useEffect for Auto Save Timer
+   useEffect(() => {
+       if (autoSaveTimerRef.current) { clearInterval(autoSaveTimerRef.current); }
+       if (borrowerProfile && profileChanges) {
+           autoSaveTimerRef.current = setInterval(autoSaveBorrowerProfile, AUTO_SAVE_INTERVAL);
+       }
+       return () => { if (autoSaveTimerRef.current) { clearInterval(autoSaveTimerRef.current); } };
+   }, [borrowerProfile, profileChanges, autoSaveBorrowerProfile]);
+
+
+  // Create Borrower Profile - Ensure it returns the created profile
+  const createBorrowerProfile = useCallback(async (profileData: Partial<BorrowerProfile>): Promise<BorrowerProfile> => {
+        if (!user) throw new Error('User must be logged in');
         const now = new Date().toISOString();
-        
-        // Update profile with current progress calculations
-        const completeness = calculateCompleteness(borrowerProfile, principals);
-        
-        const updatedProfile = {
-          ...borrowerProfile,
-          completenessPercent: completeness,
-          updatedAt: now
+        const profileId = generateUniqueId();
+        const newProfile: BorrowerProfile = {
+            id: profileId, userId: user.email,
+            fullLegalName: profileData.fullLegalName || '', primaryEntityName: profileData.primaryEntityName || '',
+            primaryEntityStructure: profileData.primaryEntityStructure || 'LLC', contactEmail: profileData.contactEmail || user.email,
+            contactPhone: profileData.contactPhone || '', contactAddress: profileData.contactAddress || '',
+            bioNarrative: profileData.bioNarrative || '', linkedinUrl: profileData.linkedinUrl || '', websiteUrl: profileData.websiteUrl || '',
+            yearsCREExperienceRange: profileData.yearsCREExperienceRange || '0-2', assetClassesExperience: profileData.assetClassesExperience || [],
+            geographicMarketsExperience: profileData.geographicMarketsExperience || [], totalDealValueClosedRange: profileData.totalDealValueClosedRange || 'N/A',
+            existingLenderRelationships: profileData.existingLenderRelationships || '', creditScoreRange: profileData.creditScoreRange || 'N/A',
+            netWorthRange: profileData.netWorthRange || '<$1M', liquidityRange: profileData.liquidityRange || '<$100k',
+            bankruptcyHistory: profileData.bankruptcyHistory || false, foreclosureHistory: profileData.foreclosureHistory || false,
+            litigationHistory: profileData.litigationHistory || false, completenessPercent: 0, createdAt: now, updatedAt: now
         };
-        
-        // Update in state
-        setBorrowerProfile(updatedProfile);
-        
-        // Keep track of what we've saved
-        lastSavedRef.current = JSON.stringify(updatedProfile);
-        
-        // Reset changes flag
-        setProfileChanges(false);
-        
-        console.log(`Auto-saved borrower profile: ${updatedProfile.fullLegalName}`);
-      }
-    } catch (error) {
-      console.error('Failed to auto-save borrower profile:', error);
-    }
-  }, [borrowerProfile, profileChanges, principals]);
+        newProfile.completenessPercent = calculateCompleteness(newProfile, []); // Calculate initial completeness
+        setBorrowerProfile(newProfile); // Update state
+        setPrincipals([]); // Reset principals for new profile
 
-  // Calculate profile completeness
-  const calculateCompleteness = useCallback((profile: BorrowerProfile, profilePrincipals: Principal[]) => {
-    if (!profile) return 0;
-    
-    // Define required fields
-    const requiredFields: (keyof BorrowerProfile)[] = [
-      'fullLegalName',
-      'primaryEntityName',
-      'primaryEntityStructure',
-      'contactEmail',
-      'contactPhone',
-      'contactAddress',
-      'yearsCREExperienceRange',
-      'assetClassesExperience',
-      'geographicMarketsExperience',
-      'creditScoreRange',
-      'netWorthRange',
-      'liquidityRange'
-    ];
-    
-    // Count filled required fields
-    let filledCount = 0;
-    for (const field of requiredFields) {
-      const value = profile[field];
-      if (value) {
-        if (Array.isArray(value) && value.length > 0) {
-          filledCount++;
-        } else if (typeof value === 'string' && value.trim() !== '') {
-          filledCount++;
-        } else if (typeof value === 'number' || typeof value === 'boolean') {
-          filledCount++;
-        }
-      }
-    }
-    
-    // Add bonus points for optional fields
-    const optionalFields: (keyof BorrowerProfile)[] = [
-      'bioNarrative',
-      'linkedinUrl',
-      'websiteUrl',
-      'totalDealValueClosedRange',
-      'existingLenderRelationships'
-    ];
-    
-    for (const field of optionalFields) {
-      const value = profile[field];
-      if (value && typeof value === 'string' && value.trim() !== '') {
-        filledCount += 0.5; // Half point for optional fields
-      }
-    }
-    
-    // Add points for having principals
-    if (profilePrincipals.length > 0) {
-      filledCount += 1 + (Math.min(profilePrincipals.length, 3) * 0.5); // Up to 2.5 extra points for 3+ principals
-    }
-    
-    // Calculate percentage (max points possible is requiredFields.length + 5)
-    const maxPoints = requiredFields.length + 5;
-    const completenessPercent = Math.min(100, Math.round((filledCount / maxPoints) * 100));
-    
-    return completenessPercent;
-  }, []);
+        // Save new profile to storage
+        const profiles = await storageService.getItem<BorrowerProfile[]>('borrowerProfiles') || [];
+        await storageService.setItem('borrowerProfiles', [...profiles.filter(p => p.userId !== user.email), newProfile]); // Replace if exists
 
-  // Create a new borrower profile
-  const createBorrowerProfile = useCallback(async (profileData: Partial<BorrowerProfile>) => {
-    if (!user) throw new Error('User must be logged in to create a profile');
-    
-    const now = new Date().toISOString();
-    const profileId = generateUniqueId();
-    
-    const newProfile: BorrowerProfile = {
-      id: profileId,
-      userId: user.email,
-      fullLegalName: profileData.fullLegalName || '',
-      primaryEntityName: profileData.primaryEntityName || '',
-      primaryEntityStructure: profileData.primaryEntityStructure || 'LLC',
-      contactEmail: profileData.contactEmail || user.email,
-      contactPhone: profileData.contactPhone || '',
-      contactAddress: profileData.contactAddress || '',
-      bioNarrative: profileData.bioNarrative || '',
-      linkedinUrl: profileData.linkedinUrl || '',
-      websiteUrl: profileData.websiteUrl || '',
-      yearsCREExperienceRange: profileData.yearsCREExperienceRange || '0-2',
-      assetClassesExperience: profileData.assetClassesExperience || [],
-      geographicMarketsExperience: profileData.geographicMarketsExperience || [],
-      totalDealValueClosedRange: profileData.totalDealValueClosedRange || 'N/A',
-      existingLenderRelationships: profileData.existingLenderRelationships || '',
-      creditScoreRange: profileData.creditScoreRange || 'N/A',
-      netWorthRange: profileData.netWorthRange || '<$1M',
-      liquidityRange: profileData.liquidityRange || '<$100k',
-      bankruptcyHistory: profileData.bankruptcyHistory || false,
-      foreclosureHistory: profileData.foreclosureHistory || false,
-      litigationHistory: profileData.litigationHistory || false,
-      completenessPercent: 0, // Will be calculated
-      createdAt: now,
-      updatedAt: now
-    };
-    
-    // Calculate initial completeness
-    newProfile.completenessPercent = calculateCompleteness(newProfile, []);
-    
-    setBorrowerProfile(newProfile);
-    
-    // Update user with profile ID reference
-    if (user) {
-      const userUpdate = {
-        ...user,
-        profileId: profileId
-      };
-      await storageService.setItem('user', userUpdate);
-    }
-    
-    return newProfile;
-  }, [user, calculateCompleteness, storageService]);
+        lastSavedRef.current = JSON.stringify(newProfile); // Update last saved
+        console.log(`[ProfileContext] Created profile ${profileId} for ${user.email}`);
+        return newProfile; // Return the created profile object
+  }, [user, storageService, calculateCompleteness]);
 
-  // Update borrower profile
-  const updateBorrowerProfile = useCallback(async (updates: Partial<BorrowerProfile>, manual = false) => {
-    if (!borrowerProfile) return null;
-    
-    const now = new Date().toISOString();
-    
-    const updatedProfile: BorrowerProfile = {
-      ...borrowerProfile,
-      ...updates,
-      updatedAt: now
-    };
-    
-    // Recalculate completeness
-    updatedProfile.completenessPercent = calculateCompleteness(updatedProfile, principals);
-    
-    setBorrowerProfile(updatedProfile);
-    
-    // If it's a manual save, update last saved reference and reset changes flag
-    if (manual) {
-      lastSavedRef.current = JSON.stringify(updatedProfile);
-      setProfileChanges(false);
-    }
-    
-    return updatedProfile;
-  }, [borrowerProfile, principals, calculateCompleteness]);
-
-  // Add a principal
-  const addPrincipal = useCallback(async (principalData: Partial<Principal>) => {
-    if (!borrowerProfile) throw new Error('Borrower profile must exist to add a principal');
-    
-    const now = new Date().toISOString();
-    const principalId = `principal_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    
-    const newPrincipal: Principal = {
-      id: principalId,
-      borrowerProfileId: borrowerProfile.id,
-      principalLegalName: principalData.principalLegalName || '',
-      principalRoleDefault: principalData.principalRoleDefault || 'Key Principal',
-      principalBio: principalData.principalBio || '',
-      principalEmail: principalData.principalEmail || '',
-      ownershipPercentage: principalData.ownershipPercentage || 0,
-      creditScoreRange: principalData.creditScoreRange || 'N/A',
-      netWorthRange: principalData.netWorthRange || '<$1M',
-      liquidityRange: principalData.liquidityRange || '<$100k',
-      bankruptcyHistory: principalData.bankruptcyHistory || false,
-      foreclosureHistory: principalData.foreclosureHistory || false,
-      pfsDocumentId: principalData.pfsDocumentId || null,
-      createdAt: now,
-      updatedAt: now
-    };
-    
-    setPrincipals(prev => [...prev, newPrincipal]);
-    
-    // Update borrower profile completeness
-    const updatedCompleteness = calculateCompleteness(borrowerProfile, [...principals, newPrincipal]);
-    setBorrowerProfile(prev => prev ? { ...prev, completenessPercent: updatedCompleteness, updatedAt: now } : null);
-    
-    return newPrincipal;
-  }, [borrowerProfile, principals, calculateCompleteness]);
-
-  // Update a principal
-  const updatePrincipal = useCallback(async (id: string, updates: Partial<Principal>) => {
-    const principalIndex = principals.findIndex(p => p.id === id);
-    if (principalIndex === -1) return null;
-    
-    const now = new Date().toISOString();
-    
-    const updatedPrincipal: Principal = {
-      ...principals[principalIndex],
-      ...updates,
-      updatedAt: now
-    };
-    
-    const updatedPrincipals = [...principals];
-    updatedPrincipals[principalIndex] = updatedPrincipal;
-    
-    setPrincipals(updatedPrincipals);
-    
-    // Update borrower profile completeness if it exists
-    if (borrowerProfile) {
-      const updatedCompleteness = calculateCompleteness(borrowerProfile, updatedPrincipals);
-      setBorrowerProfile(prev => prev ? { ...prev, completenessPercent: updatedCompleteness, updatedAt: now } : null);
-    }
-    
-    return updatedPrincipal;
-  }, [borrowerProfile, principals, calculateCompleteness]);
-
-  // Remove a principal
-  const removePrincipal = useCallback(async (id: string) => {
-    try {
-      const updatedPrincipals = principals.filter(p => p.id !== id);
-      setPrincipals(updatedPrincipals);
-      
-      // Update borrower profile completeness if it exists
-      if (borrowerProfile) {
+  // Update Borrower Profile
+  const updateBorrowerProfile = useCallback(async (updates: Partial<BorrowerProfile>, manual = false): Promise<BorrowerProfile | null> => {
+        if (!borrowerProfile) return null;
         const now = new Date().toISOString();
+        const updatedProfile: BorrowerProfile = { ...borrowerProfile, ...updates, updatedAt: now };
+        updatedProfile.completenessPercent = calculateCompleteness(updatedProfile, principals);
+        setBorrowerProfile(updatedProfile); // Update state
+        if (manual) {
+            lastSavedRef.current = JSON.stringify(updatedProfile);
+            setProfileChanges(false);
+             // Trigger immediate save to storage on manual update
+             try {
+                 const profiles = await storageService.getItem<BorrowerProfile[]>('borrowerProfiles') || [];
+                 const updatedProfiles = profiles.map(p => p.id === updatedProfile.id ? updatedProfile : p);
+                 await storageService.setItem('borrowerProfiles', updatedProfiles);
+             } catch (e) { console.error("Manual profile save failed:", e); }
+        } else {
+            setProfileChanges(true); // Mark changes for auto-save if not manual
+        }
+        return updatedProfile;
+  }, [borrowerProfile, principals, storageService, calculateCompleteness]);
+
+  // Add Principal
+  const addPrincipal = useCallback(async (principalData: Partial<Principal>): Promise<Principal> => {
+        if (!borrowerProfile?.id) throw new Error('Profile must exist');
+        const now = new Date().toISOString(); const pid = `principal_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        const newPrincipal: Principal = {
+            id: pid, borrowerProfileId: borrowerProfile.id, principalLegalName: principalData.principalLegalName || '',
+            principalRoleDefault: principalData.principalRoleDefault || 'Key Principal', principalBio: principalData.principalBio || '',
+            principalEmail: principalData.principalEmail || '', ownershipPercentage: principalData.ownershipPercentage || 0,
+            creditScoreRange: principalData.creditScoreRange || 'N/A', netWorthRange: principalData.netWorthRange || '<$1M',
+            liquidityRange: principalData.liquidityRange || '<$100k', bankruptcyHistory: principalData.bankruptcyHistory || false,
+            foreclosureHistory: principalData.foreclosureHistory || false, pfsDocumentId: principalData.pfsDocumentId || null,
+            createdAt: now, updatedAt: now
+        };
+        const updatedPrincipals = [...principals, newPrincipal];
+        setPrincipals(updatedPrincipals);
+        // Update profile completeness & mark changes for auto-save
         const updatedCompleteness = calculateCompleteness(borrowerProfile, updatedPrincipals);
         setBorrowerProfile(prev => prev ? { ...prev, completenessPercent: updatedCompleteness, updatedAt: now } : null);
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Failed to remove principal:', error);
-      return false;
-    }
-  }, [borrowerProfile, principals, calculateCompleteness]);
+        setProfileChanges(true);
+        // Save principals list immediately to storage as well
+        try {
+            const allStoredPrincipals = await storageService.getItem<Principal[]>('principals') || [];
+            const otherStoredPrincipals = allStoredPrincipals.filter(p => p.borrowerProfileId !== borrowerProfile.id);
+            await storageService.setItem('principals', [...otherStoredPrincipals, ...updatedPrincipals]);
+        } catch (e) { console.error("Failed to save principals after add:", e); }
+        return newPrincipal;
+  }, [borrowerProfile, principals, storageService, calculateCompleteness]);
+
+  // Update Principal
+  const updatePrincipal = useCallback(async (id: string, updates: Partial<Principal>): Promise<Principal | null> => {
+        let updatedPrincipal: Principal | null = null;
+        setPrincipals(prev => { const i = prev.findIndex(p => p.id === id); if (i === -1) return prev; const now = new Date().toISOString(); updatedPrincipal = { ...prev[i], ...updates, updatedAt: now }; const list = [...prev]; list[i] = updatedPrincipal; return list; });
+        if (updatedPrincipal && borrowerProfile) {
+            setProfileChanges(true); // Mark profile as changed due to principal update
+             // Save updated principals list to storage
+             try {
+                 const allStoredPrincipals = await storageService.getItem<Principal[]>('principals') || [];
+                 const updatedList = allStoredPrincipals.map(p => p.id === id ? updatedPrincipal! : p);
+                 await storageService.setItem('principals', updatedList);
+             } catch (e) { console.error("Failed to save principals after update:", e); }
+        }
+        return updatedPrincipal;
+  }, [borrowerProfile, storageService]); // Removed principals dependency
+
+  // Remove Principal
+  const removePrincipal = useCallback(async (id: string): Promise<boolean> => {
+        let success = false;
+        setPrincipals(prev => { const list = prev.filter(p => p.id !== id); success = list.length < prev.length; return list; });
+        if (success && borrowerProfile) {
+            setProfileChanges(true); // Mark profile as changed
+            // Save updated principals list to storage
+             try {
+                 const allStoredPrincipals = await storageService.getItem<Principal[]>('principals') || [];
+                 const updatedList = allStoredPrincipals.filter(p => p.id !== id);
+                 await storageService.setItem('principals', updatedList);
+             } catch (e) { console.error("Failed to save principals after remove:", e); success = false; }
+        }
+        return success;
+  }, [borrowerProfile, storageService]);
 
   return (
-    <BorrowerProfileContext.Provider value={{
-      borrowerProfile,
-      principals,
-      isLoading,
-      createBorrowerProfile,
-      updateBorrowerProfile,
-      addPrincipal,
-      updatePrincipal,
-      removePrincipal,
-      calculateCompleteness,
-      profileChanges,
-      setProfileChanges,
-      autoSaveBorrowerProfile,
-    }}>
+    <BorrowerProfileContext.Provider value={{ borrowerProfile, principals, isLoading, createBorrowerProfile, updateBorrowerProfile, addPrincipal, updatePrincipal, removePrincipal, calculateCompleteness, profileChanges, setProfileChanges, autoSaveBorrowerProfile, resetProfileState }}>
       {children}
     </BorrowerProfileContext.Provider>
   );

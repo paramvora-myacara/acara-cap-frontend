@@ -9,14 +9,14 @@ export interface Step {
   title: string;
   component: React.ReactNode;
   isOptional?: boolean;
-  isCompleted?: boolean;
+  isCompleted?: boolean; // Track completion state if needed externally
 }
 
 interface FormWizardProps {
   steps: Step[];
   onComplete?: () => void;
   className?: string;
-  allowSkip?: boolean;
+  allowSkip?: boolean; // Note: Skipping logic might need refinement if steps depend on each other
   showProgressBar?: boolean;
   showStepIndicators?: boolean;
   initialStep?: number;
@@ -32,64 +32,68 @@ export const FormWizard: React.FC<FormWizardProps> = ({
   initialStep = 0,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(initialStep);
-  const [completedSteps, setCompletedSteps] = useState<Record<string, boolean>>({});
-  
-  // Reset completed steps when steps change
+  // Internal completion tracking for visual state
+  const [internallyCompletedSteps, setInternallyCompletedSteps] = useState<Record<string, boolean>>({});
+
+  // Initialize internal completion based on external prop (if provided)
   useEffect(() => {
     const initialCompleted: Record<string, boolean> = {};
     steps.forEach(step => {
-      if (step.isCompleted) {
+      if (step.isCompleted) { // Check the prop passed in
         initialCompleted[step.id] = true;
       }
     });
-    setCompletedSteps(initialCompleted);
-  }, [steps]);
-  
+     // Also mark previous steps as complete initially if starting later
+     for (let i = 0; i < initialStep; i++) {
+         initialCompleted[steps[i].id] = true;
+     }
+    setInternallyCompletedSteps(initialCompleted);
+  }, [steps, initialStep]); // Rerun if steps or initialStep change
+
+
   const currentStep = steps[currentStepIndex];
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === steps.length - 1;
-  
+
   const goNext = () => {
+    // Mark current step as completed internally for visual feedback
+    setInternallyCompletedSteps(prev => ({ ...prev, [currentStep.id]: true }));
+
     if (isLastStep) {
-      // Mark the current step as completed
-      setCompletedSteps(prev => ({ ...prev, [currentStep.id]: true }));
-      onComplete?.();
+      onComplete?.(); // Call external onComplete if provided
     } else {
-      // Mark the current step as completed and go to next step
-      setCompletedSteps(prev => ({ ...prev, [currentStep.id]: true }));
       setCurrentStepIndex(currentStepIndex + 1);
     }
   };
-  
+
   const goPrevious = () => {
     if (!isFirstStep) {
       setCurrentStepIndex(currentStepIndex - 1);
     }
   };
-  
+
   const goToStep = (index: number) => {
-    // Only allow navigating to completed steps or the next incomplete step
-    const previousStepsCompleted = steps.slice(0, index).every(step => 
-      step.isOptional || completedSteps[step.id]
-    );
-    
-    if (previousStepsCompleted || allowSkip) {
-      setCurrentStepIndex(index);
+    // Allow navigation only to steps before the current one if they are marked complete
+    if (index < currentStepIndex || internallyCompletedSteps[steps[index-1]?.id] || allowSkip) {
+       setCurrentStepIndex(index);
     }
+    // Add logic here if you want to prevent jumping far ahead
   };
-  
+
+  // Calculate progress based on *internal* completion tracking for visuals
   const progressPercent = Math.round(
-    (Object.keys(completedSteps).length / steps.length) * 100
+    (Object.values(internallyCompletedSteps).filter(Boolean).length / steps.length) * 100
   );
-  
+
+
   return (
     <div className={cn("w-full", className)}>
       {/* Progress bar */}
       {showProgressBar && (
         <div className="mb-6">
           <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-blue-600 transition-all duration-300" 
+            <div
+              className="h-full bg-blue-600 transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -98,59 +102,62 @@ export const FormWizard: React.FC<FormWizardProps> = ({
           </div>
         </div>
       )}
-      
-      {/* Step indicators */}
+
+      {/* Step indicators and titles */}
       {showStepIndicators && (
-        <div className="flex justify-center mb-8">
-          <div className="flex items-center">
-            {steps.map((step, index) => (
-              <React.Fragment key={step.id}>
-                {/* Step circle */}
-                <div 
-                  className={cn(
-                    "flex items-center justify-center w-8 h-8 rounded-full cursor-pointer transition-all",
-                    currentStepIndex === index ? "bg-blue-600 text-white" : 
-                    completedSteps[step.id] ? "bg-green-100 text-green-600 border border-green-200" : 
-                    "bg-gray-100 text-gray-400 border border-gray-200"
-                  )}
-                  onClick={() => goToStep(index)}
-                >
-                  {completedSteps[step.id] ? (
-                    <CheckCircle className="w-5 h-5" />
-                  ) : (
-                    <Circle className="w-5 h-5" />
-                  )}
-                </div>
-                
-                {/* Step title - visible only for current step */}
-                <div className={cn(
-                  "absolute mt-10 text-sm font-medium transition-all",
-                  currentStepIndex === index ? "opacity-100" : "opacity-0"
-                )}>
-                  {step.title}
-                </div>
-                
-                {/* Connector line */}
-                {index < steps.length - 1 && (
-                  <div className={cn(
-                    "w-16 h-1 mx-1",
-                    completedSteps[step.id] ? "bg-green-200" : "bg-gray-200"
-                  )} />
+        <div className="flex justify-between items-start mb-8 px-4 md:px-8 relative"> {/* Added relative positioning */}
+          {steps.map((step, index) => (
+            <div key={step.id} className="flex-1 flex flex-col items-center relative group"> {/* Added group */}
+              {/* Step Circle */}
+              <div
+                className={cn(
+                  "flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all z-10",
+                  currentStepIndex === index ? "bg-blue-600 border-blue-600 text-white" :
+                  internallyCompletedSteps[step.id] ? "bg-green-500 border-green-500 text-white" :
+                  index < currentStepIndex ? "bg-white border-blue-600 text-blue-600" : // Completed but not active
+                  "bg-white border-gray-300 text-gray-400", // Upcoming
+                  index <= currentStepIndex || allowSkip ? "cursor-pointer" : "cursor-default"
                 )}
-              </React.Fragment>
-            ))}
-          </div>
+                onClick={() => goToStep(index)}
+              >
+                {internallyCompletedSteps[step.id] || index < currentStepIndex ? (
+                    <CheckCircle className="w-5 h-5" />
+                 ) : (
+                    <span className="text-xs font-semibold">{index + 1}</span> // Show number instead of circle icon
+                )}
+              </div>
+
+              {/* Step Title - Positioned below */}
+              <div className={cn(
+                "mt-2 text-center text-xs md:text-sm font-medium absolute top-full whitespace-nowrap px-1 transition-colors", // Position below, allow wrapping maybe?
+                currentStepIndex === index ? "text-blue-600 font-semibold" :
+                internallyCompletedSteps[step.id] || index < currentStepIndex ? "text-gray-600" :
+                "text-gray-400"
+              )}>
+                {step.title}
+              </div>
+
+               {/* Connector Line (Behind Circles) */}
+               {index < steps.length - 1 && (
+                 <div className={cn(
+                     "absolute top-4 left-1/2 w-full h-0.5 z-0", // Position behind circle
+                     internallyCompletedSteps[step.id] || index < currentStepIndex ? "bg-blue-600" : "bg-gray-300"
+                 )} />
+               )}
+
+            </div>
+          ))}
         </div>
       )}
-      
-      {/* Step content */}
-      <div className="mb-6">
-        {currentStep.component}
+
+      {/* Step content Area - Add margin top to avoid overlap with titles */}
+      <div className="mt-8 mb-6"> {/* Added mt-8 */}
+        {currentStep?.component} {/* Added optional chaining */}
       </div>
-      
+
       {/* Navigation buttons */}
       <div className={cn(
-        "flex justify-between mt-8",
+        "flex items-center pt-4 border-t", // Added border-t for separation
         isFirstStep ? "justify-end" : "justify-between"
       )}>
         {!isFirstStep && (
@@ -162,11 +169,17 @@ export const FormWizard: React.FC<FormWizardProps> = ({
             Previous
           </Button>
         )}
-        
+        {/* Show skip button only if allowed and step is optional */}
+        {allowSkip && currentStep?.isOptional && !isLastStep && (
+             <Button variant="ghost" onClick={goNext} className="text-sm text-gray-500 hover:text-gray-700">
+                Skip (Optional)
+             </Button>
+        )}
         <Button
           variant="primary"
-          rightIcon={<ChevronRight size={16} />}
+          rightIcon={!isLastStep ? <ChevronRight size={16} /> : <CheckCircle size={16} />}
           onClick={goNext}
+          // Add validation logic if needed: disabled={!isStepValid}
         >
           {isLastStep ? 'Complete' : 'Next'}
         </Button>

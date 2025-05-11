@@ -1,74 +1,63 @@
 // src/components/ui/ButtonSelect.tsx
 import React from 'react';
-import { cn } from '../../utils/cn';
+import { cn } from '@/utils/cn';
+import { Button } from './Button';
 
-export interface ButtonSelectOption {
-  value: string;
+interface ButtonSelectProps {
   label: string;
-}
-
-export interface ButtonSelectProps {
-  options: string[] | ButtonSelectOption[];
-  value: string[];
-  onChange: (value: string[]) => void;
+  options: ReadonlyArray<string>;
+  selectedValue: string | null | undefined;
+  onSelect?: (value: string) => void; // *** Make onSelect optional ***
+  required?: boolean;
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
-  disabled?: boolean;
+  buttonClassName?: string;
+  gridCols?: string;
 }
 
 export const ButtonSelect: React.FC<ButtonSelectProps> = ({
+  label,
   options,
-  value,
-  onChange,
+  selectedValue,
+  onSelect, // Optional now
+  required = false,
   className,
-  size = 'md',
-  disabled = false,
+  buttonClassName = "text-xs md:text-sm",
+  gridCols = "grid-cols-2 sm:grid-cols-3 md:grid-cols-4",
 }) => {
-  // Convert string[] to ButtonSelectOption[] if needed
-  const normalizedOptions = options.map(option => 
-    typeof option === 'string' ? { value: option, label: option } : option
-  );
-
-  const toggleOption = (optionValue: string) => {
-    if (disabled) return;
-    
-    if (value.includes(optionValue)) {
-      onChange(value.filter(item => item !== optionValue));
+  // Handler that checks if onSelect exists before calling it
+  const handleClick = (option: string) => {
+    if (onSelect) {
+      onSelect(option);
     } else {
-      onChange([...value, optionValue]);
+      console.warn(`ButtonSelect: onSelect handler not provided for label "${label}"`);
     }
   };
 
-  const sizeClasses = {
-    sm: 'text-xs py-1 px-2',
-    md: 'text-sm py-1.5 px-3',
-    lg: 'text-base py-2 px-4',
-  };
-
   return (
-    <div className={cn("flex flex-wrap gap-2", className)}>
-      {normalizedOptions.map((option) => {
-        const isSelected = value.includes(option.value);
-        return (
-          <button
-            key={option.value}
+    <div className={cn("w-full", className)}>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <div className={`grid ${gridCols} gap-2`}>
+        {options.map((option) => (
+          <Button
+            key={option}
             type="button"
-            onClick={() => toggleOption(option.value)}
-            disabled={disabled}
+            variant={selectedValue === option ? 'primary' : 'outline'}
+            // Use the safe handler
+            onClick={() => handleClick(option)}
             className={cn(
-              "rounded-md border transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
-              sizeClasses[size],
-              isSelected 
-                ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700" 
-                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50",
-              disabled && "opacity-50 cursor-not-allowed"
+              "justify-center w-full px-2 py-1.5 md:px-3 md:py-2 whitespace-nowrap focus:ring-2 focus:ring-offset-1 focus:ring-blue-500",
+               selectedValue === option
+                ? 'ring-2 ring-blue-500 ring-offset-1 shadow-md'
+                : 'text-gray-700 hover:bg-gray-50',
+               buttonClassName
             )}
-            aria-pressed={isSelected}
           >
-            {option.label}
-          </button>
-        );
-      })}
+            {option}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 };

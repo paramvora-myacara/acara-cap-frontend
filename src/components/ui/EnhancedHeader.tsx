@@ -4,7 +4,7 @@
 import React, { useState, useEffect, MutableRefObject } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { LogIn, Menu, X } from 'lucide-react';
+import { LogIn, Menu, X, Briefcase } from 'lucide-react'; // Added Briefcase for Process
 import { Button } from './Button';
 import { cn } from '@/utils/cn';
 
@@ -13,23 +13,44 @@ interface EnhancedHeaderProps {
   logoRef?: MutableRefObject<HTMLImageElement | null>;
 }
 
-export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({ 
+export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
   scrolled,
-  logoRef 
+  logoRef
 }) => {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (mobileMenuOpen) {
-        setMobileMenuOpen(false);
+      if (mobileMenuOpen && !(e.target instanceof Element && e.target.closest('header'))) {
+         setMobileMenuOpen(false);
       }
     };
-    
-    document.addEventListener('click', handleClickOutside);
+
+    if (mobileMenuOpen) {
+        document.addEventListener('click', handleClickOutside);
+    }
     return () => document.removeEventListener('click', handleClickOutside);
   }, [mobileMenuOpen]);
+
+  const toggleMobileMenu = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleNav = (path: string, isSectionLink: boolean = false) => {
+    setMobileMenuOpen(false);
+    if (isSectionLink) {
+        // For section links, we need to ensure we are on the homepage first
+        if (window.location.pathname === '/') {
+            document.getElementById(path.substring(1))?.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            router.push('/' + path); // Navigate to homepage then scroll (can be improved)
+        }
+    } else {
+        router.push(path);
+    }
+  };
 
   return (
     <header
@@ -42,98 +63,92 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
     >
       <div className="container mx-auto flex justify-between items-center px-4">
         <Link href="/" className="flex items-center">
-          <img 
+          <img
             ref={logoRef}
-            src="/acara-logo.png" 
-            alt="ACARA-CAP" 
+            src="/acara-logo.png"
+            alt="ACARA-CAP"
             className={cn(
               "transition-all duration-300 object-contain",
-              scrolled ? "h-8" : "h-10" // Made the logo smaller
+              scrolled ? "h-8" : "h-10"
             )}
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.onerror = null;
-              target.style.fontSize = scrolled ? '1.5rem' : '1.75rem';
-              target.style.fontWeight = 'bold';
-              target.style.color = '#3B82F6';
-              target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMjAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjE2Ij5BQ0FSQS1DQVA8L3RleHQ+PC9zdmc+';
+              target.outerHTML = `<span class="font-bold text-lg ${scrolled ? 'text-blue-700' : 'text-blue-800'}">ACARA-CAP</span>`;
             }}
           />
         </Link>
 
-        {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-6">
           <nav className="flex items-center space-x-6">
-            <Link href="#lenderline-section" className={cn(
+            <Link href="/#lenderline-section" scroll={false} // Add scroll={false} for smooth scroll
+              onClick={(e) => { e.preventDefault(); document.getElementById('lenderline-section')?.scrollIntoView({ behavior: 'smooth' });}}
+              className={cn(
               "text-sm font-medium transition-colors",
               scrolled ? "text-gray-700 hover:text-blue-600" : "text-gray-800 hover:text-blue-700"
             )}>
               <span className="font-semibold">LenderLine</span>
               <sup className="text-xs">™</sup>
             </Link>
-            <Link href="/process" className={cn(
+            <Link href="/#process-section" scroll={false} // Add scroll={false}
+              onClick={(e) => { e.preventDefault(); document.getElementById('process-section')?.scrollIntoView({ behavior: 'smooth' });}}
+              className={cn(
               "text-sm font-medium transition-colors",
               scrolled ? "text-gray-700 hover:text-blue-600" : "text-gray-800 hover:text-blue-700"
             )}>
               Process
             </Link>
           </nav>
-          
-          <Button 
-            variant="primary" 
-            size="sm" 
+
+          <Button
+            variant="primary"
+            size="sm"
             leftIcon={<LogIn size={16} />}
             onClick={() => router.push('/login')}
             className={cn(
-              scrolled ? "bg-blue-600" : "bg-blue-700",
-              "font-medium"
+              scrolled ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-700 hover:bg-blue-800",
+              "font-medium transition-colors duration-200"
             )}
           >
             <span>Access <span className="font-bold">Deal Room</span><sup className="text-xs">™</sup></span>
           </Button>
         </div>
 
-        {/* Mobile Menu Button */}
-        <button 
-          className="md:hidden p-2 text-gray-700 focus:outline-none" 
-          onClick={(e) => {
-            e.stopPropagation();
-            setMobileMenuOpen(!mobileMenuOpen);
-          }}
+        <button
+          className="md:hidden p-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded"
+          onClick={toggleMobileMenu}
+          aria-label="Toggle mobile menu"
+          aria-expanded={mobileMenuOpen}
         >
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t shadow-lg">
+        <div className="md:hidden bg-white border-t shadow-lg absolute top-full left-0 right-0">
           <div className="container mx-auto py-4 px-4">
             <nav className="flex flex-col space-y-4">
-              <Link 
-                href="#lenderline-section" 
-                className="text-gray-700 hover:text-blue-600 py-2 text-sm font-medium"
-                onClick={() => setMobileMenuOpen(false)}
+               <Link
+                href="/#lenderline-section"
+                className="text-gray-700 hover:text-blue-600 py-2 text-sm font-medium block"
+                onClick={() => handleNav('#lenderline-section', true)}
               >
                 <span className="font-semibold">LenderLine</span>
                 <sup className="text-xs">™</sup>
               </Link>
-              <Link 
-                href="/process" 
-                className="text-gray-700 hover:text-blue-600 py-2 text-sm font-medium"
-                onClick={() => setMobileMenuOpen(false)}
+              <Link
+                href="/#process-section"
+                className="text-gray-700 hover:text-blue-600 py-2 text-sm font-medium block"
+                onClick={() => handleNav('#process-section', true)}
               >
                 Process
               </Link>
-              <Button 
-                variant="primary" 
-                size="sm" 
+              <Button
+                variant="primary"
+                size="sm"
                 leftIcon={<LogIn size={16} />}
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  router.push('/login');
-                }}
-                className="mt-2"
+                onClick={() => handleNav('/login')}
+                className="mt-2 w-full"
               >
                 <span>Access <span className="font-bold">Deal Room</span><sup className="text-xs">™</sup></span>
               </Button>

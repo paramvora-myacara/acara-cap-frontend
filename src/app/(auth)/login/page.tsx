@@ -2,14 +2,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'; // Import useSearchParams
 import { useAuth } from '../../../hooks/useAuth';
 import { useUI } from '../../../hooks/useUI';
 import AuthLayout from '../../../components/layout/AuthLayout';
-import { Form, FormGroup, FormLabel, FormHelperText } from '../../../components/ui/Form';
+import { Form, FormGroup } from '../../../components/ui/Form'; // Removed unused FormLabel, FormHelperText
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
-import { Sparkles, Mail, Lock } from 'lucide-react';
+import { Sparkles, Mail } from 'lucide-react'; // Removed Lock icon as it's not used
 import { GlobalToast } from '../../../components/ui/GlobalToast';
 import { LoadingOverlay } from '../../../components/ui/LoadingOverlay';
 
@@ -19,36 +19,47 @@ export default function LoginPage() {
   const { login, isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { showNotification, setLoading } = useUI();
   const router = useRouter();
+  const searchParams = useSearchParams(); // Hook to read query parameters
 
-  // Check for existing user session
+  const [loginSource, setLoginSource] = useState<'direct' | 'lenderline'>('direct');
+
+  // Determine login source from query parameter on mount
   useEffect(() => {
-    if (isAuthenticated) {
+    const sourceParam = searchParams.get('from');
+    if (sourceParam === 'lenderline') {
+      setLoginSource('lenderline');
+      console.log("Login source detected: lenderline"); // Log for debugging
+    } else {
+        setLoginSource('direct');
+         console.log("Login source detected: direct"); // Log for debugging
+    }
+  }, [searchParams]);
+
+
+  // Check for existing user session (no change needed here)
+  useEffect(() => {
+    if (isAuthenticated && user) { // Added check for user object
       // Redirect based on user role
-      if (user?.role === 'advisor') {
-        router.push('/advisor/dashboard');
-      } else if (user?.role === 'admin') {
-        router.push('/admin/dashboard');
+      if (user.role === 'advisor') {
+        router.push('/advisor/dashboard'); // Assuming this route exists or will exist
+      } else if (user.role === 'admin') {
+        router.push('/admin/dashboard'); // Assuming this route exists or will exist
       } else {
+         // For borrowers, the redirection logic will now be handled post-login
+         // based on AuthContext/Dashboard logic, so just push to dashboard initially.
         router.push('/dashboard');
       }
     }
   }, [isAuthenticated, router, user]);
 
-  // Check if user is coming from lender selection
-  useEffect(() => {
-    const formData = localStorage.getItem('lastFormData');
-    if (formData) {
-      // We'll use this data later when creating a project
-      console.log('Form data available from previous selection');
-    }
-  }, []);
 
-  // Update loading state
+  // Update loading state (no change needed here)
   useEffect(() => {
     setLoading(authLoading);
   }, [authLoading, setLoading]);
 
-  // Update the handleLogin function in login page
+
+  // --- Updated handleLogin function ---
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
@@ -61,29 +72,40 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      
-      // Detect if this should be an advisor login based on email
+
+      // Detect role (as before)
       const isAdvisor = email.includes('advisor') || email.endsWith('@acaracap.com');
-      const role = isAdvisor ? 'advisor' : 'borrower';
-      
-      await login(email, role);
-      
+      const isAdmin = email.includes('admin@acaracap.com'); // Example admin rule
+      const role: 'borrower' | 'advisor' | 'admin' = isAdmin ? 'admin' : isAdvisor ? 'advisor' : 'borrower';
+
+      // Call login with the CORRECT arguments: email, source, role
+      await login(email, loginSource, role);
+
       showNotification({
         type: 'success',
         message: 'Successfully signed in!',
       });
-      
-      // Always redirect to dashboard first, regardless of user type
+
+      // --- Redirection Logic ---
+      // The AuthContext now handles seeding data.
+      // The Dashboard page will handle the logic of where to send the user next
+      // (either dashboard itself or project workspace).
+      // So, always redirect non-borrowers to their specific dashboards,
+      // and borrowers *always* go to /dashboard first.
       if (role === 'advisor') {
-        router.push('/advisor/dashboard');
+        router.push('/advisor/dashboard'); // Make sure this route exists
+      } else if (role === 'admin') {
+        router.push('/admin/dashboard'); // Make sure this route exists
       } else {
-        // For borrowers, always go to dashboard
+        // Borrowers always go to /dashboard, which will decide the next step
         router.push('/dashboard');
       }
+
     } catch (err) {
+       console.error("Login Error:", err); // Log the actual error
       showNotification({
         type: 'error',
-        message: 'An error occurred. Please try again.',
+        message: err instanceof Error ? err.message : 'An error occurred during login. Please try again.',
       });
     } finally {
       setLoading(false);
@@ -92,9 +114,10 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
+      {/* LoadingOverlay and GlobalToast moved inside AuthLayout if not already */}
       <LoadingOverlay />
       <GlobalToast />
-      
+
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl shadow-xl overflow-hidden transform transition-all hover:scale-[1.01] duration-300">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
@@ -104,15 +127,15 @@ export default function LoginPage() {
             </div>
             <p className="mt-2 opacity-90">Sign in to access the lender matching platform</p>
           </div>
-          
+
           <div className="p-6">
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-800">Sign In</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Sign In / Sign Up</h3>
               <p className="text-gray-600 text-sm mt-1">
-                Enter your email to access the platform
+                Enter your email to continue
               </p>
             </div>
-            
+
             <Form onSubmit={handleLogin} className="space-y-4">
               <FormGroup>
                 <Input
@@ -127,17 +150,21 @@ export default function LoginPage() {
                   required
                 />
               </FormGroup>
-              
-              <div className="text-sm text-gray-500 mt-2">
-                <p>
-                  <strong>Demo account options:</strong>
+
+              {/* Updated Test Account Info */}
+              <div className="text-sm text-gray-500 mt-2 p-3 bg-gray-50 rounded border border-gray-200">
+                <p className="font-medium mb-1">
+                  <strong>Test account options:</strong>
                 </p>
-                <ul className="mt-1 space-y-1">
-                  <li>Borrower: <span className="text-blue-600">borrower@example.com</span></li>
-                  <li>Advisor: <span className="text-blue-600">advisor@acaracap.com</span></li>
+                <ul className="mt-1 space-y-1 list-disc list-inside">
+                  <li>Borrower 1 (Full Profile): <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower1@example.com</code></li>
+                  <li>Borrower 2 (Partial Profile): <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower2@example.com</code></li>
+                  <li>New Borrower: <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower3@example.com</code></li>
+                  <li>Advisor: <code className="text-purple-600 text-xs bg-purple-50 px-1 rounded">advisor@acaracap.com</code></li>
+                   {/* Add other roles if needed */}
                 </ul>
               </div>
-              
+
               <Button
                 type="submit"
                 variant="primary"
@@ -146,7 +173,7 @@ export default function LoginPage() {
               >
                 Continue
               </Button>
-              
+
               <p className="text-center text-xs text-gray-500 mt-4">
                 By continuing, you agree to our Terms of Service and Privacy Policy.
               </p>

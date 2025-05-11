@@ -6,7 +6,9 @@ import { Button } from '../ui/Button';
 import { MessageSquare, Send, ChevronRight } from 'lucide-react';
 import { useProjects } from '../../hooks/useProjects';
 import { ProjectMessage } from '../../types/enhanced-types';
+// Adjust path if your mock service is elsewhere
 import { getAdvisorById, generateAdvisorMessage } from '../../../lib/enhancedMockApiService';
+import { useAuth } from '../../hooks/useAuth'; // Import useAuth
 
 interface MessagePanelProps {
   projectId: string;
@@ -14,72 +16,117 @@ interface MessagePanelProps {
 
 export const MessagePanel: React.FC<MessagePanelProps> = ({ projectId }) => {
   const router = useRouter();
-  const { getProject, projectMessages, addProjectMessage } = useProjects();
+  // projectMessages is now specific to the activeProject in context
+  // For a general panel, we might need a way to fetch messages specifically for this ID
+  // Let's assume for now this panel might only appear when the project IS active,
+  // or adjust useProjects hook later if needed.
+  const { getProject, projectMessages, addProjectMessage, activeProject, setActiveProject } = useProjects();
+  const { user } = useAuth(); // Get current user
   const [newMessage, setNewMessage] = useState('');
   const [advisorName, setAdvisorName] = useState('Your Capital Advisor');
-  const [advisorAvatar, setAdvisorAvatar] = useState('');
+  const [advisorAvatar, setAdvisorAvatar] = useState(''); // Keep avatar state if used
+  const [isLoadingAdvisor, setIsLoadingAdvisor] = useState(false);
+  const [localMessages, setLocalMessages] = useState<ProjectMessage[]>([]);
 
-  // Get the project
+  // Get the specific project for this panel
   const project = getProject(projectId);
 
-  // Get advisor information
-  useEffect(() => {
-    const loadAdvisorInfo = async () => {
-      if (project?.assignedAdvisorUserId) {
-        try {
-          const advisor = await getAdvisorById(project.assignedAdvisorUserId);
-          if (advisor) {
-            setAdvisorName(advisor.name);
-            setAdvisorAvatar(advisor.avatar);
-          }
-        } catch (error) {
-          console.error('Error fetching advisor info:', error);
-        }
-      }
-    };
-    
-    loadAdvisorInfo();
-  }, [project]);
+   // Effect to update local messages when the active project matches this panel's project
+   useEffect(() => {
+    if (activeProject?.id === projectId) {
+      setLocalMessages(projectMessages);
+    }
+    // If the active project changes and *doesn't* match, the message list won't update here
+    // This might be okay if the panel is only shown for the active project context
+    // Or we need a dedicated message fetcher per panel instance.
+  }, [projectMessages, activeProject, projectId]);
 
-  // Generate welcome message if no messages exist
+
+  // Get advisor information and ensure project is active
   useEffect(() => {
-    const generateWelcomeMessage = async () => {
-      if (project && projectMessages.length === 0 && project.assignedAdvisorUserId) {
-        try {
-          // Generate a welcome message for new projects
-          const welcomeMessage = await generateAdvisorMessage(
-            project.assignedAdvisorUserId,
-            project.id,
-            {
-              assetType: project.assetType,
-              dealType: project.projectPhase,
-              loanAmount: project.loanAmountRequested,
-              stage: project.projectStatus
+    const loadData = async () => {
+      if (project) {
+          // Set this project as active if it's not already
+          // Be cautious if multiple panels are rendered - this could cause loops
+          // setActiveProject(project);
+
+        if (project.assignedAdvisorUserId) {
+          setIsLoadingAdvisor(true);
+          try {
+            const advisor = await getAdvisorById(project.assignedAdvisorUserId);
+            if (advisor) {
+              setAdvisorName(advisor.name);
+              // setAdvisorAvatar(advisor.avatar); // Uncomment if avatar is used
             }
-          );
-          
-          // Add the welcome message to the project
-          await addProjectMessage(welcomeMessage, true);
-        } catch (error) {
-          console.error('Error generating welcome message:', error);
+          } catch (error) {
+            console.error('Error fetching advisor info:', error);
+            setAdvisorName('Capital Advisor'); // Fallback name
+          } finally {
+              setIsLoadingAdvisor(false);
+          }
+        } else {
+            setAdvisorName('Capital Advisor'); // Default if none assigned
         }
       }
     };
-    
-    generateWelcomeMessage();
-  }, [project, projectMessages, addProjectMessage]);
+
+    loadData();
+  }, [project]); // Depend only on the project prop
+
+  // Generate welcome message if no messages exist *for the active project*
+  // This logic might need refinement if the panel shows messages for non-active projects
+  useEffect(() => {
+    const generateWelcome = async () => {
+        // Ensure this runs only for the currently active project matching the panel
+        if (activeProject && activeProject.id === projectId && localMessages.length === 0 && activeProject.assignedAdvisorUserId && !isLoadingAdvisor) {
+             try {
+                // Generate a welcome message
+                const welcomeMessageText = await generateAdvisorMessage(
+                    activeProject.assignedAdvisorUserId,
+                    activeProject.id,
+                    {
+                    assetType: activeProject.assetType,
+                    dealType: activeProject.projectPhase,
+                    loanAmount: activeProject.loanAmountRequested,
+                    stage: activeProject.projectStatus
+                    }
+                );
+
+                 // Use addProjectMessage context function
+                 await addProjectMessage(welcomeMessageText, 'Advisor', activeProject.assignedAdvisorUserId);
+                 console.log("Generated welcome message for " + projectId)
+
+            } catch (error) {
+                console.error('Error generating welcome message:', error);
+            }
+        }
+    };
+
+    // Only generate if advisor info is loaded and messages are confirmed empty
+    if (!isLoadingAdvisor) {
+       generateWelcome();
+    }
+  }, [activeProject, projectId, localMessages, isLoadingAdvisor, addProjectMessage ]);
+
 
   // Handle sending a message
   const handleSendMessage = async () => {
-    if (!project || !newMessage.trim()) return;
-    
+    // Ensure the project context is active for sending messages
+    if (!activeProject || activeProject.id !== projectId || !newMessage.trim()) return;
+
     try {
-      await addProjectMessage(newMessage);
+      // Use context function, defaulting sender to 'Borrower'
+      await addProjectMessage(newMessage, 'Borrower', user?.email);
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
+      // Optionally show UI feedback for error
     }
   };
+
+  if (!project) {
+      return <Card className="shadow-sm"><CardContent className="p-4 text-gray-500">Loading project...</CardContent></Card>; // Or some loading state
+  }
 
   return (
     <Card className="shadow-sm">
@@ -88,66 +135,80 @@ export const MessagePanel: React.FC<MessagePanelProps> = ({ projectId }) => {
           <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
           <h2 className="text-lg font-semibold text-gray-800">Message Board</h2>
         </div>
-        <Button 
+        {/* Link to the new workspace page */}
+        <Button
           variant="outline"
           size="sm"
           rightIcon={<ChevronRight size={16} />}
-          onClick={() => router.push(`/project/${projectId}`)}
+          onClick={() => router.push(`/project/workspace/${projectId}`)}
         >
-          View Project
+          View/Edit Project
         </Button>
       </CardHeader>
-      
+
       <CardContent className="p-4">
-        <div className="space-y-4 max-h-64 overflow-y-auto mb-4">
-          {projectMessages.length > 0 ? (
-            projectMessages.map((message: ProjectMessage) => (
-              <div 
-                key={message.id} 
+        {/* Display localMessages which should reflect the active project's messages if IDs match */}
+        <div className="space-y-4 max-h-64 overflow-y-auto mb-4 border rounded p-2 bg-gray-50">
+          {localMessages.length > 0 ? (
+            localMessages.map((message: ProjectMessage) => (
+              <div
+                key={message.id}
                 className={`flex ${message.senderType === 'Borrower' ? 'justify-end' : 'justify-start'}`}
               >
-                <div 
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                    message.senderType === 'Borrower' 
-                      ? 'bg-blue-100 text-blue-900' 
-                      : 'bg-gray-100 text-gray-900'
+                <div
+                  className={`max-w-[80%] rounded-lg px-3 py-2 shadow-sm ${
+                    message.senderType === 'Borrower'
+                      ? 'bg-blue-100 text-blue-900'
+                      : message.senderType === 'Advisor'
+                      ? 'bg-gray-100 text-gray-900'
+                      : 'bg-yellow-50 text-yellow-800 italic text-sm' // System message style
                   }`}
                 >
-                  <div className="flex items-center mb-1">
-                    <span className="text-xs font-medium">
-                      {message.senderType === 'Borrower' ? 'You' : advisorName}
-                    </span>
-                    <span className="text-xs text-gray-500 ml-2">
-                      {new Date(message.createdAt).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-sm whitespace-pre-line">{message.message}</p>
+                  {message.senderType !== 'System' && (
+                     <div className="flex items-center mb-1">
+                        <span className="text-xs font-medium">
+                        {/* Display 'You' or Advisor Name */}
+                        {message.senderType === 'Borrower' ? 'You' : advisorName}
+                        </span>
+                        <span className="text-xs text-gray-500 ml-2">
+                        {new Date(message.createdAt).toLocaleString()}
+                        </span>
+                    </div>
+                  )}
+                  <p className={`text-sm whitespace-pre-line ${message.senderType === 'System' ? 'text-center' : ''}`}>
+                    {message.message}
+                  </p>
                 </div>
               </div>
             ))
           ) : (
             <div className="text-center py-4">
-              <p className="text-gray-500">No messages yet</p>
+              <p className="text-gray-500">No messages yet.</p>
             </div>
           )}
         </div>
-        
+
         <div className="flex space-x-2">
           <textarea
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
             placeholder="Type your message here..."
             rows={2}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
+            // Disable if the current panel's project isn't the active one
+            disabled={activeProject?.id !== projectId}
           />
           <Button
             onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
+            disabled={!newMessage.trim() || activeProject?.id !== projectId}
             leftIcon={<Send size={16} />}
           >
             Send
           </Button>
         </div>
+         {activeProject?.id !== projectId && (
+            <p className="text-xs text-red-600 mt-1">Select this project via the dashboard to send messages.</p>
+        )}
       </CardContent>
     </Card>
   );

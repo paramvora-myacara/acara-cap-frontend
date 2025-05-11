@@ -1,0 +1,29 @@
+# Ignore Next.js build artifacts
+.next/*
+# Ignore Node dependencies
+node_modules/*
+
+# (Optional) Other common ignores
+.DS_Store
+*.log
+.env*
+coverage/
+build/
+
+package-lock.json
+public/*
+
+.gitignore
+.git/*
+
+lib/*
+
+eslint.config.mjs
+next-env.d.ts
+next.config.ts
+package-lock.json
+package.json
+postcss.config.mjs
+README.md
+tailwind.config.ts
+tsconfig.json

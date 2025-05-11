@@ -167,22 +167,23 @@ export interface Advisor {
   updatedAt: string;
 }
 
-// Message Types
+// Message Types (REMOVED isRead)
 export interface ProjectMessage {
   id: string;
   projectId: string;
   senderId: string;
-  senderType: 'Borrower' | 'Advisor';
+  senderType: 'Borrower' | 'Advisor' | 'System'; // Added System type
   message: string;
-  isRead: boolean;
+  // isRead: boolean; // REMOVED
   createdAt: string;
 }
 
-// Enhanced User type with role
+// Enhanced User type with role and login source
 export interface EnhancedUser {
   email: string;
   name?: string;
-  profileId?: string;
+  profileId?: string; // Optional: ID of the associated BorrowerProfile
   lastLogin: Date;
   role: 'borrower' | 'advisor' | 'admin';
+  loginSource?: 'direct' | 'lenderline'; // Added login source tracking
 }
