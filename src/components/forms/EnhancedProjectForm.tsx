@@ -29,8 +29,14 @@ import {
 } from '../../types/enhanced-types';
 
 interface EnhancedProjectFormProps {
+<<<<<<< HEAD
   existingProject: ProjectProfile; // Made non-optional as workspace loads it
   onComplete?: (project: ProjectProfile) => void; // Make onComplete optional
+=======
+  existingProject?: ProjectProfile | null;
+  onComplete?: (project: ProjectProfile) => void;
+  compact?: boolean;
+>>>>>>> 12a0c30c3463db3600051d26b5cd6aaf2e2f7ee3
 }
 
 // Define options for ButtonSelect components
