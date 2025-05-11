@@ -126,7 +126,7 @@ export default function ProjectDetailPage() {
                     </div>
                     <div>
                       <div className="flex items-center">
-                        <div className="w-full h-2 bg-gray-200 rounded-full mr-2 w-24">
+                        <div className="h-2 bg-gray-200 rounded-full mr-2 w-24">
                           <div 
                             className={`h-full rounded-full ${
                               (borrowerProfile?.completenessPercent || 0) === 100 ? 'bg-green-600' : 'bg-blue-600'
