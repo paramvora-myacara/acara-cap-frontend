@@ -195,12 +195,12 @@ const OfferingMemorandumGraphic: React.FC = () => (
         { x: 170, y: 10, IconComponent: Users, label: 'Sponsor Info', color: PALETTE.GREY_MEDIUM, baseColor: PALETTE.GREY_DARK },
         { x: 30, y: 140, IconComponent: BarChartHorizontal, label: 'Financials', color: PALETTE.BLUE_PRIMARY, baseColor: PALETTE.BLUE_MEDIUM },
         { x: 170, y: 140, IconComponent: Eye, label: 'Market Data', color: PALETTE.BLUE_MEDIUM, baseColor: PALETTE.BLUE_LIGHT },
-        { x: 100, cy: -10, IconComponent: Link2, label: 'Live OM Link', color: PALETTE.GREEN_PRIMARY, baseColor: PALETTE.GREEN_MEDIUM },
+        { x: 100, y: -10, IconComponent: Link2, label: 'Live OM Link', color: PALETTE.GREEN_PRIMARY, baseColor: PALETTE.GREEN_MEDIUM },
       ].map((node, index) => (
         <React.Fragment key={`om-${index}`}>
           <NodeIcon 
-            cx={node.x ?? 0} 
-            cy={node.y ?? 0} 
+            cx={node.x} 
+            cy={node.y} 
             IconComponent={node.IconComponent} 
             color={node.color} 
             baseColor={node.baseColor} 
@@ -208,8 +208,8 @@ const OfferingMemorandumGraphic: React.FC = () => (
             delay={index * 0.06} 
           />
           <AnimatedLine 
-            x1={node.x ?? 0} 
-            y1={node.y ?? 0} 
+            x1={node.x} 
+            y1={node.y} 
             x2={100} 
             y2={75} 
             color={PALETTE.GREY_LIGHT} 

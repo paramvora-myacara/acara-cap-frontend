@@ -6,7 +6,7 @@ interface PlaceholderBlockProps {
   text: string;
   height?: string; // e.g., 'h-40'
   className?: string;
-  icon?: React.ReactNode;
+  icon?: React.ReactElement<{ className?: string }>;
 }
 
 export const PlaceholderBlock: React.FC<PlaceholderBlockProps> = ({
@@ -24,7 +24,7 @@ export const PlaceholderBlock: React.FC<PlaceholderBlockProps> = ({
       )}
     >
       <div className='flex flex-col items-center'>
-         {icon && React.cloneElement(icon as React.ReactElement, { className: "h-8 w-8 mb-2 text-gray-300" })}
+         {icon && React.cloneElement(icon, { className: "h-8 w-8 mb-2 text-gray-300" })}
         {text}
       </div>
     </div>

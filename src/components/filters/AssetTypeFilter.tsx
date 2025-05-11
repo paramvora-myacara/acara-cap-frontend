@@ -41,10 +41,10 @@ const AssetTypeFilter: React.FC<AssetTypeFilterProps> = ({ value, onChange }) =>
         </div>
       </div>
       <ButtonSelect
+        label="Asset Type"
         options={assetTypeOptions}
-        value={value}
-        onChange={onChange}
-        size="sm"
+        selectedValue={value[0] || ''}
+        onSelect={(newValue) => onChange([newValue])}
       />
     </div>
   );

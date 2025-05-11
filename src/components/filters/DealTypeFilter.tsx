@@ -40,10 +40,10 @@ const DealTypeFilter: React.FC<DealTypeFilterProps> = ({ value, onChange }) => {
         </div>
       </div>
       <ButtonSelect
+        label="Deal Type"
         options={dealTypeOptions}
-        value={value}
-        onChange={onChange}
-        size="sm"
+        selectedValue={value[0] || ''}
+        onSelect={(newValue) => onChange([newValue])}
       />
     </div>
   );

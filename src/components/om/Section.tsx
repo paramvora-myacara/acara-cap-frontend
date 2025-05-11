@@ -4,7 +4,7 @@ import { cn } from '@/utils/cn';
 
 interface SectionProps {
   title: string;
-  icon?: React.ReactNode;
+  icon?: React.ReactElement<{ className?: string }>;
   children: React.ReactNode;
   className?: string;
   level?: 1 | 2; // For nested sections (h2 vs h3)
@@ -22,7 +22,7 @@ export const Section: React.FC<SectionProps> = ({ title, icon, children, classNa
           titleSize,
           bottomMargin
        )}>
-        {icon && React.cloneElement(icon as React.ReactElement, { className: "mr-2 h-5 w-5 text-blue-600 flex-shrink-0" })}
+        {icon && React.cloneElement(icon, { className: "mr-2 h-5 w-5 text-blue-600 flex-shrink-0" })}
         {title}
       </TitleTag>
       <div>{children}</div>

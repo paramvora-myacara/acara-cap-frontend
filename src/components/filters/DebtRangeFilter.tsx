@@ -42,10 +42,10 @@ const DebtRangeFilter: React.FC<DebtRangeFilterProps> = ({ value, onChange }) =>
         </div>
       </div>
       <ButtonSelect
+        label="Debt Range"
         options={debtRangeOptions}
-        value={value}
-        onChange={onChange}
-        size="sm"
+        selectedValue={value[0] || ''}
+        onSelect={(newValue) => onChange([newValue])}
       />
     </div>
   );

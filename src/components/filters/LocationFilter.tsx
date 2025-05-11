@@ -40,10 +40,10 @@ const LocationFilter: React.FC<LocationFilterProps> = ({ value, onChange }) => {
         </div>
       </div>
       <ButtonSelect
+        label="Locations"
         options={locationOptions}
-        value={value}
-        onChange={onChange}
-        size="sm"
+        selectedValue={value[0] || ''}
+        onSelect={(newValue) => onChange([newValue])}
       />
     </div>
   );

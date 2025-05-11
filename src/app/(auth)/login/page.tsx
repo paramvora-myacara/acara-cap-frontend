@@ -6,17 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation'; // Import useSearc
 import { useAuth } from '../../../hooks/useAuth';
 import { useUI } from '../../../hooks/useUI';
 import AuthLayout from '../../../components/layout/AuthLayout';
-<<<<<<< HEAD
 import { Form, FormGroup } from '../../../components/ui/Form'; // Removed unused FormLabel, FormHelperText
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Sparkles, Mail } from 'lucide-react'; // Removed Lock icon as it's not used
-=======
-import { Form, FormGroup } from '../../../components/ui/Form';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
-import { Sparkles, Mail } from 'lucide-react';
->>>>>>> 12a0c30c3463db3600051d26b5cd6aaf2e2f7ee3
 import { GlobalToast } from '../../../components/ui/GlobalToast';
 import { LoadingOverlay } from '../../../components/ui/LoadingOverlay';
 
@@ -28,21 +21,9 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams(); // Hook to read query parameters
 
-<<<<<<< HEAD
   const [loginSource, setLoginSource] = useState<'direct' | 'lenderline'>('direct');
 
   // Determine login source from query parameter on mount
-=======
-  useEffect(() => {
-    // Check if user is coming from LenderLine
-    const lastFormData = localStorage.getItem('lastFormData');
-    if (lastFormData) {
-      localStorage.setItem('cameFromLenderLine', 'true');
-    }
-  }, []);
-
-  // Check for existing user session
->>>>>>> 12a0c30c3463db3600051d26b5cd6aaf2e2f7ee3
   useEffect(() => {
     const sourceParam = searchParams.get('from');
     if (sourceParam === 'lenderline') {
@@ -59,7 +40,6 @@ export default function LoginPage() {
   useEffect(() => {
     if (isAuthenticated && user) { // Added check for user object
       // Redirect based on user role
-<<<<<<< HEAD
       if (user.role === 'advisor') {
         router.push('/advisor/dashboard'); // Assuming this route exists or will exist
       } else if (user.role === 'admin') {
@@ -68,40 +48,18 @@ export default function LoginPage() {
          // For borrowers, the redirection logic will now be handled post-login
          // based on AuthContext/Dashboard logic, so just push to dashboard initially.
         router.push('/dashboard');
-=======
-      if (user?.role === 'advisor') {
-        router.push('/advisor/dashboard');
-      } else {
-        // For borrowers, check if they have any projects
-        const hasProjects = localStorage.getItem('acara_projects');
-        const cameFromLenderLine = localStorage.getItem('cameFromLenderLine');
-        
-        if (cameFromLenderLine || !hasProjects) {
-          // First-time user or coming from LenderLine - create a new project
-          router.push('/project/create');
-        } else {
-          router.push('/dashboard');
-        }
->>>>>>> 12a0c30c3463db3600051d26b5cd6aaf2e2f7ee3
       }
     }
   }, [isAuthenticated, router, user]);
 
-<<<<<<< HEAD
 
   // Update loading state (no change needed here)
-=======
-  // Update loading state
->>>>>>> 12a0c30c3463db3600051d26b5cd6aaf2e2f7ee3
   useEffect(() => {
     setLoading(authLoading);
   }, [authLoading, setLoading]);
 
-<<<<<<< HEAD
 
   // --- Updated handleLogin function ---
-=======
->>>>>>> 12a0c30c3463db3600051d26b5cd6aaf2e2f7ee3
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
@@ -127,7 +85,6 @@ export default function LoginPage() {
         type: 'success',
         message: 'Successfully signed in!',
       });
-<<<<<<< HEAD
 
       // --- Redirection Logic ---
       // The AuthContext now handles seeding data.
@@ -144,10 +101,6 @@ export default function LoginPage() {
         router.push('/dashboard');
       }
 
-=======
-      
-      // Redirection will be handled by the useEffect above
->>>>>>> 12a0c30c3463db3600051d26b5cd6aaf2e2f7ee3
     } catch (err) {
        console.error("Login Error:", err); // Log the actual error
       showNotification({
@@ -203,20 +156,12 @@ export default function LoginPage() {
                 <p className="font-medium mb-1">
                   <strong>Test account options:</strong>
                 </p>
-<<<<<<< HEAD
                 <ul className="mt-1 space-y-1 list-disc list-inside">
                   <li>Borrower 1 (Full Profile): <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower1@example.com</code></li>
                   <li>Borrower 2 (Partial Profile): <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower2@example.com</code></li>
                   <li>New Borrower: <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower3@example.com</code></li>
                   <li>Advisor: <code className="text-purple-600 text-xs bg-purple-50 px-1 rounded">advisor@acaracap.com</code></li>
                    {/* Add other roles if needed */}
-=======
-                <ul className="mt-1 space-y-1">
-                  <li>Borrower (100% complete): <span className="text-blue-600">complete@example.com</span></li>
-                  <li>Borrower (50% complete): <span className="text-blue-600">partial@example.com</span></li>
-                  <li>New Borrower: <span className="text-blue-600">borrower@example.com</span></li>
-                  <li>Advisor: <span className="text-blue-600">advisor@acaracap.com</span></li>
->>>>>>> 12a0c30c3463db3600051d26b5cd6aaf2e2f7ee3
                 </ul>
               </div>
 

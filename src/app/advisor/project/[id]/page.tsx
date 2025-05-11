@@ -241,7 +241,6 @@ export default function AdvisorProjectDetailPage() {
         senderId: user?.email || 'advisor@acara.com',
         senderType: 'Advisor',
         message: messageContent,
-        isRead: false,
         createdAt: now,
       };
       

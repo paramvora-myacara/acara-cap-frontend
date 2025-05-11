@@ -110,33 +110,8 @@ export default function HomePage() {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: textAnimation.part3Visible ? 1 : 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
                   <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">Our platform connects you with the perfect lenders for your commercial real estate projects through our proprietary <span className="font-semibold">LenderLine™</span> technology, giving access to the exclusive <span className="font-semibold">ACARA Cap Deal Room™</span>.</p>
                   <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
-<<<<<<< HEAD
                     <Button variant="primary" size="lg" className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 shadow-lg" onClick={() => { document.getElementById('lenderline-section')?.scrollIntoView({ behavior: 'smooth' }); }}>Use LenderLine™</Button>
                     <Button variant="outline" size="lg" onClick={() => router.push('/login')} className="rounded-full shadow-md">Access Deal Room™</Button>
-=======
-                    <Button 
-                      variant="primary" 
-                      size="lg"
-                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 shadow-lg"
-                      onClick={() => {
-                        const filterSection = document.getElementById('lenderline-section');
-                        filterSection?.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                    >
-                      Use LenderLine™
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      size="lg"
-                      onClick={() => {
-                        localStorage.setItem('cameFromLenderLine', 'true');
-                        router.push('/login');
-                      }}
-                      className="rounded-full shadow-md"
-                    >
-                      Access Deal Room™
-                    </Button>
->>>>>>> 12a0c30c3463db3600051d26b5cd6aaf2e2f7ee3
                   </div>
                 </motion.div>
               </div>
@@ -181,27 +156,6 @@ export default function HomePage() {
                           {allFilterCategoriesSelected && topLenders.length === 0 && ( <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg"><p className="text-amber-700 font-medium">No exact matches found.</p><p className="text-sm text-amber-600">Try broadening your filters.</p></div> )}
                           {!allFilterCategoriesSelected && ( <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg"><p className="text-blue-700 font-medium">Select filters in all categories above</p><p className="text-sm text-blue-600">to see matches and connect.</p></div> )}
                       </div>
-<<<<<<< HEAD
-=======
-                      
-                      {/* Contact top lenders button - moved higher up */}
-                      {allFiltersSelected && topLenders.length > 0 && (
-                        <div className="mt-6 text-center">
-                          <Button
-                            variant="primary"
-                            rightIcon={<ArrowRight size={16} />}
-                            onClick={() => {
-                              localStorage.setItem('lastFormData', JSON.stringify(filters));
-                              localStorage.setItem('cameFromLenderLine', 'true');
-                              router.push('/login');
-                            }}
-                            className="shadow-xl bg-red-600 hover:bg-red-700 text-white rounded-full px-8 py-3 text-lg font-medium"
-                          >
-                            Contact your Top {topLenders.length} Lenders!
-                          </Button>
-                        </div>
-                      )}
->>>>>>> 12a0c30c3463db3600051d26b5cd6aaf2e2f7ee3
                     </div>
                   </motion.div>
                   <motion.div

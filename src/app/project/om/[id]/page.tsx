@@ -26,7 +26,7 @@ const OMLayout: React.FC<{ children: React.ReactNode, title?: string, projectId?
                         )}
                          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 inline-block align-middle">{title}</h1>
                     </div>
-                     <Button onClick={() => window.print()} variant="default" size="sm">
+                     <Button onClick={() => window.print()} variant="primary" size="sm">
                         Print / Save PDF
                     </Button>
                 </div>

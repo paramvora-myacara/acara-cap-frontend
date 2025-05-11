@@ -40,10 +40,10 @@ const CapitalTypeFilter: React.FC<CapitalTypeFilterProps> = ({ value, onChange }
         </div>
       </div>
       <ButtonSelect
+        label="Capital Type"
         options={capitalTypeOptions}
-        value={value}
-        onChange={onChange}
-        size="sm"
+        selectedValue={value[0] || ''}
+        onSelect={(newValue) => onChange([newValue])}
       />
     </div>
   );
