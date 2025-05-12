@@ -1,486 +1,787 @@
 // src/components/ui/ProcessGraphics.tsx
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
-import { Users, FileText, BarChart3, Zap, Search, Eye, Link2, CheckSquare, FileJson, BarChartHorizontal, Shuffle, BrainCircuit, Database, FileSpreadsheet } from 'lucide-react';
+import { Users, FileText, BarChart3, Zap, Search, Eye, Link2, CheckSquare, FileJson, FileSpreadsheet, Database, BrainCircuit, Shuffle } from 'lucide-react';
 
-// Define expanded color palette with opacity variations
-const PALETTE = {
-  BLUE_PRIMARY: "rgba(59, 130, 246, 1)",
-  BLUE_MEDIUM: "rgba(96, 165, 250, 1)",
-  BLUE_LIGHT: "rgba(191, 219, 254, 0.8)",
-  BLUE_LIGHTER: "rgba(219, 234, 254, 0.4)",
-  GREEN_PRIMARY: "rgba(16, 185, 129, 1)",
-  GREEN_MEDIUM: "rgba(52, 211, 153, 1)",
-  GREEN_LIGHT: "rgba(167, 243, 208, 0.8)",
-  GREY_DARK: "rgba(75, 85, 99, 1)", 
-  GREY_MEDIUM: "rgba(156, 163, 175, 1)",
-  GREY_LIGHT: "rgba(209, 213, 219, 0.6)",
-  WHITE_PURE: "rgba(255, 255, 255, 1)",
-  WHITE_SOFT: "rgba(255, 255, 255, 0.9)",
-  BACKGROUND_GRADIENT_START: "rgba(23, 37, 84, 0.1)", 
-  BACKGROUND_GRADIENT_END: "rgba(17, 24, 39, 0.05)",
-  GLOW_BLUE: "rgba(59, 130, 246, 0.3)",
-  GLOW_GREEN: "rgba(16, 185, 129, 0.25)",
+// Enhanced color palette with proper opacity values
+const COLORS = {
+  PRIMARY_BLUE: "#3b82f6",
+  LIGHT_BLUE: "#60a5fa",
+  VERY_LIGHT_BLUE: "rgba(191, 219, 254, 0.8)",
+  FADED_BLUE: "rgba(59, 130, 246, 0.2)",
+  PRIMARY_GREEN: "#10b981",
+  LIGHT_GREEN: "#34d399",
+  VERY_LIGHT_GREEN: "rgba(167, 243, 208, 0.8)",
+  FADED_GREEN: "rgba(16, 185, 129, 0.15)",
+  DARK_GREY: "#4b5563",
+  MEDIUM_GREY: "#9ca3af",
+  LIGHT_GREY: "rgba(209, 213, 219, 0.6)",
+  WHITE: "#ffffff",
+  SOFT_WHITE: "rgba(255, 255, 255, 0.9)",
+  BLUE_GLOW: "rgba(59, 130, 246, 0.3)",
+  GREEN_GLOW: "rgba(16, 185, 129, 0.25)",
+  GRID_LINE: "rgba(209, 213, 219, 0.07)",
+  BG_GRADIENT_START: "rgba(15, 23, 42, 0.7)",
+  BG_GRADIENT_END: "rgba(15, 23, 42, 0.95)",
 };
 
-// Enhanced variants for smoother animations
-const iconContainerVariants = {
-  hidden: { opacity: 0, scale: 0.5, y: 10 },
-  visible: (delay = 0) => ({ 
-    opacity: 1, 
+// Variants for different animation components
+const centerIconVariants = {
+  hidden: { 
+    scale: 0.5, 
+    opacity: 0 
+  },
+  visible: (delay: number) => ({ 
     scale: 1, 
-    y: 0,
+    opacity: 1, 
     transition: { 
       type: 'spring', 
-      stiffness: 220, 
-      damping: 20, 
-      delay: delay + 0.2,
-      duration: 0.8
+      stiffness: 100, 
+      damping: 15, 
+      delay 
+    } 
+  })
+};
+
+const nodeIconVariants = {
+  hidden: { 
+    scale: 0.5, 
+    opacity: 0, 
+    y: 10 
+  },
+  visible: (delay: number) => ({ 
+    scale: 1, 
+    opacity: 1, 
+    y: 0, 
+    transition: { 
+      type: 'spring', 
+      stiffness: 120, 
+      damping: 15, 
+      delay 
     } 
   }),
-};
-
-// Animation for pulsing effect on center nodes
-const pulsingCircleVariants = {
-  pulse: {
-    scale: [1, 1.15, 1],
-    opacity: [0.7, 0.3, 0.7],
-    transition: {
-      duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }
+  hover: { 
+    scale: 1.1, 
+    transition: { duration: 0.2 } 
   }
 };
 
-// Animation for the initial appearance of the line
-const lineAppearDefinition = (i: number = 0) => ({
-  pathLength: 1,
-  opacity: 1,
-  transition: {
-    pathLength: { delay: i * 0.1 + 0.4, type: 'spring', duration: 1.2, bounce: 0.1 },
-    opacity: { delay: i * 0.1 + 0.4, duration: 0.2 },
+const lineDrawVariants = {
+  hidden: { 
+    pathLength: 0, 
+    opacity: 0 
   },
-});
+  visible: (delay: number) => ({ 
+    pathLength: 1, 
+    opacity: 1, 
+    transition: { 
+      pathLength: { 
+        delay, 
+        type: 'spring', 
+        duration: 1.5, 
+        bounce: 0 
+      }, 
+      opacity: { 
+        delay, 
+        duration: 0.3 
+      } 
+    } 
+  })
+};
 
-// Enhanced animation for the continuous flow animation
-const lineFlowDefinition = (isReversed = false) => ({
-  strokeDasharray: "5 4",
-  strokeDashoffset: isReversed ? [-18, 0] : [0, -18],
-  opacity: [0.8, 0.6, 0.8],
-  transition: {
-    strokeDashoffset: {
-      duration: 2.5, 
-      repeat: Infinity,
-      ease: "linear"
-    },
-    opacity: {
-      duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }
-  }
-});
+const labelVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 10 
+  },
+  visible: (delay: number) => ({ 
+    opacity: 1, 
+    y: 0, 
+    transition: { 
+      delay, 
+      duration: 0.5 
+    } 
+  })
+};
 
-// New particle system animation
+const pulseVariants = {
+  hidden: { 
+    opacity: 0, 
+    scale: 1 
+  },
+  visible: (delay: number) => ({ 
+    opacity: [0.2, 0.4, 0.2], 
+    scale: [1, 1.15, 1], 
+    transition: { 
+      delay, 
+      duration: 3, 
+      repeat: Infinity, 
+      ease: "easeInOut" 
+    } 
+  })
+};
+
 const particleVariants = {
-  animate: (customDelay = 0) => ({
-    x: [0, 20, -10, 30, 0],
-    y: [0, -15, 10, -20, 0],
-    opacity: [0, 0.8, 1, 0.5, 0],
-    scale: [0.4, 1, 0.8, 0.6, 0],
+  hidden: { 
+    opacity: 0, 
+    scale: 0 
+  },
+  visible: (customProps: { delay: number, duration: number, loop: boolean }) => ({
+    opacity: customProps.loop ? [0, 0.7, 0] : 0.7,
+    scale: customProps.loop ? [0, 1, 0] : 1,
     transition: {
-      duration: Math.random() * 2 + 3,
-      delay: customDelay,
-      repeat: Infinity,
+      delay: customProps.delay,
+      duration: customProps.duration,
+      repeat: customProps.loop ? Infinity : 0,
       ease: "easeInOut"
     }
   })
 };
 
-// Central icon component with enhanced styling and animations
-const CentralPlatformIcon: React.FC<{
-  IconComponent: React.ElementType, 
-  color: string, 
+// Central icon component with enhanced styling
+const CentralIcon: React.FC<{
+  x: number,
+  y: number,
+  size: number,
+  Icon: React.ElementType,
+  color: string,
   glowColor: string,
-  label?: string, 
+  label?: string,
   delay?: number
-}> = ({IconComponent, color, glowColor, label, delay=0.1}) => (
-  <motion.g variants={iconContainerVariants} custom={delay} initial="hidden" animate="visible">
-    {/* Outer glow effect */}
-    <motion.circle 
-      cx="120" cy="85" r="46" 
-      fill={glowColor}
-      initial={{r:0, opacity:0}} 
-      animate={{r:46, opacity:0.15}} 
-      transition={{type:'spring', stiffness:120, damping:15, delay: delay}}
-    />
-    
-    {/* Main circle */}
-    <motion.circle 
-      cx="120" cy="85" r="36" 
-      fill={color}
-      initial={{r:0, opacity:0}} 
-      animate={{r:36, opacity:1}} 
-      transition={{type:'spring', stiffness:150, damping:15, delay: delay+0.1}}
-    />
-    
-    {/* Icon */}
-    <motion.g 
-      transform="translate(102, 67)" 
-      initial={{scale:0, opacity:0}} 
-      animate={{scale:1, opacity:1}} 
-      transition={{delay:delay+0.4, type:'spring'}}
-    >
-      <IconComponent size={36} color={PALETTE.WHITE_PURE}/>
-    </motion.g>
-    
-    {/* Label */}
-    {label && (
-      <motion.text 
-        x={120} y={85 + 36 + 22} 
-        textAnchor="middle" 
-        fontSize="13" 
-        fontWeight="semibold" 
-        className="fill-gray-200"
-        initial={{opacity:0, y:85+36+12}} 
-        animate={{opacity:1, y:85+36+22}} 
-        transition={{delay:delay+0.6}}
-      >
-        {label}
-      </motion.text>
-    )}
-    
-    {/* Pulsing effect */}
-    <motion.circle
-      cx="120" cy="85" r="36"
-      fill="transparent"
-      stroke={color}
-      strokeWidth="3"
-      initial={{ opacity: 0.2 }}
-      animate={{ 
-        opacity: [0.2, 0.4, 0.2], 
-        scale: [1, 1.18, 1] 
-      }}
-      transition={{ 
-        duration: 3, 
-        repeat: Infinity, 
-        ease: "easeInOut", 
-        delay: delay + 0.5 
-      }}
-    />
-  </motion.g>
-);
-
-// Enhanced node icon with improved hover effects
-const NodeIcon: React.FC<{
-  cx: number, 
-  cy: number, 
-  IconComponent: React.ElementType, 
-  color: string, 
-  glowColor: string,
-  label?: string, 
-  delay?: number
-}> = ({cx, cy, IconComponent, color, glowColor, label, delay=0}) => (
-  <React.Fragment>
-    <motion.g 
-      variants={iconContainerVariants} 
-      custom={delay} 
-      initial="hidden" 
-      animate="visible"
-      whileHover={{ scale: 1.1 }}
-    >
-      {/* Soft glow effect */}
+}> = ({ x, y, size, Icon, color, glowColor, label, delay = 0 }) => {
+  return (
+    <>
+      {/* Glow effect */}
       <motion.circle 
-        cx={cx} cy={cy} r="26" 
+        cx={x} 
+        cy={y} 
+        r={size * 1.2} 
         fill={glowColor}
-        initial={{r:0, opacity:0}} 
-        animate={{r:26, opacity:0.2}} 
-        transition={{type:'spring', stiffness:120, damping:15, delay: delay}}
+        variants={centerIconVariants}
+        custom={delay}
+        initial="hidden"
+        animate="visible"
       />
       
-      {/* Main circle */}
+      {/* Main circle background */}
       <motion.circle 
-        cx={cx} cy={cy} r="20" 
-        fill={color} 
-        initial={{r:0, opacity:0}} 
-        animate={{r:20, opacity:1}} 
-        transition={{type:'spring', stiffness:150, damping:15, delay: delay+0.2}}
+        cx={x} 
+        cy={y} 
+        r={size} 
+        fill={color}
+        variants={centerIconVariants}
+        custom={delay + 0.1}
+        initial="hidden"
+        animate="visible"
       />
       
       {/* Icon */}
       <motion.g 
-        transform={`translate(${cx - 10}, ${cy - 10})`} 
-        initial={{scale:0, opacity:0}} 
-        animate={{scale:1, opacity:1}} 
-        transition={{delay:delay+0.5, type:'spring'}}
+        variants={centerIconVariants}
+        custom={delay + 0.3}
+        initial="hidden"
+        animate="visible"
       >
-        <IconComponent size={20} color={PALETTE.WHITE_SOFT}/>
+        <foreignObject
+          x={x - size/2}
+          y={y - size/2}
+          width={size}
+          height={size}
+          style={{ color: COLORS.WHITE }}
+        >
+          <div className="w-full h-full flex items-center justify-center">
+            <Icon size={size * 0.6} />
+          </div>
+        </foreignObject>
       </motion.g>
       
-      {/* Pulsing effect */}
+      {/* Label */}
+      {label && (
+        <motion.text
+          x={x}
+          y={y + size + 20}
+          textAnchor="middle"
+          fontSize="14"
+          fill={COLORS.SOFT_WHITE}
+          fontWeight="600"
+          variants={labelVariants}
+          custom={delay + 0.5}
+          initial="hidden"
+          animate="visible"
+        >
+          {label}
+        </motion.text>
+      )}
+      
+      {/* Pulse effect */}
       <motion.circle
-        cx={cx} cy={cy} r="20"
+        cx={x}
+        cy={y}
+        r={size}
         fill="transparent"
         stroke={color}
         strokeWidth="2"
-        variants={pulsingCircleVariants}
-        initial={{ opacity: 0 }}
-        animate="pulse"
+        variants={pulseVariants}
+        custom={delay + 0.6}
+        initial="hidden"
+        animate="visible"
       />
-    </motion.g>
-    
-    {/* Label */}
-    {label && (
-      <motion.text 
-        x={cx} y={cy + 32} 
-        textAnchor="middle" 
-        fontSize="11" 
-        fontWeight="medium"
-        className="fill-gray-300"
-        initial={{opacity:0, y:cy+18}} 
-        animate={{opacity:1, y:cy+32}} 
-        transition={{delay:delay+0.6}}
-      >
-        {label}
-      </motion.text>
-    )}
-  </React.Fragment>
-);
-
-// Enhanced animated line with improved flow effect
-const AnimatedLineRevised: React.FC<{
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  color: string, 
-  delayIndex: number, 
-  isReversed?: boolean
-}> = ({x1, y1, x2, y2, color, delayIndex, isReversed = false}) => {
-  const controls = useAnimation();
-
-  React.useEffect(() => {
-    const sequence = async () => {
-      // Start with appear animation
-      await controls.start(lineAppearDefinition(delayIndex));
-      
-      // Then transition to continuous flow animation
-      await controls.start(lineFlowDefinition(isReversed));
-    };
-    
-    sequence();
-  }, [controls, delayIndex, isReversed]);
-
-  return (
-    <motion.line
-      x1={x1} y1={y1} x2={x2} y2={y2}
-      stroke={color} strokeWidth="2"
-      initial={{ pathLength: 0, opacity: 0 }}
-      animate={controls}
-    />
+    </>
   );
 };
 
-// Particles component to add dynamic movement
-const ParticleEffect: React.FC<{cx: number, cy: number, color: string}> = ({cx, cy, color}) => {
-  // Generate random particles
-  const particles = Array.from({ length: 5 }, (_, i) => ({
-    id: `particle-${cx}-${cy}-${i}`,
-    delay: Math.random() * 2,
-    size: Math.random() * 2 + 1,
+// Satellite node component
+const NodeIcon: React.FC<{
+  x: number,
+  y: number,
+  size: number,
+  Icon: React.ElementType,
+  color: string,
+  glowColor: string,
+  label?: string,
+  delay?: number
+}> = ({ x, y, size, Icon, color, glowColor, label, delay = 0 }) => {
+  return (
+    <>
+      {/* Glow */}
+      <motion.circle 
+        cx={x} 
+        cy={y} 
+        r={size * 1.2} 
+        fill={glowColor}
+        variants={nodeIconVariants}
+        custom={delay}
+        initial="hidden"
+        animate="visible"
+        whileHover="hover"
+      />
+      
+      {/* Main circle */}
+      <motion.circle 
+        cx={x} 
+        cy={y} 
+        r={size} 
+        fill={color}
+        variants={nodeIconVariants}
+        custom={delay + 0.1}
+        initial="hidden"
+        animate="visible"
+        whileHover="hover"
+      />
+      
+      {/* Icon */}
+      <motion.g 
+        variants={nodeIconVariants}
+        custom={delay + 0.2}
+        initial="hidden"
+        animate="visible"
+      >
+        <foreignObject
+          x={x - size/2}
+          y={y - size/2}
+          width={size}
+          height={size}
+          style={{ color: COLORS.WHITE }}
+        >
+          <div className="w-full h-full flex items-center justify-center">
+            <Icon size={size * 0.6} />
+          </div>
+        </foreignObject>
+      </motion.g>
+      
+      {/* Label */}
+      {label && (
+        <motion.text
+          x={x}
+          y={y + size + 15}
+          textAnchor="middle"
+          fontSize="12"
+          fill={COLORS.SOFT_WHITE}
+          fontWeight="500"
+          variants={labelVariants}
+          custom={delay + 0.4}
+          initial="hidden"
+          animate="visible"
+        >
+          {label}
+        </motion.text>
+      )}
+      
+      {/* Subtle pulse effect */}
+      <motion.circle
+        cx={x}
+        cy={y}
+        r={size}
+        fill="transparent"
+        stroke={color}
+        strokeWidth="1.5"
+        variants={pulseVariants}
+        custom={delay + 0.5}
+        initial="hidden"
+        animate="visible"
+      />
+    </>
+  );
+};
+
+// Component for animated flowing particles along a line
+const FlowingParticle: React.FC<{
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  color: string,
+  size?: number,
+  delay?: number,
+  duration?: number,
+  reverse?: boolean
+}> = ({ startX, startY, endX, endY, color, size = 2, delay = 0, duration = 2, reverse = false }) => {
+  const pathRef = useRef<SVGPathElement>(null);
+  const controls = useAnimation();
+  const [isReady, setIsReady] = React.useState(false);
+  
+  // Initialize animation state
+  React.useEffect(() => {
+    const initAnimation = async () => {
+      try {
+        // Set initial state
+        await controls.set({
+          offsetDistance: reverse ? "100%" : "0%",
+          opacity: 0
+        });
+        
+        // Wait for the delay
+        if (delay > 0) {
+          await new Promise(resolve => setTimeout(resolve, delay * 1000));
+        }
+        
+        // Mark as ready for animation
+        setIsReady(true);
+      } catch (error) {
+        console.error('Error initializing animation:', error);
+      }
+    };
+
+    initAnimation();
+  }, [controls, delay, reverse]);
+
+  // Handle animation after initialization
+  React.useEffect(() => {
+    if (!isReady) return;
+
+    const startAnimation = async () => {
+      try {
+        await controls.start({
+          offsetDistance: reverse ? "0%" : "100%",
+          opacity: 1,
+          transition: {
+            offsetDistance: {
+              duration,
+              repeat: Infinity,
+              ease: "linear"
+            },
+            opacity: {
+              duration: 0.3
+            }
+          }
+        });
+      } catch (error) {
+        console.error('Error starting animation:', error);
+      }
+    };
+
+    startAnimation();
+  }, [controls, duration, reverse, isReady]);
+
+  return (
+    <>
+      {/* Hidden path for the particle to follow */}
+      <path
+        ref={pathRef}
+        d={`M ${startX} ${startY} L ${endX} ${endY}`}
+        stroke="transparent"
+        fill="none"
+        id={`particle-path-${startX}-${startY}-${endX}-${endY}`}
+      />
+      
+      {/* The particle that follows the path */}
+      <motion.circle
+        cx={0}
+        cy={0}
+        r={size}
+        fill={color}
+        style={{ 
+          offsetPath: `path('M ${startX} ${startY} L ${endX} ${endY}')`
+        }}
+        animate={controls}
+      />
+    </>
+  );
+};
+
+// Enhanced animated connection line with flow effect
+const AnimatedConnectionLine: React.FC<{
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  color: string,
+  particleColor?: string,
+  delay?: number,
+  numParticles?: number
+}> = ({ 
+  startX, 
+  startY, 
+  endX, 
+  endY, 
+  color, 
+  particleColor, 
+  delay = 0,
+  numParticles = 3
+}) => {
+  // Create an array of particles with staggered delays
+  const particles = Array.from({ length: numParticles }, (_, i) => ({
+    id: `p-${startX}-${startY}-${endX}-${endY}-${i}`,
+    delay: delay + 0.5 + (i * 0.8),
+    duration: 3 + Math.random(),
+    reverse: i % 2 === 0
   }));
 
   return (
     <>
+      {/* The main connection line */}
+      <motion.line
+        x1={startX}
+        y1={startY}
+        x2={endX}
+        y2={endY}
+        stroke={color}
+        strokeWidth="1.5"
+        strokeOpacity="0.7"
+        variants={lineDrawVariants}
+        custom={delay}
+        initial="hidden"
+        animate="visible"
+      />
+      
+      {/* Flowing particles along the line */}
       {particles.map((particle) => (
-        <motion.circle
+        <FlowingParticle
           key={particle.id}
-          cx={cx}
-          cy={cy}
-          r={particle.size}
-          fill={color}
-          variants={particleVariants}
-          custom={particle.delay}
-          animate="animate"
+          startX={startX}
+          startY={startY}
+          endX={endX}
+          endY={endY}
+          color={particleColor || color}
+          size={2}
+          delay={particle.delay}
+          duration={particle.duration}
+          reverse={particle.reverse}
         />
       ))}
     </>
   );
 };
 
-// Enhanced container with improved sizing and backdrop
-const GraphicContainer: React.FC<{children: React.ReactNode}> = ({children}) => (
-  <div className="w-full h-full flex items-center justify-center p-2 relative">
-    <svg 
-      viewBox="0 0 240 180" 
-      className="w-full h-full max-h-[450px] md:max-h-[500px] xl:max-h-[550px]" 
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <defs>
-        <radialGradient id="bgGradProcess" cx="50%" cy="50%" r="75%">
-          <stop offset="0%" stopColor={PALETTE.BACKGROUND_GRADIENT_START} />
-          <stop offset="100%" stopColor={PALETTE.BACKGROUND_GRADIENT_END} />
-        </radialGradient>
+// Enhanced container with better sizing and backdrop
+const GraphicContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <div className="w-full h-full flex items-center justify-center overflow-hidden">
+      <svg 
+        viewBox="0 0 500 400" 
+        className="w-full h-full max-w-full"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <defs>
+          <radialGradient id="bgGradient" cx="50%" cy="50%" r="70%">
+            <stop offset="0%" stopColor={COLORS.BG_GRADIENT_START} />
+            <stop offset="100%" stopColor={COLORS.BG_GRADIENT_END} />
+          </radialGradient>
+          
+          {/* Glow filter for better visual effects */}
+          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
         
-        {/* Add filters for glow effects */}
-        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-      
-      {/* Background with subtle pattern */}
-      <rect width="240" height="180" fill="url(#bgGradProcess)" />
-      
-      {/* Grid lines for visual interest */}
-      <g opacity="0.07">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <line 
-            key={`grid-h-${i}`} 
-            x1="0" 
-            y1={i * 15} 
-            x2="240" 
-            y2={i * 15} 
-            stroke={PALETTE.GREY_LIGHT} 
-            strokeWidth="0.5" 
-          />
-        ))}
-        {Array.from({ length: 16 }).map((_, i) => (
-          <line 
-            key={`grid-v-${i}`} 
-            x1={i * 15} 
-            y1="0" 
-            x2={i * 15} 
-            y2="180" 
-            stroke={PALETTE.GREY_LIGHT} 
-            strokeWidth="0.5" 
-          />
-        ))}
-      </g>
-      
-      {children}
-    </svg>
-  </div>
-);
+        {/* Background with radial gradient */}
+        <rect width="500" height="400" fill="url(#bgGradient)" />
+        
+        {/* Grid lines for visual interest */}
+        <g opacity="0.1">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <line 
+              key={`grid-h-${i}`} 
+              x1="0" 
+              y1={i * 20} 
+              x2="500" 
+              y2={i * 20} 
+              stroke={COLORS.GRID_LINE} 
+              strokeWidth="1" 
+            />
+          ))}
+          {Array.from({ length: 25 }).map((_, i) => (
+            <line 
+              key={`grid-v-${i}`} 
+              x1={i * 20} 
+              y1="0" 
+              x2={i * 20} 
+              y2="400" 
+              stroke={COLORS.GRID_LINE} 
+              strokeWidth="1" 
+            />
+          ))}
+        </g>
+        
+        {children}
+      </svg>
+    </div>
+  );
+};
 
 // LenderMatchingGraphic with improved node placement and animations
-const LenderMatchingGraphic: React.FC = () => (
-  <GraphicContainer>
-    {/* Center Platform */}
-    <CentralPlatformIcon 
-      IconComponent={BrainCircuit} 
-      color={PALETTE.BLUE_PRIMARY} 
-      glowColor={PALETTE.GLOW_BLUE}
-      label="AI Analysis" 
-    />
-    
-    {/* Particle effects near center for added dynamism */}
-    <ParticleEffect cx={130} cy={75} color={PALETTE.BLUE_LIGHT} />
-    <ParticleEffect cx={110} cy={95} color={PALETTE.BLUE_LIGHT} />
-    
-    {/* Surrounding nodes with better spacing */}
-    {[
-      { cx: 45, cy: 45, IconComponent: Users, label: 'Borrowers', color: PALETTE.GREEN_PRIMARY, glowColor: PALETTE.GLOW_GREEN },
-      { cx: 195, cy: 45, IconComponent: Database, label: 'Lender Data', color: PALETTE.BLUE_MEDIUM, glowColor: PALETTE.GLOW_BLUE },
-      { cx: 45, cy: 135, IconComponent: FileText, label: 'Projects', color: PALETTE.GREEN_MEDIUM, glowColor: PALETTE.GLOW_GREEN },
-      { cx: 195, cy: 135, IconComponent: Shuffle, label: 'Matching Algo', color: PALETTE.GREY_DARK, glowColor: PALETTE.GREY_LIGHT },
-      { cx: 120, cy: 25, IconComponent: Zap, label: 'Real-time', color: PALETTE.GREY_MEDIUM, glowColor: PALETTE.GREY_LIGHT },
-    ].map((node, index) => (
-      <React.Fragment key={`lm-${index}`}>
-        <NodeIcon {...node} delay={index * 0.1} />
-        <AnimatedLineRevised 
-          x1={node.cx} 
-          y1={node.cy} 
-          x2={120} 
-          y2={85} 
-          color={index < 2 ? PALETTE.BLUE_LIGHT : PALETTE.GREY_LIGHT} 
-          delayIndex={index} 
-          isReversed={index % 2 !== 0} 
-        />
-      </React.Fragment>
-    ))}
-  </GraphicContainer>
-);
+const LenderMatchingGraphic: React.FC = () => {
+  // Center coordinates
+  const centerX = 250;
+  const centerY = 200;
+  
+  // Node definitions with proper positioning
+  const nodes = [
+    { 
+      x: 120, y: 100, Icon: Users, 
+      color: COLORS.PRIMARY_GREEN, glowColor: COLORS.FADED_GREEN, 
+      label: "Borrowers", delay: 0.1 
+    },
+    { 
+      x: 380, y: 100, Icon: Database, 
+      color: COLORS.LIGHT_BLUE, glowColor: COLORS.FADED_BLUE, 
+      label: "Lender Data", delay: 0.2 
+    },
+    { 
+      x: 120, y: 300, Icon: FileText, 
+      color: COLORS.LIGHT_GREEN, glowColor: COLORS.FADED_GREEN, 
+      label: "Projects", delay: 0.3 
+    },
+    { 
+      x: 380, y: 300, Icon: Shuffle, 
+      color: COLORS.DARK_GREY, glowColor: COLORS.LIGHT_GREY, 
+      label: "Matching Algo", delay: 0.4 
+    },
+    { 
+      x: 250, y: 70, Icon: Zap, 
+      color: COLORS.MEDIUM_GREY, glowColor: COLORS.LIGHT_GREY, 
+      label: "Real-time", delay: 0.5 
+    },
+  ];
+
+  return (
+    <GraphicContainer>
+      {/* Center Node */}
+      <CentralIcon 
+        x={centerX} 
+        y={centerY} 
+        size={50} 
+        Icon={BrainCircuit} 
+        color={COLORS.PRIMARY_BLUE} 
+        glowColor={COLORS.FADED_BLUE}
+        label="AI Analysis" 
+      />
+      
+      {/* Satellite nodes with connecting lines */}
+      {nodes.map((node, index) => (
+        <React.Fragment key={`lender-node-${index}`}>
+          <NodeIcon 
+            x={node.x} 
+            y={node.y} 
+            size={30} 
+            Icon={node.Icon} 
+            color={node.color} 
+            glowColor={node.glowColor}
+            label={node.label} 
+            delay={node.delay} 
+          />
+          
+          <AnimatedConnectionLine 
+            startX={node.x} 
+            startY={node.y} 
+            endX={centerX} 
+            endY={centerY} 
+            color={node.color === COLORS.MEDIUM_GREY || node.color === COLORS.DARK_GREY ? 
+                   COLORS.LIGHT_GREY : 
+                   node.color === COLORS.PRIMARY_GREEN || node.color === COLORS.LIGHT_GREEN ? 
+                   COLORS.VERY_LIGHT_GREEN : 
+                   COLORS.VERY_LIGHT_BLUE}
+            particleColor={node.color}
+            delay={node.delay + 0.2} 
+            numParticles={Math.floor(Math.random() * 2) + 2}
+          />
+        </React.Fragment>
+      ))}
+    </GraphicContainer>
+  );
+};
 
 // ProjectResumeGraphic with improved layout
-const ProjectResumeGraphic: React.FC = () => (
-  <GraphicContainer>
-    {/* Center Platform */}
-    <CentralPlatformIcon 
-      IconComponent={Search} 
-      color={PALETTE.GREEN_PRIMARY} 
-      glowColor={PALETTE.GLOW_GREEN}
-      label="Validation Engine"
-    />
-    
-    {/* Particle effects */}
-    <ParticleEffect cx={135} cy={75} color={PALETTE.GREEN_LIGHT} />
-    <ParticleEffect cx={105} cy={95} color={PALETTE.GREEN_LIGHT} />
-    
-    {/* Surrounding nodes */}
-    {[
-      { cx: 40, cy: 40, IconComponent: FileText, label: 'Raw Data', color: PALETTE.GREY_MEDIUM, glowColor: PALETTE.GREY_LIGHT },
-      { cx: 200, cy: 40, IconComponent: CheckSquare, label: 'Validation', color: PALETTE.BLUE_PRIMARY, glowColor: PALETTE.GLOW_BLUE },
-      { cx: 40, cy: 130, IconComponent: FileJson, label: 'Parsed Docs', color: PALETTE.GREY_MEDIUM, glowColor: PALETTE.GREY_LIGHT },
-      { cx: 200, cy: 130, IconComponent: BarChart3, label: 'Completeness', color: PALETTE.BLUE_MEDIUM, glowColor: PALETTE.GLOW_BLUE },
-    ].map((node, index) => (
-      <React.Fragment key={`pr-${index}`}>
-        <NodeIcon {...node} delay={index * 0.1} />
-        <AnimatedLineRevised 
-          x1={node.cx} 
-          y1={node.cy} 
-          x2={120} 
-          y2={85} 
-          color={index % 2 ? PALETTE.BLUE_LIGHT : PALETTE.GREEN_LIGHT} 
-          delayIndex={index} 
-          isReversed={index % 2 !== 0} 
-        />
-      </React.Fragment>
-    ))}
-  </GraphicContainer>
-);
+const ProjectResumeGraphic: React.FC = () => {
+  // Center coordinates
+  const centerX = 250;
+  const centerY = 200;
+  
+  // Node definitions with proper positioning
+  const nodes = [
+    { 
+      x: 100, y: 100, Icon: FileText, 
+      color: COLORS.MEDIUM_GREY, glowColor: COLORS.LIGHT_GREY, 
+      label: "Raw Data", delay: 0.1 
+    },
+    { 
+      x: 400, y: 100, Icon: CheckSquare, 
+      color: COLORS.PRIMARY_BLUE, glowColor: COLORS.FADED_BLUE, 
+      label: "Validation", delay: 0.2 
+    },
+    { 
+      x: 100, y: 300, Icon: FileJson, 
+      color: COLORS.MEDIUM_GREY, glowColor: COLORS.LIGHT_GREY, 
+      label: "Parsed Docs", delay: 0.3 
+    },
+    { 
+      x: 400, y: 300, Icon: BarChart3, 
+      color: COLORS.LIGHT_BLUE, glowColor: COLORS.FADED_BLUE, 
+      label: "Completeness", delay: 0.4 
+    },
+  ];
+
+  return (
+    <GraphicContainer>
+      {/* Center Node */}
+      <CentralIcon 
+        x={centerX} 
+        y={centerY} 
+        size={50} 
+        Icon={Search} 
+        color={COLORS.PRIMARY_GREEN} 
+        glowColor={COLORS.FADED_GREEN}
+        label="Validation Engine" 
+      />
+      
+      {/* Satellite nodes with connecting lines */}
+      {nodes.map((node, index) => (
+        <React.Fragment key={`resume-node-${index}`}>
+          <NodeIcon 
+            x={node.x} 
+            y={node.y} 
+            size={30} 
+            Icon={node.Icon} 
+            color={node.color} 
+            glowColor={node.glowColor}
+            label={node.label} 
+            delay={node.delay} 
+          />
+          
+          <AnimatedConnectionLine 
+            startX={node.x} 
+            startY={node.y} 
+            endX={centerX} 
+            endY={centerY} 
+            color={node.color === COLORS.MEDIUM_GREY || node.color === COLORS.DARK_GREY ? 
+                   COLORS.LIGHT_GREY : 
+                   node.color === COLORS.PRIMARY_GREEN || node.color === COLORS.LIGHT_GREEN ? 
+                   COLORS.VERY_LIGHT_GREEN : 
+                   COLORS.VERY_LIGHT_BLUE}
+            particleColor={node.color}
+            delay={node.delay + 0.2} 
+            numParticles={Math.floor(Math.random() * 2) + 2}
+          />
+        </React.Fragment>
+      ))}
+    </GraphicContainer>
+  );
+};
 
 // OfferingMemorandumGraphic with improved node placement
-const OfferingMemorandumGraphic: React.FC = () => (
-  <GraphicContainer>
-    {/* Center Platform */}
-    <CentralPlatformIcon 
-      IconComponent={FileSpreadsheet} 
-      color={PALETTE.BLUE_MEDIUM} 
-      glowColor={PALETTE.GLOW_BLUE}
-      label="OM Generator"
-    />
-    
-    {/* Particle effects */}
-    <ParticleEffect cx={140} cy={85} color={PALETTE.BLUE_LIGHT} />
-    <ParticleEffect cx={100} cy={85} color={PALETTE.BLUE_LIGHT} />
-    
-    {/* Surrounding nodes */}
-    {[
-      { cx: 45, cy: 30, IconComponent: FileText, label: 'Project Data', color: PALETTE.GREY_DARK, glowColor: PALETTE.GREY_LIGHT },
-      { cx: 195, cy: 30, IconComponent: Users, label: 'Sponsor Info', color: PALETTE.GREY_MEDIUM, glowColor: PALETTE.GREY_LIGHT },
-      { cx: 45, cy: 140, IconComponent: BarChartHorizontal, label: 'Financials', color: PALETTE.BLUE_PRIMARY, glowColor: PALETTE.GLOW_BLUE },
-      { cx: 195, cy: 140, IconComponent: Eye, label: 'Market Data', color: PALETTE.GREEN_PRIMARY, glowColor: PALETTE.GLOW_GREEN },
-      { cx: 120, cy: 20, IconComponent: Link2, label: 'Live OM Link', color: PALETTE.GREEN_MEDIUM, glowColor: PALETTE.GLOW_GREEN },
-    ].map((node, index) => (
-      <React.Fragment key={`om-${index}`}>
-        <NodeIcon {...node} delay={index * 0.1} />
-        <AnimatedLineRevised 
-          x1={node.cx} 
-          y1={node.cy} 
-          x2={120} 
-          y2={85} 
-          color={index < 2 ? PALETTE.GREY_LIGHT : (index >= 2 && index < 4) ? PALETTE.BLUE_LIGHT : PALETTE.GREEN_LIGHT} 
-          delayIndex={index} 
-          isReversed={index % 2 !== 0} 
-        />
-      </React.Fragment>
-    ))}
-  </GraphicContainer>
-);
+const OfferingMemorandumGraphic: React.FC = () => {
+  // Center coordinates
+  const centerX = 250;
+  const centerY = 200;
+  
+  // Node definitions with proper positioning
+  const nodes = [
+    { 
+      x: 100, y: 100, Icon: FileText, 
+      color: COLORS.DARK_GREY, glowColor: COLORS.LIGHT_GREY, 
+      label: "Project Data", delay: 0.1 
+    },
+    { 
+      x: 400, y: 100, Icon: Users, 
+      color: COLORS.MEDIUM_GREY, glowColor: COLORS.LIGHT_GREY, 
+      label: "Sponsor Info", delay: 0.2 
+    },
+    { 
+      x: 100, y: 300, Icon: BarChart3, 
+      color: COLORS.PRIMARY_BLUE, glowColor: COLORS.FADED_BLUE, 
+      label: "Financials", delay: 0.3 
+    },
+    { 
+      x: 400, y: 300, Icon: Eye, 
+      color: COLORS.PRIMARY_GREEN, glowColor: COLORS.FADED_GREEN, 
+      label: "Market Data", delay: 0.4 
+    },
+    { 
+      x: 250, y: 70, Icon: Link2, 
+      color: COLORS.LIGHT_GREEN, glowColor: COLORS.FADED_GREEN, 
+      label: "Live OM Link", delay: 0.5 
+    },
+  ];
+
+  return (
+    <GraphicContainer>
+      {/* Center Node */}
+      <CentralIcon 
+        x={centerX} 
+        y={centerY} 
+        size={50} 
+        Icon={FileSpreadsheet} 
+        color={COLORS.LIGHT_BLUE} 
+        glowColor={COLORS.FADED_BLUE}
+        label="OM Generator" 
+      />
+      
+      {/* Satellite nodes with connecting lines */}
+      {nodes.map((node, index) => (
+        <React.Fragment key={`om-node-${index}`}>
+          <NodeIcon 
+            x={node.x} 
+            y={node.y} 
+            size={30} 
+            Icon={node.Icon} 
+            color={node.color} 
+            glowColor={node.glowColor}
+            label={node.label} 
+            delay={node.delay} 
+          />
+          
+          <AnimatedConnectionLine 
+            startX={node.x} 
+            startY={node.y} 
+            endX={centerX} 
+            endY={centerY} 
+            color={node.color === COLORS.MEDIUM_GREY || node.color === COLORS.DARK_GREY ? 
+                   COLORS.LIGHT_GREY : 
+                   node.color === COLORS.PRIMARY_GREEN || node.color === COLORS.LIGHT_GREEN ? 
+                   COLORS.VERY_LIGHT_GREEN : 
+                   COLORS.VERY_LIGHT_BLUE}
+            particleColor={node.color}
+            delay={node.delay + 0.2} 
+            numParticles={Math.floor(Math.random() * 2) + 2}
+          />
+        </React.Fragment>
+      ))}
+    </GraphicContainer>
+  );
+};
 
 // Main component with improved transition animations
 export const ProcessGraphics: React.FC<{activeIndex: number}> = ({ activeIndex }) => {
@@ -491,7 +792,7 @@ export const ProcessGraphics: React.FC<{activeIndex: number}> = ({ activeIndex }
   ];
 
   return (
-    <div className="w-full h-full rounded-xl overflow-hidden relative">
+    <div className="w-full h-full rounded-xl overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.div
           key={activeIndex} 
@@ -501,7 +802,7 @@ export const ProcessGraphics: React.FC<{activeIndex: number}> = ({ activeIndex }
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="w-full h-full"
         >
-          {graphics[activeIndex] ? graphics[activeIndex] : null}
+          {graphics[activeIndex] || null}
         </motion.div>
       </AnimatePresence>
     </div>
