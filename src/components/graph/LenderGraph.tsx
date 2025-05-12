@@ -1,8 +1,4 @@
 // src/components/graph/LenderGraph.tsx
-// THIS IS THE CODE YOU PROVIDED AS THE "WORKING OLDER VERSION"
-// I will use this directly, assuming it has the desired baseline functionality.
-// The key is that `page.tsx` passes the correct props to it.
-
 'use client';
 
 import type React from "react";
@@ -13,102 +9,115 @@ import { X, Check } from 'lucide-react';
 
 const filterKeys = ['asset_types', 'deal_types', 'capital_types', 'debt_ranges', 'locations'];
 
-function computeSelectedFilters(formData: any): number {
-  if (!formData) return 0;
-  return filterKeys.filter(
+// This function determines if the GRAPH should consider its UI filters active for display purposes.
+// It's used for conditional rendering of certain graph elements based on formData.
+function graphHasActiveUIFilters(formData: any): boolean {
+  if (!formData) return false;
+  return filterKeys.some(
     (key) =>
       formData[key] &&
       (Array.isArray(formData[key])
         ? formData[key].length > 0
         : true)
-  ).length;
+  );
 }
 
-// This function is used by the graph to calculate a score based on its *current formData* view.
-// It's separate from the lender.match_score which comes from LenderContext and is the source of truth.
+// This function calculates a score for a lender based *only* on the graph's current formData.
+// It helps decide if a node appears "matched" by the graph's current UI filters.
 function computeLenderScoreForGraphDisplay(lender: LenderProfile, formData: any): number {
-  const selectedCount = computeSelectedFilters(formData);
-  if (selectedCount === 0) return 0;
-
-  let matchCount = 0;
-  for (const key of filterKeys) {
-    if (
+  const activeUIFilterCategories = filterKeys.filter(
+    (key) =>
       formData &&
       formData[key] &&
       (Array.isArray(formData[key]) ? formData[key].length > 0 : true)
-    ) {
-      if (key === "locations") {
-        if (
-          lender.locations.includes("nationwide") ||
-          lender.locations.some((loc) =>
-            Array.isArray(formData[key])
-              ? formData[key].includes(loc)
-              : formData[key] === loc
-          )
-        ) {
-          matchCount++;
-        }
-      } else if (key === "debt_ranges") {
-        if (
-          lender.debt_ranges &&
-          lender.debt_ranges.some((dr) =>
-            Array.isArray(formData[key])
-              ? formData[key].includes(dr)
-              : formData[key] === dr
-          )
-        ) {
-          matchCount++;
-        }
-      } else {
-        const lenderVals = lender[key as keyof LenderProfile] as string[] | undefined;
-        if (
-          lenderVals &&
-          lenderVals.some((item: string) =>
-            Array.isArray(formData[key])
-              ? formData[key].includes(item)
-              : formData[key] === item
-          )
-        ) {
-          matchCount++;
-        }
+  );
+
+  if (activeUIFilterCategories.length === 0) return 0; // No UI filters active in graph, so no match score from graph's perspective
+
+  let matchCount = 0;
+  for (const key of activeUIFilterCategories) {
+    if (key === "locations") {
+      if (
+        lender.locations.includes("nationwide") ||
+        lender.locations.some((loc) =>
+          Array.isArray(formData[key])
+            ? formData[key].includes(loc)
+            : formData[key] === loc
+        )
+      ) {
+        matchCount++;
+      }
+    } else if (key === "debt_ranges") {
+      // Ensure lender.debt_ranges exists and is an array before trying to use .some()
+      if (
+        lender.debt_ranges && Array.isArray(lender.debt_ranges) &&
+        lender.debt_ranges.some((dr) =>
+          Array.isArray(formData[key])
+            ? formData[key].includes(dr)
+            : formData[key] === dr
+        )
+      ) {
+        matchCount++;
+      }
+    } else {
+      const lenderVals = lender[key as keyof LenderProfile] as string[] | undefined;
+      if (
+        lenderVals && Array.isArray(lenderVals) && // Ensure lenderVals is an array
+        lenderVals.some((item: string) =>
+          Array.isArray(formData[key])
+            ? formData[key].includes(item)
+            : formData[key] === item
+        )
+      ) {
+        matchCount++;
       }
     }
   }
-  return selectedCount > 0 ? matchCount / selectedCount : 0;
+  return matchCount / activeUIFilterCategories.length;
 }
 
 
-function getLenderColor(lenderFromContext: LenderProfile, graphFormData: any, isNodeActiveForGraph: boolean): string {
-  const scoreFromContext = lenderFromContext.match_score || 0;
+function getLenderColor(
+    lenderFromContext: LenderProfile,
+    formDataForGraphDisplay: any,
+    graphConsidersNodeActive: boolean, // If graph's UI filters make this node "active"
+    filtersAreAppliedOnPage: boolean // If ANY filter is applied on the page (from props)
+  ): string {
+  
+  // If no filters are applied on the page at all, all nodes are uniform gray.
+  if (!filtersAreAppliedOnPage) {
+    return "hsl(220, 10%, 70%)"; // Uniform gray
+  }
 
-  // If the graph has no active UI filters selected by the user (computeSelectedFilters(graphFormData) === 0)
-  // OR if this specific node is deemed inactive by the graph's logic, render it as default gray.
-  if (computeSelectedFilters(graphFormData) === 0 || !isNodeActiveForGraph) {
-    return "hsl(220, 10%, 70%)";
+  // If page has filters, but this specific node isn't considered active by graph's UI filters
+  if (!graphConsidersNodeActive) {
+    return "hsl(220, 10%, 70%)"; // Default gray for nodes not matching current graph UI selection
   }
   
-  // Otherwise, color is based on the authoritative match_score from the context.
+  // Otherwise (filters are applied on page AND graph considers this node active),
+  // color is based on the authoritative match_score from the context.
+  const scoreFromContext = lenderFromContext.match_score || 0;
   if (scoreFromContext === 1) return "hsl(0, 100%, 50%)"; 
   if (scoreFromContext > 0.8) return "hsl(0, 90%, 60%)";  
   if (scoreFromContext > 0.6) return "hsl(20, 80%, 65%)"; 
   if (scoreFromContext > 0.4) return "hsl(30, 70%, 70%)"; 
   if (scoreFromContext > 0.2) return "hsl(40, 60%, 70%)"; 
   
-  return "hsl(220, 10%, 70%)"; // Default gray for very low context scores
+  return "hsl(220, 10%, 70%)"; // Default gray for very low context scores even if "active"
 }
 
 interface LenderGraphProps {
-  lenders: LenderProfile[]; // These lenders WILL have match_score from context
-  formData?: any;           // Current filter values from UI, used for graph's internal logic
-  filtersApplied: boolean; // True if ANY filter category is selected by the user (from page.tsx)
-  allFiltersSelected?: boolean; // Are ALL categories selected (for card display)
+  lenders: LenderProfile[];
+  formData?: any;
+  filtersApplied: boolean; // True if ANY filter category is selected by the user on the page
+  allFiltersSelected?: boolean;
   onLenderClick?: (lender: LenderProfile | null) => void;
 }
 
 export default function LenderGraph({
   lenders,
   formData,
-  filtersApplied, // This prop tells the graph if any filter is active in the UI
+  filtersApplied, // This prop tells the graph if any filter is active in the UI (from page.tsx)
   allFiltersSelected = false, 
   onLenderClick,
 }: LenderGraphProps) {
@@ -128,8 +137,9 @@ export default function LenderGraph({
     targetY: number;
     radius: number;
     color: string;
-    isActiveForGraphDisplay: boolean; // Node's visual active state in the graph
-    scoreFromContext: number; // Authoritative score
+    // NEW: Differentiate between graph's view of active and overall page filter state
+    isVisuallyActiveInGraph: boolean; // Node's visual active state based on formData
+    scoreFromContext: number;
   }>>(new Map());
   const particlesRef = useRef<Array<{
     x: number;
@@ -143,7 +153,6 @@ export default function LenderGraph({
   const cardPositionRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    // Robust canvas size update
     let rafId: number;
     const updateSize = () => {
       if (containerRef.current) {
@@ -155,20 +164,19 @@ export default function LenderGraph({
             setCenterPoint({ x: width / 2, y: height / 2 });
           }
         } else {
-          rafId = requestAnimationFrame(updateSize); // Retry if size is 0
+          rafId = requestAnimationFrame(updateSize);
         }
       } else {
-        rafId = requestAnimationFrame(updateSize); // Retry if ref not ready
+        rafId = requestAnimationFrame(updateSize);
       }
     };
-    rafId = requestAnimationFrame(updateSize); // Initial call
-    
+    rafId = requestAnimationFrame(updateSize);
     window.addEventListener("resize", updateSize);
     return () => {
       window.removeEventListener("resize", updateSize);
       cancelAnimationFrame(rafId);
     };
-  }, [canvasSize.width, canvasSize.height]); // Depend on size to re-run if needed after first set
+  }, [canvasSize.width, canvasSize.height]);
 
 
   useEffect(() => {
@@ -181,27 +189,26 @@ export default function LenderGraph({
     lenders.forEach((lender, index) => {
       const scoreFromContext = lender.match_score || 0;
       
-      // A node is considered "active" for graph display if the `filtersApplied` prop is true
-      // AND the graph's internal scoring based on `formData` yields a positive score.
-      // This allows nodes to be "dimmed" if they don't match the *current UI selection*,
-      // even if their overall `match_score` from context is high due to other potential filter combos.
+      // Determine if this node should appear "active" based on the graph's current UI filters (formData)
       const graphInternalScore = computeLenderScoreForGraphDisplay(lender, formData);
-      const isActiveForGraphDisplay = filtersApplied && graphInternalScore > 0;
+      const isVisuallyActiveInGraph = filtersApplied && graphInternalScore > 0;
       
-      const baseRadius = isActiveForGraphDisplay ? 8 + scoreFromContext * 8 : 6; // Radius scales with context score
-      const color = getLenderColor(lender, formData, isActiveForGraphDisplay);
+      const baseRadius = (filtersApplied && isVisuallyActiveInGraph) 
+                          ? 8 + scoreFromContext * 8  // Active nodes scale with context score
+                          : 6;                        // Inactive or default nodes are smaller
       
-      const angle = index * goldenAngle;
+      const color = getLenderColor(lender, formData, isVisuallyActiveInGraph, filtersApplied);
+      
       let distanceFactor;
-      
-      if (isActiveForGraphDisplay) {
-        distanceFactor = 0.3 + (1 - scoreFromContext) * 0.6; // Position by context score
+      if (filtersApplied && isVisuallyActiveInGraph) {
+        // Position active nodes by their context_score (closer to center for higher scores)
+        distanceFactor = 0.3 + (1 - scoreFromContext) * 0.6;
       } else {
-        // If not active for graph display, push to periphery.
-        // Still use scoreFromContext slightly to keep better overall matches a bit closer.
-        distanceFactor = 0.75 + (1 - scoreFromContext * 0.5) * 0.20; 
+        // Default state (no filters applied on page OR node not visually active in graph):
+        // Push to periphery. Slightly vary by context_score to avoid perfect circle for already scored lenders.
+        distanceFactor = 0.85 + (1 - scoreFromContext * 0.2) * 0.10;
       }
-      
+      const angle = index * goldenAngle;
       const distance = maxDistance * distanceFactor;
       const targetX = center.x + Math.cos(angle) * distance;
       const targetY = center.y + Math.sin(angle) * distance;
@@ -210,11 +217,11 @@ export default function LenderGraph({
       newPositions.set(lender.lender_id, {
         x: currentPosData?.x ?? targetX, 
         y: currentPosData?.y ?? targetY, 
-        targetX, targetY, radius: baseRadius, color, isActiveForGraphDisplay, scoreFromContext,
+        targetX, targetY, radius: baseRadius, color, isVisuallyActiveInGraph, scoreFromContext,
       });
     });
     lenderPositionsRef.current = newPositions;
-  }, [lenders, canvasSize, filtersApplied, formData]);
+  }, [lenders, canvasSize, filtersApplied, formData]); // formData is crucial here
 
 
   function addParticles(x: number, y: number, color: string, count = 3, sizeMultiplier = 0.8) {
@@ -238,6 +245,7 @@ export default function LenderGraph({
     const animate = (time: number) => {
       ctx.clearRect(0, 0, canvasSize.width, canvasSize.height);
 
+      // Concentric circles (background)
       ctx.strokeStyle = "rgba(200, 200, 230, 0.1)";
       ctx.lineWidth = 0.4;
       for (let i = 1; i <= 4; i++) {
@@ -247,6 +255,7 @@ export default function LenderGraph({
         ctx.stroke();
       }
 
+      // Center orb
       ctx.beginPath();
       ctx.arc(centerPoint.x, centerPoint.y, 14, 0, Math.PI * 2); 
       ctx.fillStyle = "rgba(90, 120, 240, 0.4)"; 
@@ -261,6 +270,7 @@ export default function LenderGraph({
       ctx.fillStyle = centerGlow;
       ctx.fill();
 
+      // Particles
       particlesRef.current.forEach((particle, index) => {
         particle.life++;
         if (particle.life >= particle.maxLife) { particlesRef.current.splice(index, 1); return; }
@@ -272,12 +282,16 @@ export default function LenderGraph({
         ctx.fill();
       });
 
+      // Lender Nodes
       lenderPositionsRef.current.forEach((pos, lender_id) => {
         if (!pos) return;
-        const { isActiveForGraphDisplay, scoreFromContext } = pos;
+        // isVisuallyActiveInGraph determines if lines/active pulses are shown
+        const { isVisuallyActiveInGraph, scoreFromContext } = pos;
 
-        if (isActiveForGraphDisplay) { // Only draw lines if node is active for graph display
+        // Draw connecting lines only if page filters are applied AND node is visually active in graph
+        if (filtersApplied && isVisuallyActiveInGraph) {
           let gradient;
+          // Color lines based on context score
           if (scoreFromContext === 1) { gradient = ctx.createLinearGradient(centerPoint.x, centerPoint.y, pos.x, pos.y); gradient.addColorStop(0, "rgba(255, 0, 0, 0.45)"); gradient.addColorStop(1, "rgba(255, 0, 0, 0.2)");
           } else if (scoreFromContext > 0.8) { gradient = ctx.createLinearGradient(centerPoint.x, centerPoint.y, pos.x, pos.y); gradient.addColorStop(0, "rgba(255, 60, 60, 0.35)"); gradient.addColorStop(1, "rgba(255, 60, 60, 0.12)");
           } else if (scoreFromContext > 0.6) { gradient = ctx.createLinearGradient(centerPoint.x, centerPoint.y, pos.x, pos.y); gradient.addColorStop(0, "rgba(255, 120, 60, 0.25)"); gradient.addColorStop(1, "rgba(255, 120, 60, 0.08)");
@@ -290,6 +304,7 @@ export default function LenderGraph({
           ctx.lineWidth = 0.4 + scoreFromContext * 1.3; 
           ctx.stroke();
 
+          // Particles along lines for active, high-scoring nodes
           if (scoreFromContext > 0.65 && Math.random() < 0.018 * scoreFromContext) {
             const t = Math.random();
             addParticles(centerPoint.x + (pos.x - centerPoint.x) * t, centerPoint.y + (pos.y - centerPoint.y) * t, pos.color, 1, 0.7);
@@ -300,20 +315,35 @@ export default function LenderGraph({
         pos.x += (pos.targetX - pos.x) * moveSpeed;
         pos.y += (pos.targetY - pos.y) * moveSpeed;
         
-        if (isActiveForGraphDisplay && scoreFromContext > 0.55 && Math.random() < 0.012 * scoreFromContext) {
+        // Particles at node position for active, mid-to-high scoring nodes
+        if (filtersApplied && isVisuallyActiveInGraph && scoreFromContext > 0.55 && Math.random() < 0.012 * scoreFromContext) {
           addParticles(pos.x, pos.y, pos.color, 1, 0.6);
         }
 
-        const pulseStrength = isActiveForGraphDisplay ? 0.07 + (scoreFromContext * 0.065) : 0.02; 
-        const pulseSpeed = 0.0011 + (scoreFromContext * 0.00065); 
+        // Pulse effect: Stronger for visually active nodes, subtle otherwise if page has filters
+        let pulseStrength = 0.02; // Default subtle pulse
+        let pulseSpeed = 0.0011;
+        if (filtersApplied && isVisuallyActiveInGraph) {
+            pulseStrength = 0.07 + (scoreFromContext * 0.065);
+            pulseSpeed = 0.0011 + (scoreFromContext * 0.00065);
+        } else if (filtersApplied) { // Filters on page, but this node not visually active
+            pulseStrength = 0.03; // Slightly more noticeable than no-filter state
+            pulseSpeed = 0.0009;
+        }
+        // If NO filters are applied on page, pulseStrength remains 0.02 (very subtle or could be 0)
+        // To disable pulse completely when no filters are applied:
+        // pulseStrength = filtersApplied ? pulseStrength : 0;
+
+
         const pulse = Math.sin(time * pulseSpeed + lender_id * 0.1) * pulseStrength + (1 - pulseStrength / 2);
         const radius = pos.radius * pulse;
 
+        // Glow effect for visually active nodes or highlighted nodes
         const isHighlighted = hoveredLenderId === lender_id || (selectedLender?.lender_id === lender_id);
-        if (isActiveForGraphDisplay || isHighlighted) {
+        if ((filtersApplied && isVisuallyActiveInGraph) || isHighlighted) {
           const glowRadius = radius * (1.18 + scoreFromContext * 0.22); 
           const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, glowRadius);
-          const glowOpacity = isActiveForGraphDisplay ? 0.065 + scoreFromContext * 0.18 : 0.045; 
+          const glowOpacity = (filtersApplied && isVisuallyActiveInGraph) ? 0.065 + scoreFromContext * 0.18 : 0.045; 
           glow.addColorStop(0, pos.color.replace(")", `, ${glowOpacity})`));
           glow.addColorStop(1, pos.color.replace(")", ", 0)"));
           ctx.beginPath();
@@ -322,14 +352,16 @@ export default function LenderGraph({
           ctx.fill();
         }
 
+        // Draw node circle
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, Math.max(2, radius), 0, Math.PI * 2); // Ensure min radius
+        ctx.arc(pos.x, pos.y, Math.max(2, radius), 0, Math.PI * 2);
         const nodeGradient = ctx.createRadialGradient(pos.x - radius * 0.3, pos.y - radius * 0.3, 0, pos.x, pos.y, radius);
-        nodeGradient.addColorStop(0, pos.color.replace(")", ", 1)"));
-        nodeGradient.addColorStop(1, pos.color.replace("hsl", "hsla").replace(")", ", 0.62)"));
+        nodeGradient.addColorStop(0, pos.color.replace(")", ", 1)")); // Solid center
+        nodeGradient.addColorStop(1, pos.color.replace("hsl", "hsla").replace(")", ", 0.62)")); // Softer edge
         ctx.fillStyle = nodeGradient;
         ctx.fill();
 
+        // Highlight selected/hovered
         if (selectedLender?.lender_id === lender_id) {
           ctx.strokeStyle = "rgba(255, 255, 255, 0.82)"; 
           ctx.lineWidth = 1.9; ctx.stroke();
@@ -338,7 +370,9 @@ export default function LenderGraph({
           ctx.lineWidth = 1.3; ctx.stroke();
         }
 
-        if (radius > 9 && scoreFromContext > 0.22) { 
+        // Node initial (text)
+        // Show initials only if filters are applied AND node is visually active AND has a decent score
+        if (filtersApplied && isVisuallyActiveInGraph && radius > 9 && scoreFromContext > 0.22) { 
           const lenderDetails = lenders.find(l => l.lender_id === lender_id);
           const initial = lenderDetails?.name.charAt(0).toUpperCase() || "L";
           ctx.fillStyle = "rgba(255, 255, 255, 0.78)"; 
@@ -351,7 +385,12 @@ export default function LenderGraph({
     };
     animationRef.current = requestAnimationFrame(animate);
     return () => { cancelAnimationFrame(animationRef.current); };
-  }, [lenders, canvasSize, selectedLender, hoveredLenderId, centerPoint, filtersApplied, formData]); // formData needed by getLenderColor
+  }, [lenders, canvasSize, selectedLender, hoveredLenderId, centerPoint, filtersApplied, formData]);
+
+  // Mouse event handlers (handleMouseMove, handleMouseLeave, handleMouseDown, handleMouseUp, handleLenderClick)
+  // remain largely the same as your provided "working older version",
+  // as their core logic for interaction is sound.
+  // The key is that the drawing loop now correctly uses `filtersApplied` for the initial state.
 
   function handleMouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
     const canvas = canvasRef.current;
@@ -361,14 +400,13 @@ export default function LenderGraph({
     const y = e.clientY - rect.top;
     let foundLender: LenderProfile | null = null;
 
-    // Iterate to find the topmost lender node under cursor
     const sortedLenders = [...lenders].sort((a,b) => (lenderPositionsRef.current.get(a.lender_id)?.radius || 0) - (lenderPositionsRef.current.get(b.lender_id)?.radius || 0));
 
-    for (const lender of sortedLenders) { // Check smaller nodes first (effectively topmost)
+    for (const lender of sortedLenders) {
         const pos = lenderPositionsRef.current.get(lender.lender_id);
         if (!pos) continue;
         const distance = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
-        if (distance <= pos.radius + 3) { // Increased hover radius slightly
+        if (distance <= pos.radius + 3) { 
             foundLender = lender;
             break; 
         }
@@ -382,12 +420,12 @@ export default function LenderGraph({
       if (containerRect) {
         const relativeX = e.clientX - containerRect.left;
         const relativeY = e.clientY - containerRect.top;
-        const cardWidth = 320; const cardHeight = 380; // Adjusted card height estimate
-        let cardX = relativeX + 20; let cardY = relativeY - 20; // Position slightly offset and above
+        const cardWidth = 320; const cardHeight = 380; 
+        let cardX = relativeX + 20; let cardY = relativeY - 20;
 
         if (cardX + cardWidth > canvasSize.width -10) cardX = relativeX - cardWidth - 20;
         if (cardY + cardHeight > canvasSize.height -10) cardY = canvasSize.height - cardHeight -10;
-        if (cardY < 10) cardY = 10; // Don't let it go off top
+        if (cardY < 10) cardY = 10; 
         
         cardX = Math.max(5, Math.min(cardX, canvasSize.width - cardWidth - 5));
         cardY = Math.max(5, Math.min(cardY, canvasSize.height - cardHeight - 5));
@@ -406,33 +444,28 @@ export default function LenderGraph({
       }
     } else {
       setShowIncompleteFiltersCard(false);
-      // Only clear selection if mouse is not down (i.e., not dragging)
       if (!isMouseDown) {
-        // Check if the mouse is outside the currently selected lender card before clearing
         const card = document.getElementById(`lender-card-${selectedLender?.lender_id}`);
         if (card && e.target !== card && !card.contains(e.target as Node)) {
-            // setSelectedLender(null); // Potentially too aggressive
+            //setSelectedLender(null); // Potentially too aggressive
         } else if (!card) {
-             // setSelectedLender(null); // If no card was shown
+             //setSelectedLender(null); // If no card was shown
         }
       }
     }
   }
 
   function handleMouseLeave(e: React.MouseEvent<HTMLCanvasElement>) {
-    // Check if mouse is leaving to outside the canvas and not onto the lender card
     if (selectedLender && containerRef.current) {
-        const cardElement = document.querySelector(`[id^="lender-card-"]`); // More generic selector
+        const cardElement = document.querySelector(`[id^="lender-card-"]`); 
         if (cardElement && cardElement.contains(e.relatedTarget as Node)) {
-            // Mouse is over the card, do nothing
             return;
         }
     }
     setHoveredLenderId(null);
     setShowIncompleteFiltersCard(false);
     if (!isMouseDown) {
-      // setSelectedLender(null); // Commented out: don't clear selection on mouse leave from canvas
-      // if (onLenderClick) onLenderClick(null);
+      // if (onLenderClick) onLenderClick(null); // Don't clear on mouse leave from canvas
     }
     if (canvasRef.current) canvasRef.current.style.cursor = "default";
   }
@@ -461,12 +494,12 @@ export default function LenderGraph({
             setSelectedLender(prev => {
                 const newSelection = prev?.lender_id === clickedLender?.lender_id ? null : clickedLender;
                 if (onLenderClick) onLenderClick(newSelection);
-                setShowIncompleteFiltersCard(false); // Hide tooltip if card is shown
+                setShowIncompleteFiltersCard(false);
                 return newSelection;
             });
         } else if (clickedLender.match_score > 0) {
             setShowIncompleteFiltersCard(true);
-            setSelectedLender(null); // Ensure card isn't shown if filters incomplete
+            setSelectedLender(null); 
         } else { 
             setSelectedLender(null); 
             setShowIncompleteFiltersCard(false);
@@ -495,7 +528,7 @@ export default function LenderGraph({
 
   return (
     <div className="h-full w-full flex" ref={containerRef}>
-      <div className="relative w-full h-full"> {/* This div will define canvas bounds */}
+      <div className="relative w-full h-full">
         <canvas
           ref={canvasRef}
           width={canvasSize.width}
@@ -505,21 +538,20 @@ export default function LenderGraph({
           onMouseLeave={handleMouseLeave}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
-          style={{ display: 'block' }}  // Important for layout
+          style={{ display: 'block' }}
         />
 
         {selectedLender && allFiltersSelected && selectedLender.match_score > 0 && (
           <div
-            id={`lender-card-${selectedLender.lender_id}`} // Add ID for mouseleave check
+            id={`lender-card-${selectedLender.lender_id}`}
             className="absolute z-10"
             style={{
               top: cardPositionRef.current.y,
               left: cardPositionRef.current.x,
             }}
             onMouseLeave={(e) => {
-                // If mouse leaves card to an element not canvas, clear selection
                  if (canvasRef.current && e.relatedTarget !== canvasRef.current && !canvasRef.current.contains(e.relatedTarget as Node)) {
-                    // setSelectedLender(null);
+                    // setSelectedLender(null); // Do not clear on mouse leave from card
                     // if (onLenderClick) onLenderClick(null);
                  }
             }}
@@ -528,7 +560,7 @@ export default function LenderGraph({
               lender={selectedLender}
               formData={formData}
               onClose={() => {setSelectedLender(null); if (onLenderClick) onLenderClick(null);}}
-              color={getLenderColor(selectedLender, formData, true)} // Node is active because it's selected
+              color={getLenderColor(selectedLender, formData, true, filtersApplied)}
             />
           </div>
         )}
