@@ -123,3 +123,33 @@ h1, h2, h3, h4, h5, h6 {
 .animate-count-up {
   animation: countUpAnimation 0.5s ease-out forwards;
 }
+
+/* OM Dashboard Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.om-dashboard {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Quadrant hover effects */
+.om-quadrant {
+  transition: all 0.3s ease;
+}
+
+.om-quadrant:hover {
+  transform: translateY(-4px);
+}
+
+/* Page transitions */
+.om-page-transition {
+  animation: fadeInUp 0.3s ease-out;
+}
