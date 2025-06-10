@@ -41,12 +41,27 @@ const DebtRangeFilter: React.FC<DebtRangeFilterProps> = ({ value, onChange }) =>
           )}
         </div>
       </div>
-      <ButtonSelect
-        label="Debt Range"
-        options={debtRangeOptions}
-        selectedValue={value[0] || ''}
-        onSelect={(newValue) => onChange([newValue])}
-      />
+      <div className="flex flex-wrap gap-2">
+        {debtRangeOptions.map((option) => (
+          <button
+            key={option}
+            type="button"
+            className={`px-3 py-1.5 text-sm rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+              value.includes(option)
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+            onClick={() => {
+              const newValue = value.includes(option)
+                ? value.filter((v) => v !== option)
+                : [...value, option];
+              onChange(newValue);
+            }}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };

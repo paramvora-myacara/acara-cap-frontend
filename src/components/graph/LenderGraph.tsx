@@ -244,43 +244,49 @@ export default function LenderGraph({
 
     const animate = (time: number) => {
       ctx.clearRect(0, 0, canvasSize.width, canvasSize.height);
+      const activePositions: Array<{ x: number, y: number, color: string, score: number }> = [];
+      const maxRadius = Math.min(canvasSize.width, canvasSize.height) * 0.45;
 
       // Concentric circles (background)
       ctx.strokeStyle = "rgba(200, 200, 230, 0.1)";
       ctx.lineWidth = 0.4;
-      for (let i = 1; i <= 4; i++) {
-        const radius = i * (Math.min(canvasSize.width, canvasSize.height) * 0.15);
+      for (let i = 0; i < 5; i++) {
         ctx.beginPath();
-        ctx.arc(centerPoint.x, centerPoint.y, radius, 0, Math.PI * 2);
+        ctx.arc(centerPoint.x, centerPoint.y, (maxRadius / 5) * (i + 1) + (Math.sin(time / 2000 + i) * 3), 0, 2 * Math.PI);
         ctx.stroke();
       }
 
-      // Center orb
-      ctx.beginPath();
-      ctx.arc(centerPoint.x, centerPoint.y, 14, 0, Math.PI * 2); 
-      ctx.fillStyle = "rgba(90, 120, 240, 0.4)"; 
-      ctx.fill();
-      const centerGlow = ctx.createRadialGradient(
-        centerPoint.x, centerPoint.y, 0, centerPoint.x, centerPoint.y, 28
-      );
-      centerGlow.addColorStop(0, "rgba(90, 120, 240, 0.12)");
-      centerGlow.addColorStop(1, "rgba(90, 120, 240, 0)");
-      ctx.beginPath();
-      ctx.arc(centerPoint.x, centerPoint.y, 28, 0, Math.PI * 2);
-      ctx.fillStyle = centerGlow;
-      ctx.fill();
-
-      // Particles
-      particlesRef.current.forEach((particle, index) => {
-        particle.life++;
-        if (particle.life >= particle.maxLife) { particlesRef.current.splice(index, 1); return; }
-        const lifeRatio = particle.life / particle.maxLife;
-        const alpha = lifeRatio < 0.5 ? lifeRatio * 2 : 2 - lifeRatio * 2;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size * (1 - lifeRatio), 0, Math.PI * 2);
-        ctx.fillStyle = particle.color.replace(")", `, ${alpha * 0.55})`);
-        ctx.fill();
+      // Draw lines between active nodes first (so they are in the background)
+      lenderPositionsRef.current.forEach(pos => {
+        if (pos.isVisuallyActiveInGraph) {
+            activePositions.push({ x: pos.x, y: pos.y, color: pos.color, score: pos.scoreFromContext });
+        }
       });
+
+      ctx.save();
+      for(let i = 0; i < activePositions.length; i++) {
+        for (let j = i + 1; j < activePositions.length; j++) {
+            const pos1 = activePositions[i];
+            const pos2 = activePositions[j];
+            const avgScore = (pos1.score + pos2.score) / 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(pos1.x, pos1.y);
+            ctx.lineTo(pos2.x, pos2.y);
+            
+            // Make brighter, more solid lines for higher average scores
+            const opacity = 0.1 + (avgScore * 0.4);
+            const lightness = 60 + (avgScore * 20);
+            
+            ctx.strokeStyle = `hsla(220, 80%, ${lightness}%, ${opacity})`;
+            ctx.lineWidth = 0.5 + avgScore;
+            ctx.stroke();
+        }
+      }
+      ctx.restore();
+
+      // Update and draw particles
+      particlesRef.current = particlesRef.current.filter(p => p.life < p.maxLife);
 
       // Lender Nodes
       lenderPositionsRef.current.forEach((pos, lender_id) => {
@@ -320,46 +326,21 @@ export default function LenderGraph({
           addParticles(pos.x, pos.y, pos.color, 1, 0.6);
         }
 
-        // Pulse effect: Stronger for visually active nodes, subtle otherwise if page has filters
-        let pulseStrength = 0.02; // Default subtle pulse
-        let pulseSpeed = 0.0011;
-        if (filtersApplied && isVisuallyActiveInGraph) {
-            pulseStrength = 0.07 + (scoreFromContext * 0.065);
-            pulseSpeed = 0.0011 + (scoreFromContext * 0.00065);
-        } else if (filtersApplied) { // Filters on page, but this node not visually active
-            pulseStrength = 0.03; // Slightly more noticeable than no-filter state
-            pulseSpeed = 0.0009;
-        }
-        // If NO filters are applied on page, pulseStrength remains 0.02 (very subtle or could be 0)
-        // To disable pulse completely when no filters are applied:
-        // pulseStrength = filtersApplied ? pulseStrength : 0;
+        // Pulsing effect for active nodes
+        const pulse = pos.isVisuallyActiveInGraph ? Math.sin(time / 300 + lender_id) * 1.5 : 0;
+        const finalRadius = pos.radius + pulse;
 
-
-        const pulse = Math.sin(time * pulseSpeed + lender_id * 0.1) * pulseStrength + (1 - pulseStrength / 2);
-        const radius = pos.radius * pulse;
-
-        // Glow effect for visually active nodes or highlighted nodes
-        const isHighlighted = hoveredLenderId === lender_id || (selectedLender?.lender_id === lender_id);
-        if ((filtersApplied && isVisuallyActiveInGraph) || isHighlighted) {
-          const glowRadius = radius * (1.18 + scoreFromContext * 0.22); 
-          const glow = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, glowRadius);
-          const glowOpacity = (filtersApplied && isVisuallyActiveInGraph) ? 0.065 + scoreFromContext * 0.18 : 0.045; 
-          glow.addColorStop(0, pos.color.replace(")", `, ${glowOpacity})`));
-          glow.addColorStop(1, pos.color.replace(")", ", 0)"));
-          ctx.beginPath();
-          ctx.arc(pos.x, pos.y, glowRadius, 0, Math.PI * 2);
-          ctx.fillStyle = glow;
-          ctx.fill();
-        }
-
-        // Draw node circle
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, Math.max(2, radius), 0, Math.PI * 2);
-        const nodeGradient = ctx.createRadialGradient(pos.x - radius * 0.3, pos.y - radius * 0.3, 0, pos.x, pos.y, radius);
-        nodeGradient.addColorStop(0, pos.color.replace(")", ", 1)")); // Solid center
-        nodeGradient.addColorStop(1, pos.color.replace("hsl", "hsla").replace(")", ", 0.62)")); // Softer edge
-        ctx.fillStyle = nodeGradient;
+        ctx.arc(pos.x, pos.y, finalRadius, 0, 2 * Math.PI);
+        ctx.fillStyle = pos.color;
         ctx.fill();
+
+        if (hoveredLenderId === lender_id) {
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          addParticles(pos.x, pos.y, pos.color, 1, 1.2);
+        }
 
         // Highlight selected/hovered
         if (selectedLender?.lender_id === lender_id) {
@@ -372,11 +353,11 @@ export default function LenderGraph({
 
         // Node initial (text)
         // Show initials only if filters are applied AND node is visually active AND has a decent score
-        if (filtersApplied && isVisuallyActiveInGraph && radius > 9 && scoreFromContext > 0.22) { 
+        if (filtersApplied && isVisuallyActiveInGraph && finalRadius > 9 && scoreFromContext > 0.22) { 
           const lenderDetails = lenders.find(l => l.lender_id === lender_id);
           const initial = lenderDetails?.name.charAt(0).toUpperCase() || "L";
           ctx.fillStyle = "rgba(255, 255, 255, 0.78)"; 
-          ctx.font = `bold ${Math.floor(radius * 0.78)}px Arial, sans-serif`; 
+          ctx.font = `bold ${Math.floor(finalRadius * 0.78)}px Arial, sans-serif`; 
           ctx.textAlign = "center"; ctx.textBaseline = "middle";
           ctx.fillText(initial, pos.x, pos.y + 0.5); 
         }

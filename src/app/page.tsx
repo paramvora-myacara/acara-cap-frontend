@@ -136,22 +136,12 @@ export default function HomePage() {
                     animate={contentVisible ? { opacity: 1, x: 0 } : { opacity: 0, x: -50 }}
                     transition={{ duration: 0.5, ease: "easeOut" }}
                   >
-                    <div className="space-y-4 flex-grow overflow-y-auto"> {/* Added overflow-y-auto if content exceeds */}
-                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex-grow flex flex-col justify-between">
                         <FilterSection formData={filters} onChange={handleFilterChange} filterType="asset_types" />
-                      </div>
-                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <FilterSection formData={filters} onChange={handleFilterChange} filterType="deal_types" />
-                      </div>
-                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <FilterSection formData={filters} onChange={handleFilterChange} filterType="capital_types" />
-                      </div>
-                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <FilterSection formData={filters} onChange={handleFilterChange} filterType="locations" />
-                      </div>
-                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <FilterSection formData={filters} onChange={handleFilterChange} filterType="debt_ranges" />
-                      </div>
                     </div>
                     <div className="mt-auto pt-6 text-center px-4">
                         {allFilterCategoriesSelected && topLenders.length > 0 && (
