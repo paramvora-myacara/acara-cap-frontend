@@ -63,12 +63,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             type={inputType}
             className={cn(
-              "block rounded-md sm:text-sm border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500",
+              "h-10 px-3 py-2 block rounded-md sm:text-sm border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500",
               leftIcon && "pl-10",
               (rightIcon || isPassword) && "pr-10",
               error && "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500",
-              fullWidth && "w-full",
-              "h-10 px-3 py-2"
+              fullWidth && "w-full"
             )}
             aria-invalid={error ? "true" : "false"}
             aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}

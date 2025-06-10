@@ -37,14 +37,13 @@ const MinimalSidebarLayout: React.FC<MinimalSidebarLayoutProps> = ({ children, t
         <GlobalToast />    {/* Include GlobalToast */}
 
       {/* Minimal Sidebar */}
-      <div className="w-20 lg:w-56 bg-white shadow-md flex flex-col justify-between"> {/* Adjust width as needed */}
+      <div className="w-24 lg:w-56 bg-white shadow-md flex flex-col justify-between"> {/* Adjust width as needed */}
         <div>
           {/* Logo/Brand */}
-          <div className="p-4 border-b border-gray-200 flex items-center justify-center lg:justify-start">
+          <div className="p-4 lg:p-6 border-b border-gray-200 flex items-center justify-center">
             {/* Simplified Logo - Maybe just initials or small icon */}
             <Link href="/" className="flex items-center space-x-2">
-                <img src="/acara-logo.png" alt="A" className="h-8 w-8 lg:h-7 lg:w-7" onError={(e)=>(e.target as HTMLImageElement).style.display='none'} />
-                <span className="hidden lg:inline text-lg font-bold text-blue-800">ACARA</span>
+                <img src="/acara-logo.png" alt="A" className="h-auto w-14 lg:w-20" onError={(e)=>(e.target as HTMLImageElement).style.display='none'} />
             </Link>
           </div>
 
