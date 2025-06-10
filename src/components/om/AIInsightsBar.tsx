@@ -94,7 +94,7 @@ export const AIInsightsBar: React.FC<AIInsightsBarProps> = ({ scenario }) => {
         <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg shadow-sm mb-6">
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/30 transition-colors rounded-lg"
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/30 transition-colors rounded-lg group"
             >
                 <div className="flex items-center space-x-3">
                     <div className="p-2 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg">
@@ -107,11 +107,18 @@ export const AIInsightsBar: React.FC<AIInsightsBarProps> = ({ scenario }) => {
                         <p className="text-sm text-gray-600">{currentInsights.summary}</p>
                     </div>
                 </div>
-                {isExpanded ? (
-                    <ChevronUp className="h-5 w-5 text-gray-500" />
-                ) : (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
-                )}
+                <div className="flex items-center space-x-2">
+                    {!isExpanded && (
+                        <span className="text-xs text-gray-400 group-hover:text-gray-600 transition-colors">
+                            Click to expand
+                        </span>
+                    )}
+                    {isExpanded ? (
+                        <ChevronUp className="h-5 w-5 text-gray-500" />
+                    ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-500" />
+                    )}
+                </div>
             </button>
             
             {isExpanded && (

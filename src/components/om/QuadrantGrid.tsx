@@ -59,6 +59,11 @@ export const QuadrantGrid: React.FC<QuadrantGridProps> = ({ quadrants, className
                                         {quadrant.title}
                                     </h3>
                                 </div>
+                                {quadrant.href && (
+                                    <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Click to expand
+                                    </span>
+                                )}
                             </div>
                             
                             {quadrant.description && (
