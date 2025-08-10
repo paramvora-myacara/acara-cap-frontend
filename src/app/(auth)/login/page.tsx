@@ -66,8 +66,8 @@ const LoginForm = () => {
     try {
       setLoading(true);
 
-      const isAdvisor = email.includes('advisor') || email.endsWith('@acaracap.com');
-      const isAdmin = email.includes('admin@acaracap.com');
+      const isAdvisor = email.includes('advisor') || email.endsWith('@capmatch.com');
+      const isAdmin = email.includes('admin@capmatch.com');
       const role: 'borrower' | 'advisor' | 'admin' = isAdmin ? 'admin' : isAdvisor ? 'advisor' : 'borrower';
 
       await login(email, loginSource, role);
@@ -102,7 +102,7 @@ const LoginForm = () => {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
           <div className="flex items-center space-x-2">
             <Sparkles className="h-6 w-6" />
-            <h2 className="text-2xl font-bold">ACARA-Cap Deal Room™</h2>
+            <h2 className="text-2xl font-bold">CapMatch Deal Room™</h2>
           </div>
           <p className="mt-2 opacity-90">Sign in to access your projects and lender matches</p>
         </div>
@@ -138,7 +138,7 @@ const LoginForm = () => {
                 <li>Borrower 1 (Full Profile): <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower1@example.com</code></li>
                 <li>Borrower 2 (Partial Profile): <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower2@example.com</code></li>
                 <li>New Borrower: <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower3@example.com</code></li>
-                <li>Advisor: <code className="text-purple-600 text-xs bg-purple-50 px-1 rounded">advisor@acaracap.com</code></li>
+                <li>Advisor: <code className="text-purple-600 text-xs bg-purple-50 px-1 rounded">advisor@capmatch.com</code></li>
               </ul>
             </div>
 

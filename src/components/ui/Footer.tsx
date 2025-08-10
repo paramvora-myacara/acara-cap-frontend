@@ -12,7 +12,7 @@ export const Footer: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center">
           {/* Logo and tagline */}
           <div className="mb-4 md:mb-0 text-center md:text-left">
-            <h2 className="text-xl font-bold text-white mb-1">ACARA-CAP</h2>
+            <h2 className="text-xl font-bold text-white mb-1">CapMatch</h2>
             <p className="text-gray-300 text-sm">
               AI-Powered. Borrower-Controlled. Commercial Lending, Simplified.
             </p>
@@ -51,7 +51,7 @@ export const Footer: React.FC = () => {
         
         {/* Copyright line */}
         <div className="text-xs text-center text-gray-500 mt-4">
-          © {currentYear} ACARA-Cap. All rights reserved.
+          © {currentYear} CapMatch. All rights reserved.
         </div>
       </div>
     </footer>

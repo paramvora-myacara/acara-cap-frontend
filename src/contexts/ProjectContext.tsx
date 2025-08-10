@@ -291,7 +291,11 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
         if (user?.role === 'borrower' && !currentBorrowerProfileId) throw new Error("[ProjectContext] Borrower profile ID missing.");
 
         const now = new Date().toISOString(); const uniqueId = generateUniqueId();
-        const advisors = [ { id: "advisor1@acaracap.com" }, { id: "advisor2@acaracap.com" }, { id: "advisor3@acaracap.com" }, ]; const randomAdvisor = advisors[Math.floor(Math.random() * advisors.length)];
+        const advisors = [
+          { id: "advisor1@capmatch.com" },
+          { id: "advisor2@capmatch.com" },
+          { id: "advisor3@capmatch.com" },
+        ]; const randomAdvisor = advisors[Math.floor(Math.random() * advisors.length)];
 
         // Calculate next project number based on current state projects for this user
         const currentUserProjects = projects.filter(p => p.borrowerProfileId === currentBorrowerProfileId);

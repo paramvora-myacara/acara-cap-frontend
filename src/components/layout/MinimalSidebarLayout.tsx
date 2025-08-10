@@ -43,7 +43,7 @@ const MinimalSidebarLayout: React.FC<MinimalSidebarLayoutProps> = ({ children, t
           <div className="p-4 lg:p-6 border-b border-gray-200 flex items-center justify-center">
             {/* Simplified Logo - Maybe just initials or small icon */}
             <Link href="/" className="flex items-center space-x-2">
-                <img src="/acara-logo.png" alt="A" className="h-auto w-14 lg:w-20" onError={(e)=>(e.target as HTMLImageElement).style.display='none'} />
+                <img src="/CapMatchLogo.png" alt="CapMatch" className="h-auto w-14 lg:w-20" onError={(e)=>(e.target as HTMLImageElement).style.display='none'} />
             </Link>
           </div>
 

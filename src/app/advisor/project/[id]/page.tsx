@@ -62,7 +62,7 @@ export default function AdvisorProjectDetailPage() {
         }
         
         // Get project
-        const allProjects = localStorage.getItem('acara_projects');
+        const allProjects = localStorage.getItem('capmatch_projects');
         if (allProjects) {
           const projects = JSON.parse(allProjects) as ProjectProfile[];
           const foundProject = projects.find(p => p.id === projectId);
@@ -72,7 +72,7 @@ export default function AdvisorProjectDetailPage() {
             setSelectedStatus(foundProject.projectStatus);
             
             // Get borrower profile
-            const allProfiles = localStorage.getItem('acara_borrowerProfiles');
+            const allProfiles = localStorage.getItem('capmatch_borrowerProfiles');
             if (allProfiles) {
               const profiles = JSON.parse(allProfiles) as BorrowerProfile[];
               const profile = profiles.find(p => p.id === foundProject.borrowerProfileId);
@@ -82,7 +82,7 @@ export default function AdvisorProjectDetailPage() {
             }
             
             // Get messages
-            const allMessages = localStorage.getItem('acara_projectMessages');
+            const allMessages = localStorage.getItem('capmatch_projectMessages');
             if (allMessages) {
               const messageList = JSON.parse(allMessages) as ProjectMessage[];
               const projectMessages = messageList
@@ -93,7 +93,7 @@ export default function AdvisorProjectDetailPage() {
             }
             
             // Get document requirements
-            const allRequirements = localStorage.getItem('acara_documentRequirements');
+            const allRequirements = localStorage.getItem('capmatch_documentRequirements');
             if (allRequirements) {
               const requirements = JSON.parse(allRequirements) as ProjectDocumentRequirement[];
               const projectRequirements = requirements.filter(r => r.projectId === projectId);
@@ -180,14 +180,14 @@ export default function AdvisorProjectDetailPage() {
       };
       
       // Save to local storage
-      const allProjects = localStorage.getItem('acara_projects');
+      const allProjects = localStorage.getItem('capmatch_projects');
       if (allProjects) {
         const projects = JSON.parse(allProjects) as ProjectProfile[];
         const updatedProjects = projects.map(p => 
           p.id === project.id ? updatedProject : p
         );
         
-        localStorage.setItem('acara_projects', JSON.stringify(updatedProjects));
+        localStorage.setItem('capmatch_projects', JSON.stringify(updatedProjects));
       }
       
       setProject(updatedProject);
@@ -238,7 +238,7 @@ export default function AdvisorProjectDetailPage() {
       const newProjectMessage: ProjectMessage = {
         id: messageId,
         projectId: project.id,
-        senderId: user?.email || 'advisor@acara.com',
+        senderId: user?.email || 'advisor@capmatch.com',
         senderType: 'Advisor',
         message: messageContent,
         createdAt: now,
@@ -249,11 +249,11 @@ export default function AdvisorProjectDetailPage() {
       setMessages(updatedMessages);
       
       // Save to storage
-      const allMessages = localStorage.getItem('acara_projectMessages') 
-        ? JSON.parse(localStorage.getItem('acara_projectMessages') || '[]') as ProjectMessage[]
+      const allMessages = localStorage.getItem('capmatch_projectMessages') 
+        ? JSON.parse(localStorage.getItem('capmatch_projectMessages') || '[]') as ProjectMessage[]
         : [];
       
-      localStorage.setItem('acara_projectMessages', JSON.stringify([...allMessages, newProjectMessage]));
+      localStorage.setItem('capmatch_projectMessages', JSON.stringify([...allMessages, newProjectMessage]));
       
       // Clear input if not a system message
       if (!isSystemMessage) {

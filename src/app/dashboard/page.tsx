@@ -112,8 +112,13 @@ export default function DashboardPage() {
                <div className="container mx-auto py-3 px-4 md:px-6 flex justify-between items-center">
                   <Link href="/" className="flex items-center space-x-2">
                        {/* Use full logo or icon based on preference */}
-                       <img src="/acara-logo.png" alt="ACARA Logo" className="h-8" onError={(e)=>(e.target as HTMLImageElement).style.display='none'} />
-                       {/* <span className="text-lg font-bold text-blue-800">ACARA Dashboard</span> */}
+                       <img
+                         src="/CapMatchLogo.png"
+                         alt="CapMatch Logo"
+                         className="h-8"
+                         onError={(e)=>(e.target as HTMLImageElement).style.display='none'}
+                       />
+                       {/* <span className="text-lg font-bold text-blue-800">CapMatch Dashboard</span> */}
                    </Link>
                    {/* *** UPDATED BUTTON *** */}
                     <Button variant="outline" size="sm" onClick={handleLogout} className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400">
@@ -145,7 +150,9 @@ export default function DashboardPage() {
                    </div>
                )}
            </main>
-            <footer className="text-center py-4 mt-8 text-xs text-gray-500 border-t"> © {new Date().getFullYear()} ACARA-Cap Platform </footer>
+            <footer className="text-center py-4 mt-8 text-xs text-gray-500 border-t">
+              © {new Date().getFullYear()} CapMatch Platform
+            </footer>
        </div>
     </RoleBasedRoute>
   );

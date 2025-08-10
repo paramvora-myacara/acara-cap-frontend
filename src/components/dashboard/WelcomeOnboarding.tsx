@@ -15,7 +15,7 @@ export const WelcomeOnboarding: React.FC<WelcomeOnboardingProps> = ({ onComplete
   // Define onboarding steps
   const steps = [
     {
-      title: "Welcome to ACARA-Cap",
+      title: "Welcome to CapMatch",
       description: "Your AI-powered platform to connect with the perfect lenders for your commercial real estate projects.",
       icon: <Building className="h-12 w-12 text-blue-600" />,
     },

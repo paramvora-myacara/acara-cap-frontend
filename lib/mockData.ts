@@ -43,7 +43,7 @@ const borrower1Project1Id = generateId('borrower1@example.com', 'project', 1);
 const borrower1Project1: ProjectProfile = {
   id: borrower1Project1Id,
   borrowerProfileId: borrower1ProfileId,
-  assignedAdvisorUserId: 'advisor1@acaracap.com', // Assign one for consistency
+  assignedAdvisorUserId: 'advisor1@capmatch.com', // Assign one for consistency
   projectName: 'Downtown Highrise Acquisition',
   name: 'Downtown Highrise Acquisition', // legacy
   propertyAddressStreet: '1 Market St',
@@ -88,7 +88,7 @@ const borrower1Project2Id = generateId('borrower1@example.com', 'project', 2);
 const borrower1Project2: ProjectProfile = {
   id: borrower1Project2Id,
   borrowerProfileId: borrower1ProfileId,
-  assignedAdvisorUserId: 'advisor1@acaracap.com',
+  assignedAdvisorUserId: 'advisor1@capmatch.com',
   projectName: 'Suburban Retail Pad',
   name: 'Suburban Retail Pad', // legacy
   propertyAddressStreet: '456 Retail Row',
@@ -163,7 +163,7 @@ const borrower2Project1Id = generateId('borrower2@example.com', 'project', 1);
 const borrower2Project1: ProjectProfile = {
   id: borrower2Project1Id,
   borrowerProfileId: borrower2ProfileId,
-  assignedAdvisorUserId: 'advisor2@acaracap.com',
+  assignedAdvisorUserId: 'advisor2@capmatch.com',
   projectName: 'Warehouse Development',
   name: 'Warehouse Development', // legacy
   propertyAddressStreet: '789 Industrial Ave',

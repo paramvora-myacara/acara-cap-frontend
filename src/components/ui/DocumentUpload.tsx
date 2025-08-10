@@ -78,8 +78,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       };
       
       // Store in local storage
-      const existingDocs = JSON.parse(localStorage.getItem('acara_documents') || '[]');
-      localStorage.setItem('acara_documents', JSON.stringify([...existingDocs, fileMetadata]));
+      const existingDocs = JSON.parse(localStorage.getItem('capmatch_documents') || '[]');
+      localStorage.setItem('capmatch_documents', JSON.stringify([...existingDocs, fileMetadata]));
       
       setUploadStatus('success');
       

@@ -53,20 +53,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-white"
+      className="fixed inset-0 z-40 flex items-center justify-center bg-white"
     >
-      <div className="text-center px-4">
-        <div className="w-64 md:w-96 mx-auto mb-6 md:mb-8">
-          <img 
+      <div className="flex items-center justify-center w-full h-full">
+        <div className="flex flex-col items-center justify-center">
+          <img
+            src="/CapMatchLogo.png"
+            alt="CapMatch"
+            className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-36 lg:h-36 xl:w-40 xl:h-40 object-contain"
             ref={logoRef}
-            src="/acara-logo.png" 
-            alt="ACARA CAP" 
-            className="w-full h-auto object-contain" 
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.onerror = null;
-              target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMjAiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiBmb250LXNpemU9IjE2Ij5BQ0FSQS1DQVA8L3RleHQ+PC9zdmc+';
-            }}
           />
         </div>
       </div>

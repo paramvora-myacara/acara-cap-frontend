@@ -56,7 +56,7 @@ export default function ProjectDocumentsPage() {
         setProject(project);
         
         // Get uploaded documents
-        const savedDocs = localStorage.getItem('acara_documents');
+        const savedDocs = localStorage.getItem('capmatch_documents');
         if (savedDocs) {
           try {
             const allDocs = JSON.parse(savedDocs) as UploadedDocument[];
@@ -149,7 +149,7 @@ export default function ProjectDocumentsPage() {
     }
     
     // Refresh the list of uploaded documents
-    const savedDocs = localStorage.getItem('acara_documents');
+    const savedDocs = localStorage.getItem('capmatch_documents');
     if (savedDocs) {
       try {
         const allDocs = JSON.parse(savedDocs) as UploadedDocument[];

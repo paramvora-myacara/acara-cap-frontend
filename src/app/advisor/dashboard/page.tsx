@@ -65,7 +65,7 @@ export default function AdvisorDashboardPage() {
         }
         
         // Get projects assigned to this advisor
-        const allProjects = localStorage.getItem('acara_projects');
+        const allProjects = localStorage.getItem('capmatch_projects');
         if (allProjects) {
           const projects = JSON.parse(allProjects) as ProjectProfile[];
           const assignedProjects = projects.filter(p => p.assignedAdvisorUserId === user.email);
@@ -118,7 +118,7 @@ export default function AdvisorDashboardPage() {
         }
         
         // Get recent messages
-        const allMessages = localStorage.getItem('acara_projectMessages');
+        const allMessages = localStorage.getItem('capmatch_projectMessages');
         if (allMessages) {
           const messages = JSON.parse(allMessages) as ProjectMessage[];
           
