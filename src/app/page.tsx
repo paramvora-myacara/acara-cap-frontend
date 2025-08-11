@@ -51,6 +51,22 @@ export default function HomePage() {
     handleScroll(); window.addEventListener('scroll', handleScroll); return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('splashAnimationComplete')) {
+        setSplashComplete(true);
+        setContentVisible(true);
+        setTextAnimation({ part1Visible: true, part2Visible: true, part3Visible: true });
+        setHeaderVisible(true);
+        setHeaderTextVisible(true);
+        setHeaderLogoHidden(false);
+        setLogoAnimating(false);
+      }
+    } catch (error) {
+      console.warn("Could not access sessionStorage. Splash animation may re-run.", error);
+    }
+  }, []); // Run only once on component mount
+
   const handleLogoAnimationStart = (pos: { x: number, y: number, width: number, height: number }) => { 
     setLogoStartPosition(pos); 
     setLogoAnimating(true); 
@@ -95,6 +111,11 @@ export default function HomePage() {
   const handleLogoAnimationComplete = () => {
     setLogoAnimating(false);
     setHeaderLogoHidden(false);
+    try {
+      sessionStorage.setItem('splashAnimationComplete', 'true');
+    } catch (error) {
+      console.warn("Could not write to sessionStorage:", error);
+    }
     // Small delay to ensure smooth transition
     setTimeout(() => setHeaderVisible(true), 100);
   };
