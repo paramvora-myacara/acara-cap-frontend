@@ -309,6 +309,8 @@ export function CapMatchAnimation() {
         style={{
           left: `${animationState.leftIconPosition.x}%`,
           top: `${animationState.leftIconPosition.y}%`,
+          width: `${iconBoundarySize}px`,
+          height: `${iconBoundarySize}px`,
         }}
       >
         {/* Icon boundary - visible during connection */}
@@ -316,42 +318,32 @@ export function CapMatchAnimation() {
           className={`absolute inset-0 border-2 border-green-400 rounded-lg transition-opacity duration-300 ${
             animationState.showConnection ? 'opacity-30' : 'opacity-0'
           }`}
-          style={{
-            width: `${iconBoundarySize}px`,
-            height: `${iconBoundarySize}px`,
-            left: `${-iconBoundarySize/2}px`,
-            top: `${-iconBoundarySize/2}px`,
-          }}
         />
-        <div className="relative z-10 text-green-500">
+        <div className="flex items-center justify-center w-full h-full relative z-10 text-green-500">
           <LeftIcon size={32} />
         </div>
       </div>
 
       <div
-        className={`absolute transition-all duration-1000 ease-in-out transform -translate-x-1/2 -translate-y-1/2 ${
-          animationState.connectionComplete ? 'scale-110' : ''
-        }`}
-        style={{
-          left: `${animationState.rightIconPosition.x}%`,
-          top: `${animationState.rightIconPosition.y}%`,
-        }}
-      >
-        {/* Icon boundary - visible during connection */}
+         className={`absolute transition-all duration-1000 ease-in-out transform -translate-x-1/2 -translate-y-1/2 ${
+           animationState.connectionComplete ? 'scale-110' : ''
+         }`}
+         style={{
+           left: `${animationState.rightIconPosition.x}%`,
+           top: `${animationState.rightIconPosition.y}%`,
+           width: `${iconBoundarySize}px`,
+           height: `${iconBoundarySize}px`,
+         }}
+       >
+         {/* Icon boundary - visible during connection */}
         <div 
           className={`absolute inset-0 border-2 rounded-lg transition-all duration-300 ${
             animationState.showConnection 
               ? (animationState.connectionComplete ? 'border-green-400 opacity-30' : 'border-blue-400 opacity-30')
               : 'opacity-0'
           }`}
-          style={{
-            width: `${iconBoundarySize}px`,
-            height: `${iconBoundarySize}px`,
-            left: `${-iconBoundarySize/2}px`,
-            top: `${-iconBoundarySize/2}px`,
-          }}
         />
-        <div className={`relative z-10 transition-colors duration-500 ${
+        <div className={`flex items-center justify-center w-full h-full relative z-10 transition-colors duration-500 ${
           animationState.connectionComplete ? 'text-green-500' : 'text-blue-500'
         }`}>
           <RightIcon size={32} />
