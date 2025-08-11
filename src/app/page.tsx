@@ -17,6 +17,7 @@ import { LenderProfile } from '@/types/lender';
 import { Button } from '@/components/ui/Button';
 import { ArrowRight } from 'lucide-react';
 import { ProcessSection } from '../components/ui/ProcessSection';
+import { CapMatchAnimation } from '../components/ui/CapMatchAnimation';
 import { cn } from '@/utils/cn'; // Ensure cn is imported
 
 // ... (initialFilters, HomePage component setup - no changes here) ...
@@ -154,20 +155,22 @@ export default function HomePage() {
           <GlobalToast />
 
           <main className="pt-16 flex-grow">
-            <section className="py-32 bg-gradient-to-b from-white to-gray-50" style={{minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <section className="py-32 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden" style={{minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
               {/* Hero content - no changes */}
-              <div className="container mx-auto px-4 max-w-5xl text-center">
+              <div className="container mx-auto px-4 max-w-5xl text-center relative z-20">
                 <motion.div className="mb-8">
                     <div className="overflow-hidden"><motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: textAnimation.part1Visible ? 1 : 0, y: textAnimation.part1Visible ? 0 : 20 }} transition={{ duration: 0.6 }} className="text-5xl md:text-6xl font-bold leading-tight text-black"><span className="md:whitespace-nowrap"><span className="text-blue-600">AI</span>-Powered. <span className="text-blue-600">Borrower-Controlled</span></span>.</motion.div></div>
                     <div className="overflow-hidden mt-2"><motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: textAnimation.part2Visible ? 1 : 0, y: textAnimation.part2Visible ? 0 : 20 }} transition={{ duration: 0.6 }} className="text-5xl md:text-6xl font-bold leading-tight"><span className="text-blue-800 font-display">Commercial Lending,</span></motion.div></div>
                     <div className="overflow-hidden"><motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: textAnimation.part3Visible ? 1 : 0, y: textAnimation.part3Visible ? 0 : 20 }} transition={{ duration: 0.6 }} className="text-5xl md:text-6xl font-bold leading-tight italic"><span className="text-blue-800 font-display">Simplified.</span></motion.div></div>
                 </motion.div>
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: textAnimation.part3Visible ? 1 : 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
-                  <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">Our platform connects you with the perfect lenders for your commercial real estate projects through our proprietary <span className="font-semibold">LenderLine™</span> technology, giving access to the exclusive <span className="font-semibold">CapMatch Deal Room™</span>.</p>
                   <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
                     <Button variant="primary" size="lg" className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 shadow-lg" onClick={() => { document.getElementById('lenderline-section')?.scrollIntoView({ behavior: 'smooth' }); }}>Use LenderLine™</Button>
                     <Button variant="outline" size="lg" onClick={() => router.push('/login')} className="rounded-full shadow-md">Access Deal Room™</Button>
                   </div>
+                  
+                  {/* Animation below buttons */}
+                  <CapMatchAnimation />
                 </motion.div>
               </div>
             </section>
