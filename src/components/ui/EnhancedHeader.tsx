@@ -64,7 +64,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
       className={cn(
         "fixed top-0 left-0 right-0 z-30 transition-all duration-300",
         scrolled
-          ? "bg-white shadow-md py-2"
+          ? "bg-white/90 backdrop-blur-sm shadow-md py-2"
           : "bg-transparent py-4"
       )}
     >
@@ -78,7 +78,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
                 alt="CapMatch"
                 className={cn(
                   "transition-all duration-300",
-                  scrolled ? "h-16" : "h-20",
+                  scrolled ? "h-12" : "h-14 drop-shadow-sm",
                   logoHidden && "invisible"
                 )}
                 onError={(e) => {
@@ -93,8 +93,8 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
               animate={{ opacity: textVisible ? 1 : 0 }}
               transition={{ duration: 0.6 }}
               className={cn(
-                "ml-3 transition-all duration-300",
-                scrolled ? "text-xl text-blue-700" : "text-2xl text-blue-800"
+                "ml-3 transition-all duration-300 font-bold",
+                scrolled ? "text-lg text-blue-700" : "text-2xl text-blue-700 drop-shadow-sm"
               )}
             >
               CapMatch
@@ -113,7 +113,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
               onClick={(e) => { e.preventDefault(); document.getElementById('lenderline-section')?.scrollIntoView({ behavior: 'smooth' });}}
               className={cn(
               "text-sm font-medium transition-colors",
-              scrolled ? "text-gray-700 hover:text-blue-600" : "text-gray-800 hover:text-blue-700"
+              scrolled ? "text-gray-700 hover:text-blue-600" : "text-black hover:text-blue-700 drop-shadow-sm"
             )}>
               <span className="font-semibold">LenderLine</span>
               <sup className="text-xs">™</sup>
@@ -122,7 +122,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
               onClick={(e) => { e.preventDefault(); document.getElementById('process-section')?.scrollIntoView({ behavior: 'smooth' });}}
               className={cn(
               "text-sm font-medium transition-colors",
-              scrolled ? "text-gray-700 hover:text-blue-600" : "text-gray-800 hover:text-blue-700"
+              scrolled ? "text-gray-700 hover:text-blue-600" : "text-black hover:text-blue-700 drop-shadow-sm"
             )}>
               Process
             </Link>
@@ -134,7 +134,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
             leftIcon={<LogIn size={16} />}
             onClick={() => router.push('/login')}
             className={cn(
-              scrolled ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-700 hover:bg-blue-800",
+              scrolled ? "bg-blue-600 hover:bg-blue-700" : "bg-blue-700 hover:bg-blue-800 shadow-lg",
               "font-medium transition-colors duration-200"
             )}
           >
@@ -146,7 +146,10 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: visible ? 1 : 0, scale: visible ? 1 : 0.8 }}
           transition={{ duration: 0.6, delay: visible ? 0.3 : 0, ease: "easeOut" }}
-          className="md:hidden p-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded"
+          className={cn(
+            "md:hidden p-2 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 rounded transition-colors",
+            scrolled ? "text-gray-700" : "text-white"
+          )}
           onClick={toggleMobileMenu}
           aria-label="Toggle mobile menu"
           aria-expanded={mobileMenuOpen}
@@ -161,7 +164,7 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3 }}
-          className="md:hidden bg-white border-t shadow-lg absolute top-full left-0 right-0"
+          className="md:hidden bg-white/95 backdrop-blur-sm border-t shadow-lg absolute top-full left-0 right-0"
         >
           <div className="container mx-auto py-4 px-4">
             <nav className="flex flex-col space-y-4">

@@ -47,7 +47,7 @@ export default function HomePage() {
   const headerLogoRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
-    const handleScroll = () => { setScrolled(window.scrollY > 20); };
+    const handleScroll = () => { setScrolled(window.scrollY > 10); };
     handleScroll(); window.addEventListener('scroll', handleScroll); return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -154,10 +154,10 @@ export default function HomePage() {
         <>
           <GlobalToast />
 
-          <main className="pt-16 flex-grow">
+          <main className="flex-grow">
             <section className="py-32 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden" style={{minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
               {/* Blueprint Grid Background */}
-              <div className="absolute inset-0 opacity-30">
+              <div className="absolute inset-0 opacity-40">
                 <svg width="100%" height="100%" className="absolute inset-0">
                   <defs>
                     <pattern
@@ -170,8 +170,8 @@ export default function HomePage() {
                         d="M 20 0 L 0 0 0 20"
                         fill="none"
                         stroke="#60a5fa"
-                        strokeWidth="0.5"
-                        opacity="0.6"
+                        strokeWidth="0.8"
+                        opacity="0.8"
                       />
                     </pattern>
                   </defs>
