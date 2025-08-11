@@ -189,7 +189,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       // Allow contexts to update based on the new user state
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      await createFirstProjectIfNeeded(newUser, source); // Create project *after* setting user
+      // Auto-creation of borrower profile and first project is now handled by the
+      // respective providers. No need to invoke it from AuthProvider.
 
     } catch (error) { console.error('[Auth] Login failed:', error); throw error; }
     finally { setIsLoading(false); }

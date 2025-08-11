@@ -10,7 +10,7 @@ import { UIProvider } from '../../contexts/UIContext';
 import { createStorageService } from '../../services/storage/StorageService';
 
 // Initialize storage service
-const storageService = createStorageService(false, 'acara_'); // Set to true for encrypted storage
+const storageService = createStorageService(false, 'capmatch_'); // Set to true for encrypted storage
 
 export const ClientAppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (

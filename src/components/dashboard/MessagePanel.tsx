@@ -1,7 +1,7 @@
 // src/components/dashboard/MessagePanel.tsx
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { Button } from '../ui/Button';
@@ -34,10 +34,33 @@ export const MessagePanel: React.FC<MessagePanelProps> = ({
   const [advisorAvatar, setAdvisorAvatar] = useState(''); // Keep avatar state if used
   const [isLoadingAdvisor, setIsLoadingAdvisor] = useState(false);
   const [localMessages, setLocalMessages] = useState<ProjectMessage[]>([]);
+  const [welcomeMessageGenerated, setWelcomeMessageGenerated] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true';
+    }
+    return false;
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageContainerRef = useRef<HTMLDivElement>(null);
+  const welcomeGenerationInProgress = useRef(false);
+
+  // Helper function to persist welcome message flag in localStorage
+  const setWelcomeGeneratedWithStorage = useCallback((value: boolean) => {
+    setWelcomeMessageGenerated(value);
+    if (typeof window !== 'undefined') {
+      if (value) {
+        localStorage.setItem(`capmatch_welcomeGenerated_${projectId}`, 'true');
+      } else {
+        localStorage.removeItem(`capmatch_welcomeGenerated_${projectId}`);
+      }
+    }
+  }, [projectId]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Scroll the message container to the bottom instead of using scrollIntoView
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -94,27 +117,49 @@ export const MessagePanel: React.FC<MessagePanelProps> = ({
   useEffect(() => {
     const generateWelcome = async () => {
         // Ensure this runs only for the currently active project matching the panel
-        if (activeProject && activeProject.id === projectId && localMessages.length === 0 && activeProject.assignedAdvisorUserId && !isLoadingAdvisor) {
-             try {
-                // Generate a welcome message
-                const welcomeMessageText = await generateAdvisorMessage(
-                    activeProject.assignedAdvisorUserId,
-                    activeProject.id,
-                    {
-                    assetType: activeProject.assetType,
-                    dealType: activeProject.projectPhase,
-                    loanAmount: activeProject.loanAmountRequested,
-                    stage: activeProject.projectStatus
-                    }
-                );
+        // and that we haven't already generated a welcome message for this project
+        if (
+          activeProject && 
+          activeProject.id === projectId && 
+          localMessages.length === 0 && 
+          activeProject.assignedAdvisorUserId && 
+          !isLoadingAdvisor &&
+          !welcomeMessageGenerated &&
+          !welcomeGenerationInProgress.current
+        ) {
+          try {
+            // Set ref immediately to prevent race conditions
+            welcomeGenerationInProgress.current = true;
+            
+            // Set flag to prevent duplicate generation (now persisted in localStorage)
+            setWelcomeGeneratedWithStorage(true);
+            
+            // Generate a welcome message
+            const welcomeMessageText = await generateAdvisorMessage(
+                activeProject.assignedAdvisorUserId,
+                activeProject.id,
+                {
+                assetType: activeProject.assetType,
+                dealType: activeProject.projectPhase,
+                loanAmount: activeProject.loanAmountRequested,
+                stage: activeProject.projectStatus
+                }
+            );
 
-                 // Use addProjectMessage context function
-                 await addProjectMessage(welcomeMessageText, 'Advisor', activeProject.assignedAdvisorUserId);
-                 console.log("Generated welcome message for " + projectId)
+             // Use addProjectMessage context function
+             await addProjectMessage(welcomeMessageText, 'Advisor', activeProject.assignedAdvisorUserId);
+             console.log("Generated welcome message for " + projectId);
+             
+             // Reset ref after successful completion
+             welcomeGenerationInProgress.current = false;
 
-            } catch (error) {
-                console.error('Error generating welcome message:', error);
-            }
+        } catch (error) {
+            console.error('Error generating welcome message:', error);
+            // Reset flag on error so it can be retried
+            setWelcomeGeneratedWithStorage(false);
+            // Reset ref on error
+            welcomeGenerationInProgress.current = false;
+        }
         }
     };
 
@@ -122,8 +167,16 @@ export const MessagePanel: React.FC<MessagePanelProps> = ({
     if (!isLoadingAdvisor) {
        generateWelcome();
     }
-  }, [activeProject, projectId, localMessages, isLoadingAdvisor, addProjectMessage ]);
+  }, [activeProject, projectId, localMessages, isLoadingAdvisor, welcomeMessageGenerated, setWelcomeGeneratedWithStorage]);
 
+  // Reset welcome message flag when switching projects
+  useEffect(() => {
+    // Reset flag only when actually switching to a different project
+    const currentFlag = typeof window !== 'undefined' 
+      ? localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true'
+      : false;
+    setWelcomeMessageGenerated(currentFlag);
+  }, [projectId]);
 
   // Handle sending a message
   const handleSendMessage = async () => {
@@ -164,7 +217,7 @@ export const MessagePanel: React.FC<MessagePanelProps> = ({
 
       <CardContent className="p-4">
         {/* Display localMessages which should reflect the active project's messages if IDs match */}
-        <div className="space-y-4 max-h-64 overflow-y-auto mb-4 border rounded p-2 bg-gray-50">
+        <div className="space-y-4 max-h-64 overflow-y-auto mb-4 border rounded p-2 bg-gray-50" ref={messageContainerRef}>
           {localMessages.length > 0 ? (
             localMessages.map((message: ProjectMessage) => (
               <div

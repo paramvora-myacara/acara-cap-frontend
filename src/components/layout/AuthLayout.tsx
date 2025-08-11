@@ -16,7 +16,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
       <header className="bg-white shadow-sm p-4">
         <div className="container mx-auto">
           <Link href="/" className="flex items-center">
-            <img src="/acara-logo.png" alt="ACARA Logo" className="h-8" />
+            <img src="/CapMatchLogo.png" alt="CapMatch Logo" className="h-8" />
           </Link>
         </div>
       </header>
@@ -27,7 +27,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
       
       <footer className="bg-white shadow-sm p-4 mt-auto">
         <div className="container mx-auto text-center text-sm text-gray-500">
-          <p>© {new Date().getFullYear()} ACARA-Cap Platform</p>
+          <p>© {new Date().getFullYear()} CapMatch Platform</p>
         </div>
       </footer>
     </div>

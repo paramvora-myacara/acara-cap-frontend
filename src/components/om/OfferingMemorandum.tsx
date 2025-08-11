@@ -27,7 +27,7 @@ export const OfferingMemorandum: React.FC<OfferingMemorandumProps> = ({ project,
     <div className="om-container space-y-8 md:space-y-12 print:space-y-6">
       {/* OM Header */}
       <div className="text-center mb-8 md:mb-12 border-b pb-6 print:border-none print:mb-6">
-        <img src="/acara-logo.png" alt="ACARA Capital Logo" className="h-10 mx-auto mb-4 print:h-8" />
+        <img src="/CapMatchLogo.png" alt="CapMatch Logo" className="h-10 mx-auto mb-4 print:h-8" />
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800">{project.projectName}</h1>
         <p className="text-lg text-gray-500 mt-1">{project.assetType} - {project.projectPhase}</p>
         <p className="text-sm text-gray-500 mt-2">
@@ -126,7 +126,7 @@ export const OfferingMemorandum: React.FC<OfferingMemorandumProps> = ({ project,
         {/* Disclaimer */}
         <div className="pt-8 mt-8 border-t print:mt-4">
             <p className="text-xs text-gray-500 italic text-center">
-                Disclaimer: This document is for informational purposes only and does not constitute an offer to lend or invest. All information is provided by the borrower and has not been independently verified by ACARA Capital. Financial projections are estimates and actual results may differ. Potential lenders should conduct their own due diligence.
+                Disclaimer: This document is for informational purposes only and does not constitute an offer to lend or invest. All information is provided by the borrower and has not been independently verified by CapMatch. Financial projections are estimates and actual results may differ. Potential lenders should conduct their own due diligence.
             </p>
         </div>
 

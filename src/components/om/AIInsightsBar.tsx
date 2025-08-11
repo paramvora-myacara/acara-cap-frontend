@@ -102,7 +102,7 @@ export const AIInsightsBar: React.FC<AIInsightsBarProps> = ({ scenario }) => {
                     </div>
                     <div className="text-left">
                         <h3 className="font-semibold text-gray-800">
-                            ACARA CAP™ Deal Room™ AI Insights
+                            CapMatch™ Deal Room™ AI Insights
                         </h3>
                         <p className="text-sm text-gray-600">{currentInsights.summary}</p>
                     </div>

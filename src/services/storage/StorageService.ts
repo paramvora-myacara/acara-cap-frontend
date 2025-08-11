@@ -14,7 +14,7 @@ export interface StorageService {
 export class LocalStorageService implements StorageService {
 private prefix: string;
 
-constructor(prefix: string = 'acara_') {
+constructor(prefix: string = 'capmatch_') {
   this.prefix = prefix;
 }
 
@@ -133,7 +133,7 @@ export class EncryptedStorageService implements StorageService {
 private storage: any; // Should be SecureLS instance
 private prefix: string;
 
-constructor(prefix: string = 'acara_') {
+constructor(prefix: string = 'capmatch_') {
   this.prefix = prefix;
   // Use LocalStorage as a fallback for this mock implementation
   this.storage = typeof window !== 'undefined' ? localStorage : {
@@ -238,7 +238,7 @@ async clear(): Promise<void> {
 }
 
 // Factory function
-export function createStorageService(useEncryption: boolean = false, prefix: string = 'acara_'): StorageService {
+export function createStorageService(useEncryption: boolean = false, prefix: string = 'capmatch_'): StorageService {
 if (useEncryption) {
   // In a real app, instantiate SecureLS here if available
   // console.warn("Encryption requested but not fully implemented, using LocalStorage fallback.");

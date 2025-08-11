@@ -59,19 +59,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {sidebarMinimal ? (
             <div className="flex justify-center">
               <img 
-                src="/acara-logo.png" 
-                alt="ACARA-Cap" 
-                className="h-8" 
+                src="/CapMatchLogo.png"
+                alt="CapMatch"
+                className="h-8 w-auto"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.onerror = null;
                   target.style.display = 'none';
                 }}
               />
             </div>
           ) : (
             <>
-              <h1 className="text-xl font-bold text-blue-800">ACARA-Cap</h1>
+              <h1 className="text-xl font-bold text-blue-800">CapMatch</h1>
               <p className="text-sm text-gray-500 mt-1">Deal Room™</p>
             </>
           )}

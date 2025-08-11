@@ -291,7 +291,11 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
         if (user?.role === 'borrower' && !currentBorrowerProfileId) throw new Error("[ProjectContext] Borrower profile ID missing.");
 
         const now = new Date().toISOString(); const uniqueId = generateUniqueId();
-        const advisors = [ { id: "advisor1@acaracap.com" }, { id: "advisor2@acaracap.com" }, { id: "advisor3@acaracap.com" }, ]; const randomAdvisor = advisors[Math.floor(Math.random() * advisors.length)];
+        const advisors = [
+          { id: "advisor1@capmatch.com" },
+          { id: "advisor2@capmatch.com" },
+          { id: "advisor3@capmatch.com" },
+        ]; const randomAdvisor = advisors[Math.floor(Math.random() * advisors.length)];
 
         // Calculate next project number based on current state projects for this user
         const currentUserProjects = projects.filter(p => p.borrowerProfileId === currentBorrowerProfileId);
@@ -306,6 +310,41 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
         console.log(`[ProjectContext] Created: "${newProject.projectName}" (ID: ${newProject.id})`);
         return newProject;
     }, [user, borrowerProfileContext.borrowerProfile, projects, calculateProgress]); // dependencies reviewed
+
+    // --------------------------------------------------------
+    // Auto-create first project for new borrower accounts
+    // --------------------------------------------------------
+    useEffect(() => {
+        if (isLoading) return;                       // Wait for initial load
+        if (!user || user.role !== 'borrower') return;
+        if (!borrowerProfileContext.borrowerProfile) return; // Need profile
+        if (projects.length > 0) return;             // Already have projects
+
+        (async () => {
+            try {
+                // 1️⃣ Double-check storage to avoid duplicates
+                const profile = borrowerProfileContext.borrowerProfile;
+                if (!profile) return; // Safety check
+                
+                const stored = await storageService.getItem<ProjectProfile[]>('projects') || [];
+                const existing = stored.filter(p => p.borrowerProfileId === profile.id);
+                if (existing.length > 0) {
+                    const withProgress = existing.map(p => ({
+                        ...p,
+                        ...calculateProgress(p)
+                    }));
+                    setProjects(withProgress);
+                    setActiveProject(withProgress[0]);
+                    return;                          // nothing to create
+                }
+
+                // 2️⃣ Still none → create first project
+                await createProject({ projectName: 'Unnamed Project 1' });
+            } catch (err) {
+                console.error('[ProjectContext] Auto-create project failed:', err);
+            }
+        })();
+    }, [isLoading, user, borrowerProfileContext.borrowerProfile, projects.length, createProject, calculateProgress, storageService]);
 
     // Update Project
     const updateProject = useCallback(async (id: string, updates: Partial<ProjectProfile>, manual = false): Promise<ProjectProfile | null> => {

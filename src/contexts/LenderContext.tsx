@@ -40,8 +40,8 @@ export const LenderContext = createContext<LenderContextProps>({
   filteredLenders: [],
   isLoading: true,
   filters: {
-    asset_types: [],
-    deal_types: [],
+    asset_types: ['Multifamily'],
+    deal_types: ['Refinance'],
     capital_types: [],
     debt_ranges: [],
     locations: [],
@@ -71,8 +71,8 @@ export const LenderProvider: React.FC<LenderProviderProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [selectedLender, setSelectedLender] = useState<LenderProfile | null>(null);
   const [filters, setFiltersState] = useState<LenderFilters>({
-    asset_types: [],
-    deal_types: [],
+    asset_types: ['Multifamily'],
+    deal_types: ['Refinance'],
     capital_types: [],
     debt_ranges: [],
     locations: [],

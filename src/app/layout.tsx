@@ -15,8 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ACARA-Cap | Lender Matching Platform",
-  description: "Connect with the perfect lender for your commercial real estate project",
+  title: "CapMatch | Lender Matching Platform",
+  description: "Connect with the right lenders for your commercial real estate projects",
+  icons: {
+    icon: '/CapMatchLogo.png',
+    shortcut: '/CapMatchLogo.png',
+    apple: '/CapMatchLogo.png',
+  },
 };
 
 export default function RootLayout({

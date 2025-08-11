@@ -29,10 +29,10 @@ export const getAdvisors = async (): Promise<Advisor[]> => {
   return [
     {
       id: 'advisor1',
-      userId: 'advisor1@acaracap.com',
+      userId: 'advisor1@capmatch.com',
       name: 'Sarah Adams',
       title: 'Senior Capital Advisor',
-      email: 'sarah.adams@acaracap.com',
+      email: 'sarah.adams@capmatch.com',
       phone: '(555) 123-4567',
       bio: 'Sarah has over 15 years of experience in commercial real estate financing, specializing in multifamily and retail assets.',
       avatar: '/avatars/sarah.jpg',
@@ -43,10 +43,10 @@ export const getAdvisors = async (): Promise<Advisor[]> => {
     },
     {
       id: 'advisor2',
-      userId: 'advisor2@acaracap.com',
+      userId: 'advisor2@capmatch.com',
       name: 'Michael Chen',
       title: 'Capital Markets Director',
-      email: 'michael.chen@acaracap.com',
+      email: 'michael.chen@capmatch.com',
       phone: '(555) 234-5678',
       bio: 'Michael specializes in structuring complex financing solutions for office, industrial and mixed-use developments.',
       avatar: '/avatars/michael.jpg',
@@ -57,10 +57,10 @@ export const getAdvisors = async (): Promise<Advisor[]> => {
     },
     {
       id: 'advisor3',
-      userId: 'advisor3@acaracap.com',
+      userId: 'advisor3@capmatch.com',
       name: 'Jessica Williams',
       title: 'Executive Capital Advisor',
-      email: 'jessica.williams@acaracap.com',
+      email: 'jessica.williams@capmatch.com',
       phone: '(555) 345-6789',
       bio: 'Jessica has extensive experience in hotel and hospitality financing, as well as senior housing developments.',
       avatar: '/avatars/jessica.jpg',
@@ -104,12 +104,12 @@ export const generateAdvisorMessage = async (
   
   // Create a personalized message based on context
   if (context.assetType && context.dealType) {
-    return `Hello! I'm ${advisor.name}, your dedicated Capital Markets Advisor at ACARA-Cap. 
+    return `Hello! I'm ${advisor.name}, your dedicated Capital Markets Advisor at CapMatch. 
     I see you're working on a ${context.assetType} ${context.dealType} project${context.loanAmount ? ` with a target loan amount of $${(context.loanAmount/1000000).toFixed(1)}M` : ''}. 
     As a specialist in ${advisor.specialties.join(', ')}, I'm excited to help you find the perfect financing solution. 
     Please complete your Project Resume so we can match you with the ideal capital providers. Let me know if you have any questions!`;
   } else {
-    return `Hello! I'm ${advisor.name}, your dedicated Capital Markets Advisor at ACARA-Cap with ${advisor.yearsExperience} years of experience.
+    return `Hello! I'm ${advisor.name}, your dedicated Capital Markets Advisor at CapMatch with ${advisor.yearsExperience} years of experience.
     I'm here to help you find the ideal financing for your commercial real estate project. 
     Please complete your Project Resume so we can match you with suitable lenders. 
     Don't hesitate to reach out if you have any questions or need assistance.`;
