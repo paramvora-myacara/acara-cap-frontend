@@ -196,10 +196,13 @@ export function CapMatchAnimation() {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // Icon boundary size scaled with container height (min 60, max 120)
-  const iconBoundarySize = Math.min(120, Math.max(60, containerDimensions.height / 4));
-  const iconSize = iconBoundarySize - 64; // smaller relative to boundary
-  const staticIconSize = Math.min(40, Math.max(24, iconBoundarySize / 3));
+  // Utility clamp function
+  const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+  // Responsive sizing – boundary smaller ratio for mobile and prevents oversized boxes
+  const iconBoundarySize = clamp(containerDimensions.height / 7, 40, 96);
+  const iconSize       = clamp(iconBoundarySize * 0.6, 18, iconBoundarySize - 16);
+  const staticIconSize = clamp(iconBoundarySize * 0.45, 18, 42);
 
   // Pixel positions for icons based on percentage coordinates and container size
   const leftIconPixelPos = {
@@ -287,7 +290,7 @@ export function CapMatchAnimation() {
           return (
             <div
               key={`static-left-${index}`}
-              className="text-green-500 opacity-60"
+              className={`text-green-500 ${index === animationState.leftIconIndex && animationState.phase !== 'idle' ? 'opacity-0' : 'opacity-60'}`}
             >
               <IconComponent size={staticIconSize} />
             </div>
@@ -301,7 +304,7 @@ export function CapMatchAnimation() {
           return (
             <div
               key={`static-right-${index}`}
-              className="text-blue-500 opacity-60"
+              className={`text-blue-500 ${index === animationState.rightIconIndex && animationState.phase !== 'idle' ? 'opacity-0' : 'opacity-60'}`}
             >
               <IconComponent size={staticIconSize} />
             </div>
@@ -319,6 +322,7 @@ export function CapMatchAnimation() {
           top: `${animationState.leftIconPosition.y}%`,
           width: `${iconBoundarySize}px`,
           height: `${iconBoundarySize}px`,
+          opacity: animationState.phase === 'idle' ? 0 : 1,
         }}
       >
         {/* Icon boundary - visible during connection */}
@@ -341,7 +345,8 @@ export function CapMatchAnimation() {
            top: `${animationState.rightIconPosition.y}%`,
            width: `${iconBoundarySize}px`,
            height: `${iconBoundarySize}px`,
-         }}
+           opacity: animationState.phase === 'idle' ? 0 : 1,
+        }}
        >
          {/* Icon boundary - visible during connection */}
         <div 
