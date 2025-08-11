@@ -52,11 +52,10 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
                     </div>
                     <Button
                         variant="outline"
-                        size="sm"
                         onClick={() => router.push(`/project/om/${projectId}`)}
-                        className="border-green-300 text-green-700 hover:bg-green-100 hover:border-green-400"
+                        className="border-green-300 text-green-700 hover:bg-green-100 hover:border-green-400 px-6 py-3 text-base font-medium"
                     >
-                        <FileSpreadsheet className="mr-1.5 h-4 w-4" />
+                        <FileSpreadsheet className="mr-2 h-5 w-5" />
                         View OM
                     </Button>
                 </div>
