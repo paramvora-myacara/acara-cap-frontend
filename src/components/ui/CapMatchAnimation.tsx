@@ -260,28 +260,7 @@ export function CapMatchAnimation() {
       className="w-full mt-8 relative overflow-hidden"
       style={{ height: containerDimensions.height ? `${containerDimensions.height}px` : '16rem' }}
     >
-      {/* Blueprint Grid Background */}
-      <div className="absolute inset-0 opacity-30">
-        <svg width="100%" height="100%" className="absolute inset-0">
-          <defs>
-            <pattern
-              id="blueprint-grid"
-              width="20"
-              height="20"
-              patternUnits="userSpaceOnUse"
-            >
-              <path
-                d="M 20 0 L 0 0 0 20"
-                fill="none"
-                stroke="#60a5fa"
-                strokeWidth="0.5"
-                opacity="0.6"
-              />
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#blueprint-grid)" />
-        </svg>
-      </div>
+
 
       {/* Static Icon Columns */}
       <div className="absolute left-4 top-0 h-full flex flex-col justify-center space-y-4">

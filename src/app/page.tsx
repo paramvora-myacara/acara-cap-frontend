@@ -156,6 +156,29 @@ export default function HomePage() {
 
           <main className="pt-16 flex-grow">
             <section className="py-32 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden" style={{minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+              {/* Blueprint Grid Background */}
+              <div className="absolute inset-0 opacity-30">
+                <svg width="100%" height="100%" className="absolute inset-0">
+                  <defs>
+                    <pattern
+                      id="hero-blueprint-grid"
+                      width="20"
+                      height="20"
+                      patternUnits="userSpaceOnUse"
+                    >
+                      <path
+                        d="M 20 0 L 0 0 0 20"
+                        fill="none"
+                        stroke="#60a5fa"
+                        strokeWidth="0.5"
+                        opacity="0.6"
+                      />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#hero-blueprint-grid)" />
+                </svg>
+              </div>
+              
               {/* Hero content - no changes */}
               <div className="container mx-auto px-4 max-w-5xl text-center relative z-20">
                 <motion.div className="mb-8">
