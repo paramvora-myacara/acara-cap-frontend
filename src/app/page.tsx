@@ -156,9 +156,9 @@ export default function HomePage() {
           <main className="pt-16 flex-grow">
             <section className="py-32 bg-gradient-to-b from-white to-gray-50" style={{minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
               {/* Hero content - no changes */}
-              <div className="container mx-auto px-4 max-w-3xl text-center">
+              <div className="container mx-auto px-4 max-w-5xl text-center">
                 <motion.div className="mb-8">
-                    <div className="overflow-hidden"><motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: textAnimation.part1Visible ? 1 : 0, y: textAnimation.part1Visible ? 0 : 20 }} transition={{ duration: 0.6 }} className="text-5xl md:text-6xl font-bold leading-tight text-black"><span className="text-blue-600">AI</span>-Powered. <span className="text-blue-600">Borrower</span>-Controlled.</motion.div></div>
+                    <div className="overflow-hidden"><motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: textAnimation.part1Visible ? 1 : 0, y: textAnimation.part1Visible ? 0 : 20 }} transition={{ duration: 0.6 }} className="text-5xl md:text-6xl font-bold leading-tight text-black"><span className="md:whitespace-nowrap"><span className="text-blue-600">AI</span>-Powered. <span className="text-blue-600">Borrower-Controlled</span></span>.</motion.div></div>
                     <div className="overflow-hidden mt-2"><motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: textAnimation.part2Visible ? 1 : 0, y: textAnimation.part2Visible ? 0 : 20 }} transition={{ duration: 0.6 }} className="text-5xl md:text-6xl font-bold leading-tight"><span className="text-blue-800 font-display">Commercial Lending,</span></motion.div></div>
                     <div className="overflow-hidden"><motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: textAnimation.part3Visible ? 1 : 0, y: textAnimation.part3Visible ? 0 : 20 }} transition={{ duration: 0.6 }} className="text-5xl md:text-6xl font-bold leading-tight italic"><span className="text-blue-800 font-display">Simplified.</span></motion.div></div>
                 </motion.div>
