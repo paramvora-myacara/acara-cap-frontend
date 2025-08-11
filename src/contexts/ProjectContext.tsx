@@ -311,6 +311,41 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
         return newProject;
     }, [user, borrowerProfileContext.borrowerProfile, projects, calculateProgress]); // dependencies reviewed
 
+    // --------------------------------------------------------
+    // Auto-create first project for new borrower accounts
+    // --------------------------------------------------------
+    useEffect(() => {
+        if (isLoading) return;                       // Wait for initial load
+        if (!user || user.role !== 'borrower') return;
+        if (!borrowerProfileContext.borrowerProfile) return; // Need profile
+        if (projects.length > 0) return;             // Already have projects
+
+        (async () => {
+            try {
+                // 1️⃣ Double-check storage to avoid duplicates
+                const profile = borrowerProfileContext.borrowerProfile;
+                if (!profile) return; // Safety check
+                
+                const stored = await storageService.getItem<ProjectProfile[]>('projects') || [];
+                const existing = stored.filter(p => p.borrowerProfileId === profile.id);
+                if (existing.length > 0) {
+                    const withProgress = existing.map(p => ({
+                        ...p,
+                        ...calculateProgress(p)
+                    }));
+                    setProjects(withProgress);
+                    setActiveProject(withProgress[0]);
+                    return;                          // nothing to create
+                }
+
+                // 2️⃣ Still none → create first project
+                await createProject({ projectName: 'Unnamed Project 1' });
+            } catch (err) {
+                console.error('[ProjectContext] Auto-create project failed:', err);
+            }
+        })();
+    }, [isLoading, user, borrowerProfileContext.borrowerProfile, projects.length, createProject, calculateProgress, storageService]);
+
     // Update Project
     const updateProject = useCallback(async (id: string, updates: Partial<ProjectProfile>, manual = false): Promise<ProjectProfile | null> => {
         let updatedProject: ProjectProfile | null = null; let originalStatus: ProjectStatus | undefined;

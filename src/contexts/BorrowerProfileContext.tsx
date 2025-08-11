@@ -40,7 +40,7 @@ const AUTO_SAVE_INTERVAL = 3000;
 const generateUniqueId = (): string => `profile_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
 export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = ({ children, storageService }) => {
-  const { user } = useAuth(); // Use user from auth context
+  const { user, updateUser } = useAuth(); // Get user and updater from auth context
   const [borrowerProfile, setBorrowerProfile] = useState<BorrowerProfile | null>(null);
   const [principals, setPrincipals] = useState<Principal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -138,6 +138,8 @@ export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = (
        return () => { if (autoSaveTimerRef.current) { clearInterval(autoSaveTimerRef.current); } };
    }, [borrowerProfile, profileChanges, autoSaveBorrowerProfile]);
 
+  // ------------------------------------------------------------
+  // (auto-create effect moved lower)
 
   // Create Borrower Profile - Ensure it returns the created profile
   const createBorrowerProfile = useCallback(async (profileData: Partial<BorrowerProfile>): Promise<BorrowerProfile> => {
@@ -169,6 +171,42 @@ export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = (
         console.log(`[ProfileContext] Created profile ${profileId} for ${user.email}`);
         return newProfile; // Return the created profile object
   }, [user, storageService, calculateCompleteness]);
+
+  // ------------------------------------------------------------
+  // Auto-create minimal borrower profile for first-time borrowers
+  // ------------------------------------------------------------
+  useEffect(() => {
+    if (isLoading) return;                    // wait until initial load finished
+    if (!user || user.role !== 'borrower') return;
+    if (borrowerProfile) return;              // profile already exists
+
+    (async () => {
+      try {
+        // 1️⃣ Check local-storage again to avoid duplicates
+        const stored = await storageService.getItem<BorrowerProfile[]>('borrowerProfiles') || [];
+        const existing = stored.find(p => p.userId === user.email);
+        if (existing) {
+          setBorrowerProfile(existing);
+          await updateUser({ profileId: existing.id });
+          return;                              // nothing to create
+        }
+
+        // 2️⃣ Still missing → create minimal profile
+        const newProfile = await createBorrowerProfile({
+          userId: user.email,
+          contactEmail: user.email,
+          fullLegalName: user.email.split('@')[0] || 'New User',
+          primaryEntityName: 'My Entity',
+        });
+
+        // Persist the profileId back to AuthContext so the rest of the app knows it
+        await updateUser({ profileId: newProfile.id });
+      } catch (err) {
+        console.error('[BorrowerProfileContext] Auto-create failed:', err);
+      }
+    })();
+
+  }, [isLoading, user, borrowerProfile, createBorrowerProfile, updateUser, storageService]);
 
   // Update Borrower Profile
   const updateBorrowerProfile = useCallback(async (updates: Partial<BorrowerProfile>, manual = false): Promise<BorrowerProfile | null> => {
