@@ -12,6 +12,7 @@ import { MessagePanel } from '../dashboard/MessagePanel';
 import { Loader2, FileSpreadsheet } from 'lucide-react'; // Added FileSpreadsheet
 import { ProjectProfile } from '@/types/enhanced-types';
 import { Button } from '../ui/Button'; // Import Button
+import { useAuth } from '@/hooks/useAuth'; // Add this import
 
 interface ProjectWorkspaceProps {
     projectId: string;
@@ -20,20 +21,64 @@ interface ProjectWorkspaceProps {
 export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId }) => {
     const router = useRouter();
     const {
-        activeProject, setActiveProject, isLoading: projectsLoading, getProject, updateProject
+        activeProject, setActiveProject, isLoading: projectsLoading, getProject, updateProject, projects
     } = useProjects();
     const { borrowerProfile, isLoading: profileLoading } = useBorrowerProfile();
+    const { user, isLoading: authLoading } = useAuth(); // Add auth loading state
     const { setLoading, showNotification } = useUI();
 
-    // useEffect for loading and setting active project (no changes needed)
-     useEffect(() => { if (projectId && (!activeProject || activeProject.id !== projectId)) { const projectData = getProject(projectId); if (projectData) { setActiveProject(projectData); } else if (!projectsLoading) { console.error(`Project ${projectId} not found.`); showNotification({ type: 'error', message: 'Project not found.' }); router.push('/dashboard'); } } setLoading(projectsLoading || profileLoading); }, [projectId, activeProject, setActiveProject, getProject, projectsLoading, profileLoading, router, showNotification, setLoading]);
+    // Calculate if we're still in initial loading phase
+    const isInitialLoading = authLoading || projectsLoading || (user?.role === 'borrower' && profileLoading);
+
+    // useEffect for loading and setting active project
+    useEffect(() => {
+        if (!projectId) return;
+        
+        // Don't proceed if still in initial loading phase
+        if (isInitialLoading) {
+            setLoading(true);
+            return;
+        }
+        
+        // Only check for project existence after initial loading is complete
+        if (!activeProject || activeProject.id !== projectId) {
+            const projectData = getProject(projectId);
+            if (projectData) {
+                setActiveProject(projectData);
+            } else {
+                // Only show error if we're confident the project doesn't exist
+                // (not just because we haven't loaded projects yet)
+                console.error(`Project ${projectId} not found.`);
+                showNotification({ type: 'error', message: 'Project not found.' });
+                router.push('/dashboard');
+            }
+        }
+        
+        setLoading(false);
+    }, [
+        projectId,
+        activeProject,
+        setActiveProject,
+        getProject,
+        isInitialLoading,
+        router,
+        showNotification,
+        setLoading
+    ]);
+
+    // Loading state render - show loading during initial loading or if project doesn't match
+    if (isInitialLoading || !activeProject || activeProject.id !== projectId) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                <span className="ml-3 text-gray-600">Loading...</span>
+            </div>
+        );
+    }
 
 
      // Handle project update completion (no changes needed)
      const handleProjectUpdateComplete = (updatedProject: ProjectProfile) => { showNotification({ type: 'success', message: `Project "${updatedProject.projectName}" updated.` }); };
-
-    // Loading state render (no changes needed)
-    if (projectsLoading || profileLoading || !activeProject || activeProject.id !== projectId) { return ( <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-blue-600" /><span className="ml-3 text-gray-600">Loading...</span></div> ); }
 
     const projectCompleteness = activeProject?.completenessPercent || 0;
     const projectProgressColor = projectCompleteness === 100 ? 'bg-green-600' : 'bg-blue-600';
