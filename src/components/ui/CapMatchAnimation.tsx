@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { 
   DollarSign, 
   CreditCard, 
@@ -182,11 +182,12 @@ export function CapMatchAnimation() {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerDimensions, setContainerDimensions] = React.useState({ width: 0, height: 0 });
 
-  React.useEffect(() => {
+  useLayoutEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        setContainerDimensions({ width: rect.width, height: rect.height });
+        const dynamicHeight = window.innerHeight - rect.top; // remaining viewport height
+        setContainerDimensions({ width: rect.width, height: dynamicHeight });
       }
     };
 
@@ -195,6 +196,12 @@ export function CapMatchAnimation() {
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
+  // Icon boundary size scaled with container height (min 60, max 120)
+  const iconBoundarySize = Math.min(120, Math.max(60, containerDimensions.height / 4));
+  const iconSize = iconBoundarySize - 64; // smaller relative to boundary
+  const staticIconSize = Math.min(40, Math.max(24, iconBoundarySize / 3));
+
+  // Pixel positions for icons based on percentage coordinates and container size
   const leftIconPixelPos = {
     x: (animationState.leftIconPosition.x / 100) * containerDimensions.width,
     y: (animationState.leftIconPosition.y / 100) * containerDimensions.height,
@@ -205,9 +212,6 @@ export function CapMatchAnimation() {
     y: (animationState.rightIconPosition.y / 100) * containerDimensions.height,
   };
 
-  // Icon boundary size (padding around the icon)
-  const iconBoundarySize = 40; // 40px boundary around each icon
-  
   // Calculate connection points at the edges of icon boundaries
   const calculateConnectionPoints = () => {
     const centerToCenter = {
@@ -248,7 +252,11 @@ export function CapMatchAnimation() {
   );
 
   return (
-    <div ref={containerRef} className="w-full h-64 mt-8 relative overflow-hidden">
+    <div
+      ref={containerRef}
+      className="w-full mt-8 relative overflow-hidden"
+      style={{ height: containerDimensions.height ? `${containerDimensions.height}px` : '16rem' }}
+    >
       {/* Blueprint Grid Background */}
       <div className="absolute inset-0 opacity-30">
         <svg width="100%" height="100%" className="absolute inset-0">
@@ -281,7 +289,7 @@ export function CapMatchAnimation() {
               key={`static-left-${index}`}
               className="text-green-500 opacity-60"
             >
-              <IconComponent size={20} />
+              <IconComponent size={staticIconSize} />
             </div>
           );
         })}
@@ -295,7 +303,7 @@ export function CapMatchAnimation() {
               key={`static-right-${index}`}
               className="text-blue-500 opacity-60"
             >
-              <IconComponent size={20} />
+              <IconComponent size={staticIconSize} />
             </div>
           );
         })}
@@ -320,7 +328,7 @@ export function CapMatchAnimation() {
           }`}
         />
         <div className="flex items-center justify-center w-full h-full relative z-10 text-green-500">
-          <LeftIcon size={32} />
+          <LeftIcon size={iconSize} />
         </div>
       </div>
 
@@ -346,7 +354,7 @@ export function CapMatchAnimation() {
         <div className={`flex items-center justify-center w-full h-full relative z-10 transition-colors duration-500 ${
           animationState.connectionComplete ? 'text-green-500' : 'text-blue-500'
         }`}>
-          <RightIcon size={32} />
+          <RightIcon size={iconSize} />
         </div>
       </div>
 
