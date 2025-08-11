@@ -69,6 +69,9 @@ export function CapMatchAnimation() {
     phase: 'idle',
   });
 
+  // State to control progressive drawing of the connection line
+  const [lineDrawn, setLineDrawn] = useState(false);
+
   useEffect(() => {
     const runAnimation = () => {
       // Phase 1: Select random icons and their starting positions
@@ -155,6 +158,22 @@ export function CapMatchAnimation() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Trigger progressive line drawing when entering the "connecting" phase
+  useEffect(() => {
+    if (animationState.phase === 'connecting') {
+      // Reset line to hidden state first
+      setLineDrawn(false);
+      // Use double requestAnimationFrame to ensure DOM updates before drawing
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setLineDrawn(true);
+        });
+      });
+    } else if (animationState.phase === 'resetting' || animationState.phase === 'idle') {
+      setLineDrawn(false);
+    }
+  }, [animationState.phase]);
 
   const LeftIcon = financeIcons[animationState.leftIconIndex].icon;
   const RightIcon = realEstateIcons[animationState.rightIconIndex].icon;
@@ -356,8 +375,8 @@ export function CapMatchAnimation() {
             className="transition-colors duration-500"
             style={{
               strokeDasharray: lineLength > 0 ? `${lineLength}` : '1000',
-              strokeDashoffset: animationState.phase === 'connecting' ? '0' : (lineLength > 0 ? `${lineLength}` : '1000'),
-              transition: animationState.phase === 'connecting' ? 'stroke-dashoffset 1s ease-in-out' : 'none',
+              strokeDashoffset: lineDrawn ? '0' : (lineLength > 0 ? `${lineLength}` : '1000'),
+              transition: 'stroke-dashoffset 1s ease-in-out',
             }}
           />
         </svg>
