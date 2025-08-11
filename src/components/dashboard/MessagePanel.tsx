@@ -35,9 +35,13 @@ export const MessagePanel: React.FC<MessagePanelProps> = ({
   const [isLoadingAdvisor, setIsLoadingAdvisor] = useState(false);
   const [localMessages, setLocalMessages] = useState<ProjectMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Scroll the message container to the bottom instead of using scrollIntoView
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -164,7 +168,7 @@ export const MessagePanel: React.FC<MessagePanelProps> = ({
 
       <CardContent className="p-4">
         {/* Display localMessages which should reflect the active project's messages if IDs match */}
-        <div className="space-y-4 max-h-64 overflow-y-auto mb-4 border rounded p-2 bg-gray-50">
+        <div className="space-y-4 max-h-64 overflow-y-auto mb-4 border rounded p-2 bg-gray-50" ref={messageContainerRef}>
           {localMessages.length > 0 ? (
             localMessages.map((message: ProjectMessage) => (
               <div
