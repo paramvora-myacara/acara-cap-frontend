@@ -29,7 +29,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
         const path = '/' + pathParts.slice(0, 4 + index).join('/');
         const label = part.charAt(0).toUpperCase() + part.slice(1).replace(/-/g, ' ');
         return { label, path };
-    });
+    }).filter(crumb => crumb.label !== 'Dashboard'); // Filter out "Dashboard" breadcrumb
     
     const isHome = pathname.endsWith('/dashboard');
     
@@ -53,6 +53,18 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                             
                             {/* Breadcrumbs */}
                             <div className="flex items-center space-x-2 text-sm">
+                                {/* Project Name - First Breadcrumb */}
+                                <button
+                                    onClick={() => router.push(`/project/workspace/${projectId}`)}
+                                    className="text-gray-500 hover:text-gray-700 font-medium"
+                                >
+                                    {projectName}
+                                </button>
+                                
+                                {/* Separator */}
+                                <span className="text-gray-400">/</span>
+                                
+                                {/* OM Dashboard - Second Breadcrumb */}
                                 <button
                                     onClick={() => router.push(`/project/om/${projectId}/dashboard`)}
                                     className="text-gray-500 hover:text-gray-700 flex items-center"
@@ -60,6 +72,8 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                                     <Home className="h-4 w-4 mr-1" />
                                     OM Dashboard
                                 </button>
+                                
+                                {/* Additional Breadcrumbs */}
                                 {breadcrumbs.map((crumb, idx) => (
                                     <React.Fragment key={idx}>
                                         <span className="text-gray-400">/</span>
