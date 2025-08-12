@@ -9,7 +9,6 @@ import { QuadrantGrid } from '@/components/om/QuadrantGrid';
 import { MetricCard } from '@/components/om/widgets/MetricCard';
 import { MiniChart } from '@/components/om/widgets/MiniChart';
 import { AIInsightsBar } from '@/components/om/AIInsightsBar';
-import { TalkToOMCard } from '@/components/om/TalkToOMCard';
 import { scenarioData, timelineData, unitMixData } from '@/services/mockOMData';
 import { DollarSign, Building, TrendingUp, Users } from 'lucide-react';
 
@@ -159,7 +158,6 @@ export default function OMDashboardPage() {
         >
             <div className="max-w-7xl mx-auto">
                 <AIInsightsBar scenario={scenario} />
-                <TalkToOMCard />
                 <QuadrantGrid quadrants={quadrants} />
             </div>
         </DashboardShell>
