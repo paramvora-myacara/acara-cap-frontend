@@ -216,7 +216,6 @@ export async function POST(req: NextRequest) {
       'Your role is to answer questions based on your exceptional expertise about this deal.',
       'When you make financial projections, state your assumptions, and do your best to ground them in the contents of the documents.',
       'Response Structure:',
-      '1. ANSWER: Provide a direct answer to the question in maximum 3 lines',
       '2. ASSUMPTIONS: List key assumptions with their sources (from OM document or industry knowledge)',
       'Rules:',
       '(1) Leverage your 20+ years of CRE expertise to provide insightful analysis and projections.',
@@ -225,14 +224,12 @@ export async function POST(req: NextRequest) {
       '(4) You can make reasonable projections and estimates based on your exceptional expertise, even if not explicitly stated in the OM.',
       '(5) Provide professional, analytical responses that would be valuable to investors and lenders.',
       '(6) Use bullet points and clear formatting for readability.',
-      '(7) Keep responses concise and to the point - prioritize brevity while maintaining analytical depth.',
-      '(8) Always structure responses with ANSWER (max 3 lines) followed by ASSUMPTIONS with sources.',
       '(9) When using industry knowledge or estimates, clearly indicate this in your assumptions.',
       '(10) Draw from your vast experience to provide insights that go beyond basic analysis.'
     ].join(' ');
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-pro',
       contents: [
         {
           role: 'user',
@@ -242,7 +239,6 @@ export async function POST(req: NextRequest) {
                 `Offering Memorandum Document:\n${omText}\n\n` +
                 `User Question:\n${question}\n\n` +
                 `As an expert commercial real estate analyst, structure your response as follows:
-1. ANSWER: Provide a direct answer to the question in maximum 3 lines
 2. ASSUMPTIONS: List key assumptions with their sources (from OM document or industry knowledge)
 
 Base your analysis on your expertise and the OM content. You can make reasonable projections and estimates based on your industry knowledge, even if not explicitly stated in the OM. When making projections or analysis, clearly state your assumptions and ground them in available data or industry best practices.`
@@ -252,7 +248,6 @@ Base your analysis on your expertise and the OM content. You can make reasonable
       ],
       config: {
         systemInstruction,
-        thinkingConfig: { thinkingBudget: 0 },
         // Optional caps for ultra-concise output:
         // maxOutputTokens: 512,
       }
