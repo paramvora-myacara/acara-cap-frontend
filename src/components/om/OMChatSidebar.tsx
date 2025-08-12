@@ -2,14 +2,18 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/Button';
-import { MessageSquare, Send, ChevronDown } from 'lucide-react';
+import { MessageSquare, Send, ChevronDown, PanelRightClose } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { OmQaSchema, OmQaAssumption } from '@/types/om-types';
 
-export const OMChatSidebar: React.FC = () => {
+interface OMChatSidebarProps {
+  setIsChatOpen: (isOpen: boolean) => void;
+}
+
+export const OMChatSidebar: React.FC<OMChatSidebarProps> = ({ setIsChatOpen }) => {
   const [question, setQuestion] = React.useState('');
   const [assumptionsOpen, setAssumptionsOpen] = React.useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
@@ -39,13 +43,23 @@ export const OMChatSidebar: React.FC = () => {
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm h-full flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
-        <div className="flex items-start space-x-3">
-          <div className="p-2 bg-blue-50 rounded-lg mt-1">
-            <MessageSquare className="h-5 w-5 text-blue-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-800 mb-1">Talk to the OM</h3>
-          </div>
+        <div className="flex items-center justify-between">
+            <div className='flex items-center'>
+                <div className="p-2 bg-blue-50 rounded-lg">
+                    <MessageSquare className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="ml-3">
+                    <h3 className="font-semibold text-gray-800">Talk to the OM</h3>
+                </div>
+            </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsChatOpen(false)}
+            className="text-gray-500 hover:text-gray-800"
+          >
+            <PanelRightClose className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 

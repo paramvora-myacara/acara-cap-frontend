@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { streamObject } from 'ai';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createGoogleGenerativeAI, GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
 import { OmQaSchema } from '@/types/om-types';
 
 const google = createGoogleGenerativeAI({
@@ -225,6 +225,14 @@ export async function POST(req: NextRequest) {
         `Offering Memorandum Document:\n${omText}\n\n` +
         `User Question:\n${question}\n\n` +
         `Return only JSON matching the schema.`,
+        providerOptions: {
+            google: {
+              thinkingConfig: {
+                includeThoughts: true,
+                thinkingBudget: 784, 
+              },
+            } satisfies GoogleGenerativeAIProviderOptions,
+          },
     });
 
     return result.toTextStreamResponse();

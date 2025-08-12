@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Download, Home } from 'lucide-react';
+import { ArrowLeft, Download, Home, PanelRightOpen } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import { OMChatSidebar } from './OMChatSidebar';
 
@@ -24,6 +24,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 }) => {
     const router = useRouter();
     const pathname = usePathname();
+    const [isChatOpen, setIsChatOpen] = useState(true);
     
 
     
@@ -115,7 +116,10 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                 
                 <div className="flex">
                     {/* Main Content with integrated scenario toggle */}
-                    <div className="flex-grow p-6">
+                    <div className={cn(
+                        "flex-grow p-6 transition-all duration-300 ease-in-out",
+                        isChatOpen ? "w-[70%]" : "w-full"
+                    )}>
                         {isHome && (
                             <div className="max-w-7xl mx-auto mb-6">
                                 {/* Prominent Scenario Toggle */}
@@ -162,9 +166,22 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                     </div>
 
                     {/* Chat Sidebar */}
-                    <aside className="w-1/3 max-w-sm sticky top-[7rem] h-[calc(100vh-7rem)]">
-                        <OMChatSidebar />
-                    </aside>
+                    {isChatOpen ? (
+                        <aside className="w-[30%] sticky top-[7rem] h-[calc(100vh-7rem)] flex-shrink-0 transition-all duration-300 ease-in-out">
+                            <OMChatSidebar setIsChatOpen={setIsChatOpen} />
+                        </aside>
+                    ) : (
+                        <div className="sticky top-[7rem] h-[calc(100vh-7rem)] p-4">
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setIsChatOpen(true)}
+                                title="Open chat"
+                            >
+                                <PanelRightOpen className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
             
