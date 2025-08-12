@@ -81,3 +81,190 @@ export const sponsorDeals = [
     { project: 'Transit-Oriented Dev', year: 2023, size: 52000000, irr: 19.5, multiple: 2.1 },
     { project: 'Value-Add Portfolio', year: 2019, size: 38000000, irr: 28.3, multiple: 2.8 },
 ];
+
+// NEW COMPREHENSIVE DATA STRUCTURES FOR OM PAGES
+
+export const dealSnapshotDetails = {
+  keyTerms: {
+    loanType: "Senior Construction Loan",
+    rate: "SOFR + 275bps",
+    floor: "4.50%",
+    term: "36 months",
+    extension: "Two 12-month extensions",
+    recourse: "25% Partial Recourse",
+    origination: "1.00%",
+    exitFee: "0.50%",
+    lenderReserves: {
+      interest: "12 months",
+      taxInsurance: "6 months",
+      capEx: "$250,000"
+    },
+    covenants: {
+      minDSCR: "1.20x",
+      maxLTV: "80%",
+      minLiquidity: "$2,000,000",
+      completionGuaranty: "Full completion guaranty"
+    }
+  },
+  
+  milestones: [
+    { phase: "Initial Underwriting", date: "Jul 1, 2025", status: "completed", duration: 5 },
+    { phase: "LOI Execution", date: "Jul 8, 2025", status: "completed", duration: 3 },
+    { phase: "Third Party Reports", date: "Jul 15, 2025", status: "current", duration: 10 },
+    { phase: "Credit Committee", date: "Jul 25, 2025", status: "upcoming", duration: 2 },
+    { phase: "Legal Documentation", date: "Aug 1, 2025", status: "upcoming", duration: 10 },
+    { phase: "Closing", date: "Aug 15, 2025", status: "upcoming", duration: 1 }
+  ],
+  
+  riskMatrix: {
+    high: [],
+    medium: [
+      { risk: "Construction Cost Overrun", mitigation: "Fixed-price GMP contract with 5% contingency", probability: "30%" }
+    ],
+    low: [
+      { risk: "Market Demand", mitigation: "35% pre-leased, strong demographic tailwinds", probability: "15%" },
+      { risk: "Entitlement", mitigation: "Fully approved, building permits in hand", probability: "5%" }
+    ]
+  }
+};
+
+export const assetProfileDetails = {
+  sitePlan: {
+    lotSize: "2.5 acres (108,900 SF)",
+    buildingFootprint: "28,500 SF",
+    parkingSpaces: 130,
+    greenSpace: "35% of site",
+    zoningDetails: {
+      current: "MU-4 (Mixed Use)",
+      allowedFAR: "4.0",
+      usedFAR: "3.5",
+      heightLimit: "100 feet",
+      actualHeight: "85 feet",
+      setbacks: { front: "25ft", side: "15ft", rear: "20ft" }
+    }
+  },
+  
+  amenityDetails: [
+    { name: "Resort-Style Pool", size: "3,200 SF", description: "Heated saltwater pool with cabanas" },
+    { name: "Fitness Center", size: "2,500 SF", description: "24/7 access, Peloton bikes, free weights" },
+    { name: "Sky Lounge", size: "1,800 SF", description: "Rooftop terrace with city views" },
+    { name: "Co-Working Space", size: "1,200 SF", description: "Private offices and conference rooms" },
+    { name: "Pet Spa", size: "400 SF", description: "Grooming station and dog wash" },
+    { name: "Package Concierge", size: "300 SF", description: "Smart lockers with refrigeration" }
+  ],
+  
+  unitMixDetails: {
+    studios: { count: 24, avgSF: 475, rentRange: "$1,850-$2,050", deposit: "$500" },
+    oneBed: { count: 48, avgSF: 725, rentRange: "$2,450-$2,850", deposit: "$750" },
+    twoBed: { count: 36, avgSF: 1050, rentRange: "$3,650-$4,050", deposit: "$1,000" }
+  },
+  
+  comparableDetails: [
+    {
+      name: "The Modern",
+      address: "1234 Main St",
+      distance: "0.8 miles",
+      yearBuilt: 2023,
+      units: 145,
+      occupancy: "94%",
+      avgRent: "$4.25 PSF",
+      lastSale: { date: "Mar 2024", price: "$52M", capRate: "4.8%" }
+    },
+    {
+      name: "Park Place Tower",
+      address: "5678 Park Ave",
+      distance: "1.2 miles",
+      yearBuilt: 2022,
+      units: 200,
+      occupancy: "96%",
+      avgRent: "$4.35 PSF",
+      lastSale: { date: "Jan 2024", price: "$68M", capRate: "5.0%" }
+    }
+  ]
+};
+
+export const marketContextDetails = {
+  demographicProfile: {
+    oneMile: { population: 45000, medianIncome: 72000, medianAge: 29 },
+    threeMile: { population: 185000, medianIncome: 68000, medianAge: 31 },
+    fiveMile: { population: 425000, medianIncome: 65000, medianAge: 32.5 },
+    growthTrends: {
+      populationGrowth5yr: "14.2%",
+      incomeGrowth5yr: "18.5%",
+      jobGrowth5yr: "22.3%"
+    }
+  },
+  
+  majorEmployers: [
+    { name: "Tech Corp HQ", employees: 15000, growth: "+12%", distance: "2.1 miles" },
+    { name: "Regional Medical Center", employees: 8500, growth: "+5%", distance: "1.5 miles" },
+    { name: "Financial Services Inc", employees: 6200, growth: "+8%", distance: "3.2 miles" },
+    { name: "State University", employees: 4800, growth: "+3%", distance: "4.0 miles" },
+    { name: "Aerospace Manufacturing", employees: 3200, growth: "+15%", distance: "5.5 miles" }
+  ],
+  
+  supplyAnalysis: {
+    currentInventory: 12500,
+    underConstruction: 2450,
+    planned24Months: 4200,
+    averageOccupancy: "93.5%",
+    deliveryByQuarter: [
+      { quarter: "Q3 2025", units: 800 },
+      { quarter: "Q4 2025", units: 1200 },
+      { quarter: "Q1 2026", units: 950 },
+      { quarter: "Q2 2026", units: 600 },
+      { quarter: "Q3 2026", units: 650 }
+    ]
+  }
+};
+
+export const financialDetails = {
+  sourcesUses: {
+    sources: [
+      { type: "Senior Debt", amount: 15000000, percentage: 80 },
+      { type: "Sponsor Equity", amount: 2850000, percentage: 15.2 },
+      { type: "LP Equity", amount: 900000, percentage: 4.8 }
+    ],
+    uses: [
+      { type: "Land Acquisition", amount: 4500000, percentage: 24 },
+      { type: "Hard Costs", amount: 11200000, percentage: 59.7 },
+      { type: "Soft Costs", amount: 2100000, percentage: 11.2 },
+      { type: "Financing Costs", amount: 950000, percentage: 5.1 }
+    ]
+  },
+  
+  sponsorProfile: {
+    firmName: "Premier Development Partners",
+    yearFounded: 2008,
+    totalDeveloped: "$450M",
+    totalUnits: 2850,
+    activeProjects: 4,
+    principals: [
+      { name: "John Smith", role: "Managing Partner", experience: "22 years" },
+      { name: "Sarah Johnson", role: "Chief Investment Officer", experience: "18 years" }
+    ],
+    trackRecord: [
+      { project: "Downtown Mixed-Use", year: 2023, units: 180, irr: "22.5%" },
+      { project: "Suburban Garden Apts", year: 2022, units: 220, irr: "18.2%" },
+      { project: "Urban Infill Tower", year: 2021, units: 165, irr: "25.8%" }
+    ],
+    references: [
+      { firm: "National Bank", contact: "Available upon request" },
+      { firm: "Regional Debt Fund", contact: "Available upon request" }
+    ]
+  },
+  
+  returnProjections: {
+    base: { irr: 18.5, multiple: 2.1, profitMargin: 28 },
+    upside: { irr: 24.5, multiple: 2.8, profitMargin: 35 },
+    downside: { irr: 12.5, multiple: 1.6, profitMargin: 18 }
+  }
+};
+
+export const certifications = {
+  badges: [
+    { name: "Opportunity Zone", status: "Qualified", icon: "shield-check" },
+    { name: "Energy Star", status: "Pending", icon: "leaf" },
+    { name: "LEED Silver", status: "Targeting", icon: "award" }
+  ]
+};
