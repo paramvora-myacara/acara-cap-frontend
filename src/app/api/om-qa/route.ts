@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { streamObject } from 'ai';
+import { createGoogleGenerativeAI, GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
+import { OmQaSchema } from '@/types/om-types';
+
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GEMINI_API_KEY!,
+});
+
+const system = [
+  'You are a super genius expert analyst in Commercial Real Estate with 20+ years experience.',
+  'Answer using the OM content; be professional and analytical.',
+  'Output must match the provided JSON schema exactly. Return JSON only.',
+].join(' ');
+
+const MODEL_NAME = 'gemini-2.5-pro'; // use a model your key supports
 
 export async function POST(req: NextRequest) {
   try {
@@ -203,63 +217,25 @@ export async function POST(req: NextRequest) {
 ---
 *AI insights generated based on pattern analysis of 2,847 similar transactions in comparable markets. Confidence levels: 91% (Downside), 94% (Base), 87% (Upside).*`;
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: 'Missing GEMINI_API_KEY' }, { status: 500 });
-    }
-
-    const ai = new GoogleGenAI({ apiKey });
-
-    const systemInstruction = [
-      'You are a super genius expert analyst in Commercial Real Estate with over 20+ years of experience in the field.',
-      'You have analyzed thousands of deals, advised major institutional investors, and have an unparalleled understanding of CRE markets, underwriting, and investment strategies.',
-      'Your role is to answer questions based on your exceptional expertise about this deal.',
-      'When you make financial projections, state your assumptions, and do your best to ground them in the contents of the documents.',
-      'Response Structure:',
-      '1. ANSWER: Provide a direct answer to the question in maximum 3 lines',
-      '2. ASSUMPTIONS: List key assumptions with their sources (from OM document or industry knowledge)',
-      'Rules:',
-      '(1) Leverage your 20+ years of CRE expertise to provide insightful analysis and projections.',
-      '(2) When making projections or analysis, clearly state your assumptions and reasoning.',
-      '(3) Ground analysis in OM facts when available, but feel free to apply your extensive industry knowledge and best practices.',
-      '(4) You can make reasonable projections and estimates based on your exceptional expertise, even if not explicitly stated in the OM.',
-      '(5) Provide professional, analytical responses that would be valuable to investors and lenders.',
-      '(6) Use bullet points and clear formatting for readability.',
-      '(7) Keep responses concise and to the point - prioritize brevity while maintaining analytical depth.',
-      '(8) Always structure responses with ANSWER (max 3 lines) followed by ASSUMPTIONS with sources.',
-      '(9) When using industry knowledge or estimates, clearly indicate this in your assumptions.',
-      '(10) Draw from your vast experience to provide insights that go beyond basic analysis.'
-    ].join(' ');
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            {
-              text:
-                `Offering Memorandum Document:\n${omText}\n\n` +
-                `User Question:\n${question}\n\n` +
-                `As an expert commercial real estate analyst, structure your response as follows:
-1. ANSWER: Provide a direct answer to the question in maximum 3 lines
-2. ASSUMPTIONS: List key assumptions with their sources (from OM document or industry knowledge)
-
-Base your analysis on your expertise and the OM content. You can make reasonable projections and estimates based on your industry knowledge, even if not explicitly stated in the OM. When making projections or analysis, clearly state your assumptions and ground them in available data or industry best practices.`
-            }
-          ]
-        }
-      ],
-      config: {
-        systemInstruction,
-        thinkingConfig: { thinkingBudget: 0 },
-        // Optional caps for ultra-concise output:
-        // maxOutputTokens: 512,
-      }
+    const result = await streamObject({
+      model: google(MODEL_NAME),
+      system,
+      schema: OmQaSchema,
+      prompt:
+        `Offering Memorandum Document:\n${omText}\n\n` +
+        `User Question:\n${question}\n\n` +
+        `Return only JSON matching the schema.`,
+        providerOptions: {
+            google: {
+              thinkingConfig: {
+                includeThoughts: true,
+                thinkingBudget: 784, 
+              },
+            } satisfies GoogleGenerativeAIProviderOptions,
+          },
     });
 
-    const answer = (response.text || '').trim();
-    return NextResponse.json({ answer });
+    return result.toTextStreamResponse();
   } catch (e: any) {
     console.error('om-qa error:', e);
     return NextResponse.json({ error: 'Failed to get answer' }, { status: 500 });

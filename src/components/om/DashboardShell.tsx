@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Download, Home } from 'lucide-react';
+import { ArrowLeft, Download, Home, PanelRightOpen } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { OMChatSidebar } from './OMChatSidebar';
 
 
 interface DashboardShellProps {
@@ -23,6 +24,7 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
 }) => {
     const router = useRouter();
     const pathname = usePathname();
+    const [isChatOpen, setIsChatOpen] = useState(true);
     
 
     
@@ -112,51 +114,74 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                     </div>
                 </div>
                 
-                {/* Main Content with integrated scenario toggle */}
-                <div className="p-6">
-                    {isHome && (
-                        <div className="max-w-7xl mx-auto mb-6">
-                            {/* Prominent Scenario Toggle */}
-                            <div className="flex justify-center">
-                                <div className="inline-flex items-center bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-                                    <button
-                                        onClick={() => onScenarioChange('downside')}
-                                        className={cn(
-                                            "px-6 py-2 rounded-md text-sm font-medium transition-all duration-200",
-                                            currentScenario === 'downside'
-                                                ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md"
-                                                : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                                        )}
-                                    >
-                                        Downside
-                                    </button>
-                                    <button
-                                        onClick={() => onScenarioChange('base')}
-                                        className={cn(
-                                            "px-6 py-2 rounded-md text-sm font-medium transition-all duration-200",
-                                            currentScenario === 'base'
-                                                ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
-                                                : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                                        )}
-                                    >
-                                        Base Case
-                                    </button>
-                                    <button
-                                        onClick={() => onScenarioChange('upside')}
-                                        className={cn(
-                                            "px-6 py-2 rounded-md text-sm font-medium transition-all duration-200",
-                                            currentScenario === 'upside'
-                                                ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md"
-                                                : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                                        )}
-                                    >
-                                        Upside
-                                    </button>
+                <div className="flex">
+                    {/* Main Content with integrated scenario toggle */}
+                    <div className={cn(
+                        "flex-grow p-6 transition-all duration-300 ease-in-out",
+                        isChatOpen ? "w-[70%]" : "w-full"
+                    )}>
+                        {isHome && (
+                            <div className="max-w-7xl mx-auto mb-6">
+                                {/* Prominent Scenario Toggle */}
+                                <div className="flex justify-center">
+                                    <div className="inline-flex items-center bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                                        <button
+                                            onClick={() => onScenarioChange('downside')}
+                                            className={cn(
+                                                "px-6 py-2 rounded-md text-sm font-medium transition-all duration-200",
+                                                currentScenario === 'downside'
+                                                    ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md"
+                                                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                                            )}
+                                        >
+                                            Downside
+                                        </button>
+                                        <button
+                                            onClick={() => onScenarioChange('base')}
+                                            className={cn(
+                                                "px-6 py-2 rounded-md text-sm font-medium transition-all duration-200",
+                                                currentScenario === 'base'
+                                                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                                                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                                            )}
+                                        >
+                                            Base Case
+                                        </button>
+                                        <button
+                                            onClick={() => onScenarioChange('upside')}
+                                            className={cn(
+                                                "px-6 py-2 rounded-md text-sm font-medium transition-all duration-200",
+                                                currentScenario === 'upside'
+                                                    ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md"
+                                                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                                            )}
+                                        >
+                                            Upside
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+                        )}
+                        {children}
+                    </div>
+
+                    {/* Chat Sidebar */}
+                    {isChatOpen ? (
+                        <aside className="w-[30%] sticky top-[7rem] h-[calc(100vh-7rem)] flex-shrink-0 transition-all duration-300 ease-in-out">
+                            <OMChatSidebar setIsChatOpen={setIsChatOpen} />
+                        </aside>
+                    ) : (
+                        <div className="sticky top-[7rem] h-[calc(100vh-7rem)] p-4">
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setIsChatOpen(true)}
+                                title="Open chat"
+                            >
+                                <PanelRightOpen className="h-4 w-4" />
+                            </Button>
                         </div>
                     )}
-                    {children}
                 </div>
             </div>
             
