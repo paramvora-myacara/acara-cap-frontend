@@ -2,7 +2,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/utils/cn';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, Expand } from 'lucide-react';
 
 export interface QuadrantData {
     id: string;
@@ -60,9 +60,7 @@ export const QuadrantGrid: React.FC<QuadrantGridProps> = ({ quadrants, className
                                     </h3>
                                 </div>
                                 {quadrant.href && (
-                                    <span className="text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        Click to expand
-                                    </span>
+                                    <Expand className="h-5 w-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
                                 )}
                             </div>
                             
