@@ -4,6 +4,7 @@ import { marketContextDetails } from '@/services/mockOMData';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, TrendingUp, MapPin, BarChart3 } from 'lucide-react';
+import PopulationHeatmap from '@/components/om/PopulationHeatmap';
 
 export default function DemographicsPage() {
   const getGrowthColor = (growth: string) => {
@@ -289,21 +290,14 @@ export default function DemographicsPage() {
         </CardContent>
       </Card>
 
-      {/* Population Density Visualization */}
+      {/* Interactive Population Heatmap */}
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <h4 className="text-xl font-semibold text-gray-800">Population Density Visualization</h4>
+          <h4 className="text-xl font-semibold text-gray-800">Interactive Population Heatmap</h4>
+          <p className="text-sm text-gray-600">Click on areas to view detailed demographic information</p>
         </CardHeader>
         <CardContent>
-          <div className="bg-gray-100 rounded-lg p-8 text-center">
-            <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium">Interactive Population Map</p>
-            <p className="text-gray-500 text-sm mt-1">Coming soon - Geographic visualization of demographic data</p>
-            <div className="mt-4 p-4 bg-white rounded border border-dashed border-gray-200">
-              <p className="text-sm text-gray-500">Population density heat map will be integrated here</p>
-              <p className="text-xs text-gray-400 mt-1">Including radius analysis and demographic overlays</p>
-            </div>
-          </div>
+          <PopulationHeatmap />
         </CardContent>
       </Card>
     </div>

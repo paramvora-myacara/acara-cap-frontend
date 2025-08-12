@@ -4,6 +4,7 @@ import { assetProfileDetails } from '@/services/mockOMData';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Building2, TreePine, Car } from 'lucide-react';
+import InteractiveSiteMap from '@/components/om/InteractiveSiteMap';
 
 export default function SitePlanPage() {
   return (
@@ -121,21 +122,14 @@ export default function SitePlanPage() {
         </CardContent>
       </Card>
 
-      {/* Site Map Placeholder */}
+      {/* Interactive Site Map */}
       <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
           <h3 className="text-xl font-semibold text-gray-800">Interactive Site Map</h3>
+          <p className="text-sm text-gray-600">Click on areas to view detailed information</p>
         </CardHeader>
         <CardContent>
-          <div className="bg-gray-100 rounded-lg p-8 text-center">
-            <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium">Interactive Site Map</p>
-            <p className="text-gray-500 text-sm mt-1">Coming soon - Interactive visualization of site layout</p>
-            <div className="mt-4 p-4 bg-white rounded border border-dashed border-gray-200">
-              <p className="text-sm text-gray-500">Site map visualization will be integrated here</p>
-              <p className="text-xs text-gray-400 mt-1">Including building footprint, parking, and green spaces</p>
-            </div>
-          </div>
+          <InteractiveSiteMap />
         </CardContent>
       </Card>
 

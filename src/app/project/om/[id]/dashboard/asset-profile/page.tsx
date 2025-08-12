@@ -9,6 +9,7 @@ import { MetricCard } from '@/components/om/widgets/MetricCard';
 import { MiniChart } from '@/components/om/widgets/MiniChart';
 import { unitMixData, marketComps } from '@/services/mockOMData';
 import { MapPin, Home, Package, Building2 } from 'lucide-react';
+import ZoningMap from '@/components/om/ZoningMap';
 
 export default function AssetProfilePage() {
     const params = useParams();
@@ -27,9 +28,7 @@ export default function AssetProfilePage() {
             href: `/project/om/${projectId}/dashboard/asset-profile/site-plan`,
             metrics: (
                 <div className="space-y-3">
-                    <div className="bg-gray-100 rounded-lg h-32 flex items-center justify-center text-gray-400">
-                        Site Map Placeholder
-                    </div>
+                    <ZoningMap compact={true} />
                     <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
                             <p className="text-gray-500">Lot Size</p>

@@ -4,6 +4,7 @@ import { financialDetails } from '@/services/mockOMData';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
+import ReturnsCharts from '@/components/om/ReturnsCharts';
 
 export default function ReturnsPage() {
   const getIRRColor = (irr: number) => {
@@ -377,23 +378,8 @@ export default function ReturnsPage() {
         </CardContent>
       </Card>
 
-      {/* Return Visualization Placeholder */}
-      <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader>
-          <h3 className="text-xl font-semibold text-gray-800">Return Visualization</h3>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-gray-100 rounded-lg p-8 text-center">
-            <BarChart3 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium">Interactive Return Charts</p>
-            <p className="text-gray-500 text-sm mt-1">Coming soon - Dynamic IRR and multiple visualization</p>
-            <div className="mt-4 p-4 bg-white rounded border border-dashed border-gray-200">
-              <p className="text-sm text-gray-500">Return analysis charts will be integrated here</p>
-              <p className="text-xs text-gray-400 mt-1">Including sensitivity analysis and scenario modeling</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Interactive Return Charts */}
+      <ReturnsCharts />
     </div>
   );
 } 

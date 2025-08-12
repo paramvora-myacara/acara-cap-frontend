@@ -4,6 +4,7 @@ import { marketContextDetails } from '@/services/mockOMData';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, TrendingUp, MapPin, Users } from 'lucide-react';
+import EmploymentMap from '@/components/om/EmploymentMap';
 
 export default function EmploymentPage() {
   const getGrowthColor = (growth: string) => {
@@ -284,21 +285,14 @@ export default function EmploymentPage() {
         </CardContent>
       </Card>
 
-      {/* Employment Map Placeholder */}
+      {/* Interactive Employment Map */}
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <h3 className="text-xl font-semibold text-gray-800">Employment Map</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Interactive Employment Map</h3>
+          <p className="text-sm text-gray-600">Click on employers to view detailed information</p>
         </CardHeader>
         <CardContent>
-          <div className="bg-gray-100 rounded-lg p-8 text-center">
-            <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium">Interactive Employment Map</p>
-            <p className="text-gray-500 text-sm mt-1">Coming soon - Geographic visualization of major employers</p>
-            <div className="mt-4 p-4 bg-white rounded border border-dashed border-gray-200">
-              <p className="text-sm text-gray-500">Employment density map will be integrated here</p>
-              <p className="text-xs text-gray-400 mt-1">Including company locations and employee counts</p>
-            </div>
-          </div>
+          <EmploymentMap />
         </CardContent>
       </Card>
     </div>

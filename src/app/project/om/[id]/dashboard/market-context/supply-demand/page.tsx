@@ -4,6 +4,7 @@ import { marketContextDetails } from '@/services/mockOMData';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, TrendingUp, BarChart3, Clock } from 'lucide-react';
+import SupplyDemandMap from '@/components/om/SupplyDemandMap';
 
 export default function SupplyDemandPage() {
   const getOccupancyColor = (occupancy: string) => {
@@ -361,21 +362,14 @@ export default function SupplyDemandPage() {
         </CardContent>
       </Card>
 
-      {/* Supply Map Placeholder */}
+      {/* Interactive Supply Map */}
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <h3 className="text-xl font-semibold text-gray-800">Supply Map</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Interactive Supply Map</h3>
+          <p className="text-sm text-gray-600">Click on properties to view detailed supply information</p>
         </CardHeader>
         <CardContent>
-          <div className="bg-gray-100 rounded-lg p-8 text-center">
-            <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 font-medium">Interactive Supply Map</p>
-            <p className="text-gray-500 text-sm mt-1">Coming soon - Geographic visualization of supply pipeline</p>
-            <div className="mt-4 p-4 bg-white rounded border border-dashed border-gray-200">
-              <p className="text-sm text-gray-500">Supply pipeline map will be integrated here</p>
-              <p className="text-xs text-gray-400 mt-1">Including current inventory and future deliveries</p>
-            </div>
-          </div>
+          <SupplyDemandMap />
         </CardContent>
       </Card>
     </div>

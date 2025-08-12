@@ -240,17 +240,38 @@ export const financialDetails = {
     totalUnits: 2850,
     activeProjects: 4,
     principals: [
-      { name: "John Smith", role: "Managing Partner", experience: "22 years" },
-      { name: "Sarah Johnson", role: "Chief Investment Officer", experience: "18 years" }
+      { 
+        name: "John Smith", 
+        role: "Managing Partner", 
+        experience: "22 years",
+        bio: "John leads the firm's strategic direction and oversees all development activities. He has successfully delivered over 2,000 units across 15 projects with an average IRR of 21.5%.",
+        education: "MBA, Harvard Business School",
+        specialties: ["Mixed-Use Development", "Urban Infill", "Value-Add"],
+        photo: "/api/placeholder/150/150/3B82F6/FFFFFF?text=JS",
+        achievements: ["Top 40 Under 40 Developers", "Urban Land Institute Award", "25+ Successful Exits"]
+      },
+      { 
+        name: "Sarah Johnson", 
+        role: "Chief Investment Officer", 
+        experience: "18 years",
+        bio: "Sarah manages the firm's investment strategy and capital relationships. She has structured over $300M in financing and maintains relationships with 25+ institutional lenders.",
+        education: "MS Finance, Stanford University",
+        specialties: ["Capital Markets", "Structured Finance", "Risk Management"],
+        photo: "/api/placeholder/150/150/10B981/FFFFFF?text=SJ",
+        achievements: ["CFA Charterholder", "Real Estate Finance Excellence Award", "15+ Debt Fund Relationships"]
+      }
     ],
     trackRecord: [
-      { project: "Downtown Mixed-Use", year: 2023, units: 180, irr: "22.5%" },
-      { project: "Suburban Garden Apts", year: 2022, units: 220, irr: "18.2%" },
-      { project: "Urban Infill Tower", year: 2021, units: 165, irr: "25.8%" }
+      { project: "Downtown Mixed-Use", year: 2023, units: 180, irr: "22.5%", status: "Completed", market: "Downtown", type: "Mixed-Use" },
+      { project: "Suburban Garden Apts", year: 2022, units: 220, irr: "18.2%", status: "Completed", market: "Suburban", type: "Residential" },
+      { project: "Urban Infill Tower", year: 2021, units: 165, irr: "25.8%", status: "Completed", market: "Urban Core", type: "Residential" },
+      { project: "Transit-Oriented Dev", year: 2020, units: 145, irr: "20.3%", status: "Completed", market: "Transit Hub", type: "Mixed-Use" },
+      { project: "Value-Add Portfolio", year: 2019, units: 320, irr: "28.5%", status: "Completed", market: "Multiple", type: "Portfolio" }
     ],
     references: [
-      { firm: "National Bank", contact: "Available upon request" },
-      { firm: "Regional Debt Fund", contact: "Available upon request" }
+      { firm: "National Bank", contact: "Available upon request", relationship: "Primary Lender", years: "8+ years" },
+      { firm: "Regional Debt Fund", contact: "Available upon request", relationship: "Mezzanine Partner", years: "5+ years" },
+      { firm: "Insurance Company", contact: "Available upon request", relationship: "Permanent Lender", years: "3+ years" }
     ]
   },
   
