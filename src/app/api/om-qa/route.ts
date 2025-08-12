@@ -1,21 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { generateObject } from 'ai';
+import { streamObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { OmQaSchema } from '@/types/om-types';
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY!,
-});
-
-const OmQaSchema = z.object({
-  answer_markdown: z.string(),
-  assumptions: z.array(
-    z.object({
-      text: z.string(),
-      source: z.enum(['om', 'industry', 'mixed']),
-      citation: z.string().optional(), // single section string
-    })
-  ),
 });
 
 const system = [
@@ -24,7 +13,7 @@ const system = [
   'Output must match the provided JSON schema exactly. Return JSON only.',
 ].join(' ');
 
-const MODEL_NAME = 'gemini-1.5-pro'; // use a model your key supports
+const MODEL_NAME = 'gemini-2.5-pro'; // use a model your key supports
 
 export async function POST(req: NextRequest) {
   try {
@@ -228,7 +217,7 @@ export async function POST(req: NextRequest) {
 ---
 *AI insights generated based on pattern analysis of 2,847 similar transactions in comparable markets. Confidence levels: 91% (Downside), 94% (Base), 87% (Upside).*`;
 
-    const { object } = await generateObject({
+    const result = await streamObject({
       model: google(MODEL_NAME),
       system,
       schema: OmQaSchema,
@@ -238,17 +227,7 @@ export async function POST(req: NextRequest) {
         `Return only JSON matching the schema.`,
     });
 
-    console.log('Generated object:', object);
-    console.log('Object type:', typeof object);
-    console.log('Object keys:', Object.keys(object || {}));
-    console.log('answer_markdown type:', typeof object?.answer_markdown);
-    console.log('assumptions type:', typeof object?.assumptions);
-    console.log('assumptions length:', object?.assumptions?.length);
-
-    const response = { data: object };
-    console.log('Final API response:', response);
-    
-    return NextResponse.json(response);
+    return result.toTextStreamResponse();
   } catch (e: any) {
     console.error('om-qa error:', e);
     return NextResponse.json({ error: 'Failed to get answer' }, { status: 500 });

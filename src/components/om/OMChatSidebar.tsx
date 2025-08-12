@@ -6,17 +6,18 @@ import { MessageSquare, Send, ChevronDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import type { OmQaResponse } from '@/types/om-types';
+import { experimental_useObject as useObject } from '@ai-sdk/react';
+import { OmQaSchema, OmQaAssumption } from '@/types/om-types';
 
 export const OMChatSidebar: React.FC = () => {
   const [question, setQuestion] = React.useState('');
-  const [answer, setAnswer] = React.useState<string | null>(null);
-  const [structured, setStructured] = React.useState<OmQaResponse | null>(null);
   const [assumptionsOpen, setAssumptionsOpen] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-  const abortRef = React.useRef<AbortController | null>(null);
+
+  const { object, submit, isLoading, error } = useObject({
+    api: '/api/om-qa',
+    schema: OmQaSchema,
+  });
 
   // Auto-resize textarea when question changes
   React.useEffect(() => {
@@ -28,58 +29,8 @@ export const OMChatSidebar: React.FC = () => {
 
   const askQuestion = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!question.trim() || loading) return;
-
-    setLoading(true);
-    setError(null);
-    setAnswer(null);
-    setStructured(null);
-    setAssumptionsOpen(false);
-
-    // Cancel any in-flight request
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    try {
-      const res = await fetch('/api/om-qa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
-        signal: controller.signal
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || 'Request failed');
-
-      // Prefer structured JSON; fallback to markdown answer if not present
-      if (data?.data && typeof data.data.answer_markdown === 'string') {
-        const s: OmQaResponse = data.data;
-        setStructured(s);
-        setAnswer(s.answer_markdown);
-        setAssumptionsOpen(false); // default closed
-      } else if (typeof data?.answer === 'string') {
-        // Try parsing JSON in answer as an additional fallback
-        try {
-          const parsed = JSON.parse(data.answer);
-          if (parsed && typeof parsed.answer_markdown === 'string') {
-            setStructured(parsed as OmQaResponse);
-            setAnswer(parsed.answer_markdown);
-            setAssumptionsOpen(false);
-          } else {
-            setAnswer(data.answer || '');
-          }
-        } catch {
-          setAnswer(data.answer || '');
-        }
-      } else {
-        setAnswer('');
-      }
-    } catch (e: any) {
-      if (e?.name === 'AbortError') return; // closed while loading
-      setError(e?.message || 'Failed to get answer');
-    } finally {
-      setLoading(false);
-    }
+    if (!question.trim() || isLoading) return;
+    submit({ question });
   };
 
   const assumptionsId = React.useId();
@@ -101,23 +52,25 @@ export const OMChatSidebar: React.FC = () => {
       {/* Chat Content Area */}
       <div className="flex-grow overflow-y-auto p-4">
         {/* Welcome Message */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-          <div className="flex items-start space-x-2">
-            <div className="p-1.5 bg-blue-100 rounded-full">
-              <MessageSquare className="h-3 w-3 text-blue-600" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm text-blue-800 font-medium">Welcome to the OM Assistant!</p>
-              <p className="text-xs text-blue-600 mt-1">
-                Ask me anything about the Offering Memorandum. I can help you find specific information, 
-                explain terms, or analyze the deal structure.
-              </p>
+        {!object && !isLoading && !question && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <div className="flex items-start space-x-2">
+              <div className="p-1.5 bg-blue-100 rounded-full">
+                <MessageSquare className="h-3 w-3 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-blue-800 font-medium">Welcome to the OM Assistant!</p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Ask me anything about the Offering Memorandum. I can help you find specific information,
+                  explain terms, or analyze the deal structure.
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Chat Messages */}
-        {answer && (
+        {object && (
           <div className="space-y-4">
             {/* User Question */}
             <div className="flex justify-end">
@@ -125,18 +78,18 @@ export const OMChatSidebar: React.FC = () => {
                 <p className="text-sm">{question}</p>
               </div>
             </div>
-            
+
             {/* AI Answer */}
             <div className="flex justify-start">
               <div className="bg-gray-100 text-gray-800 rounded-lg px-3 py-2 max-w-[80%]">
                 <div className="prose prose-sm">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {answer}
+                    {object.answer_markdown}
                   </ReactMarkdown>
                 </div>
 
                 {/* Assumptions card at the bottom, collapsed by default */}
-                {structured?.assumptions?.length ? (
+                {object.assumptions?.length ? (
                   <Card className="mt-4 border-gray-200">
                     <CardHeader className="p-3 pb-0">
                       <button
@@ -147,7 +100,7 @@ export const OMChatSidebar: React.FC = () => {
                         aria-controls={assumptionsId}
                       >
                         <span className="font-medium text-gray-900">
-                          Assumptions ({structured.assumptions.length})
+                          Assumptions ({object.assumptions.length})
                         </span>
                         <ChevronDown
                           className={`h-4 w-4 text-gray-500 transition-transform ${
@@ -161,25 +114,28 @@ export const OMChatSidebar: React.FC = () => {
                       className={`px-3 pb-3 ${assumptionsOpen ? 'block' : 'hidden'}`}
                     >
                       <div className="space-y-3">
-                        {structured.assumptions.map((a, idx) => (
-                          <Card key={idx} className="border-gray-100 bg-gray-50/50">
-                            <CardContent className="p-3">
-                              <div className="flex items-start gap-3">
-                                <div className="flex-1">
-                                  <p className="text-sm text-gray-800 leading-relaxed">{a.text}</p>
-                                  {a.citation && (
-                                    <p className="text-xs text-gray-500 mt-2">
-                                      <span className="font-medium">Section:</span> {a.citation}
-                                    </p>
-                                  )}
+                        {object.assumptions?.map((a, idx) => {
+                          if (!a) return null;
+                          return (
+                            <Card key={idx} className="border-gray-100 bg-gray-50/50">
+                              <CardContent className="p-3">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-1">
+                                    <p className="text-sm text-gray-800 leading-relaxed">{a.text}</p>
+                                    {a.citation && (
+                                      <p className="text-xs text-gray-500 mt-2">
+                                        <span className="font-medium">Section:</span> {a.citation}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <span className="shrink-0 text-xs px-2.5 py-1 rounded-full bg-gray-200 text-gray-700 capitalize font-medium">
+                                    {a.source}
+                                  </span>
                                 </div>
-                                <span className="shrink-0 text-xs px-2.5 py-1 rounded-full bg-gray-200 text-gray-700 capitalize font-medium">
-                                  {a.source}
-                                </span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                              </CardContent>
+                            </Card>
+                          )
+                        })}
                       </div>
                     </CardContent>
                   </Card>
@@ -191,7 +147,7 @@ export const OMChatSidebar: React.FC = () => {
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4">
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-red-600">{error.message}</p>
           </div>
         )}
       </div>
@@ -211,7 +167,7 @@ export const OMChatSidebar: React.FC = () => {
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey) {
                   e.preventDefault();
-                  if (question.trim() && !loading) {
+                  if (question.trim() && !isLoading) {
                     askQuestion();
                   }
                 } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -226,15 +182,15 @@ export const OMChatSidebar: React.FC = () => {
                   }, 0);
                 }
               }}
-              disabled={loading}
+              disabled={isLoading}
             />
             <Button
               type="submit"
               size="sm"
-              disabled={!question.trim() || loading}
+              disabled={!question.trim() || isLoading}
               className="absolute right-2 top-2 h-8 w-8 p-0"
             >
-              {loading ? (
+              {isLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
               ) : (
                 <Send className="h-4 w-4" />
