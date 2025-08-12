@@ -41,19 +41,19 @@ export default function ComparablesPage() {
   ) / assetProfileDetails.comparableDetails.length;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Comparable Properties</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Comparable Properties</h1>
         <p className="text-gray-600 mt-2">Market analysis and competitive positioning</p>
       </div>
 
       {/* Market Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <Building2 className="h-5 w-5 text-blue-500 mr-2" />
-              <h3 className="text-lg font-semibold">Comparables</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Comparables</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -62,11 +62,11 @@ export default function ComparablesPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <DollarSign className="h-5 w-5 text-green-500 mr-2" />
-              <h3 className="text-lg font-semibold">Avg Rent PSF</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Avg Rent PSF</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -75,11 +75,11 @@ export default function ComparablesPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <BarChart3 className="h-5 w-5 text-purple-500 mr-2" />
-              <h3 className="text-lg font-semibold">Avg Cap Rate</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Avg Cap Rate</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -88,9 +88,9 @@ export default function ComparablesPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
-            <h3 className="text-lg font-semibold">Avg Distance</h3>
+            <h3 className="text-lg font-semibold text-gray-800">Avg Distance</h3>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-orange-600">
@@ -102,31 +102,31 @@ export default function ComparablesPage() {
       </div>
 
       {/* Comparables Table */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Comparable Properties Analysis</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Comparable Properties Analysis</h3>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Property</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Distance</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Year Built</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Units</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Occupancy</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Rent PSF</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Last Sale</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Cap Rate</th>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Property</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Distance</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Year Built</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Units</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Occupancy</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Rent PSF</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Last Sale</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Cap Rate</th>
                 </tr>
               </thead>
               <tbody>
                 {assetProfileDetails.comparableDetails.map((comp, index) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={index} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="py-4 px-4">
                       <div>
-                        <p className="font-medium text-gray-900">{comp.name}</p>
+                        <p className="font-medium text-gray-800">{comp.name}</p>
                         <p className="text-sm text-gray-500">{comp.address}</p>
                       </div>
                     </td>
@@ -136,17 +136,17 @@ export default function ComparablesPage() {
                         {comp.distance}
                       </Badge>
                     </td>
-                    <td className="py-4 px-4 text-gray-900">{comp.yearBuilt}</td>
-                    <td className="py-4 px-4 text-gray-900">{comp.units}</td>
+                    <td className="py-4 px-4 text-gray-800">{comp.yearBuilt}</td>
+                    <td className="py-4 px-4 text-gray-800">{comp.units}</td>
                     <td className="py-4 px-4">
                       <Badge className={getOccupancyColor(comp.occupancy)}>
                         {comp.occupancy}
                       </Badge>
                     </td>
-                    <td className="py-4 px-4 text-gray-900">{comp.avgRent}</td>
+                    <td className="py-4 px-4 text-gray-800">{comp.avgRent}</td>
                     <td className="py-4 px-4">
                       <div>
-                        <p className="text-sm text-gray-900">{comp.lastSale.date}</p>
+                        <p className="text-sm text-gray-800">{comp.lastSale.date}</p>
                         <p className="text-xs text-gray-500">{comp.lastSale.price}</p>
                       </div>
                     </td>
@@ -164,15 +164,15 @@ export default function ComparablesPage() {
       </Card>
 
       {/* Market Positioning */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h3 className="text-xl font-semibold">Rent Analysis</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Rent Analysis</h3>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Rent per Square Foot Comparison</h4>
+                <h4 className="font-semibold text-gray-800 mb-3">Rent per Square Foot Comparison</h4>
                 <div className="space-y-3">
                   {assetProfileDetails.comparableDetails.map((comp, index) => {
                     const rentPSF = parseFloat(comp.avgRent.replace(/[^\d.]/g, ''));
@@ -181,7 +181,7 @@ export default function ComparablesPage() {
                       <div key={index} className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">{comp.name}</span>
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium">{comp.avgRent}</span>
+                          <span className="text-sm font-medium text-gray-800">{comp.avgRent}</span>
                           <Badge variant={isAboveAvg ? "default" : "secondary"}>
                             {isAboveAvg ? "Above" : "Below"} Avg
                           </Badge>
@@ -192,9 +192,9 @@ export default function ComparablesPage() {
                 </div>
               </div>
               
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-100">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-900">Market Average</span>
+                  <span className="text-sm font-medium text-gray-800">Market Average</span>
                   <Badge className="bg-blue-100 text-blue-800">${avgRentPSF.toFixed(2)}</Badge>
                 </div>
               </div>
@@ -202,14 +202,14 @@ export default function ComparablesPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h3 className="text-xl font-semibold">Investment Metrics</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Investment Metrics</h3>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">Cap Rate Analysis</h4>
+                <h4 className="font-semibold text-gray-800 mb-3">Cap Rate Analysis</h4>
                 <div className="space-y-3">
                   {assetProfileDetails.comparableDetails.map((comp, index) => {
                     const capRate = parseFloat(comp.lastSale.capRate.replace(/[^\d.]/g, ''));
@@ -218,7 +218,7 @@ export default function ComparablesPage() {
                       <div key={index} className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">{comp.name}</span>
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium">{comp.lastSale.capRate}</span>
+                          <span className="text-sm font-medium text-gray-800">{comp.lastSale.capRate}</span>
                           <Badge variant={isBelowAvg ? "default" : "secondary"}>
                             {isBelowAvg ? "Lower" : "Higher"} Risk
                           </Badge>
@@ -229,10 +229,10 @@ export default function ComparablesPage() {
                 </div>
               </div>
               
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-100">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-900">Market Average</span>
-                  <Badge className="bg-purple-100 text-purple-800">{avgCapRate.toFixed(1)}%</Badge>
+                  <span className="text-sm font-medium text-gray-800">Market Average</span>
+                  <Badge className="bg-purple-100 text-blue-800">{avgCapRate.toFixed(1)}%</Badge>
                 </div>
               </div>
             </div>
@@ -241,14 +241,14 @@ export default function ComparablesPage() {
       </div>
 
       {/* Competitive Analysis */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Competitive Positioning</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Competitive Positioning</h3>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Market Position</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Market Position</h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Rent Premium</span>
@@ -256,7 +256,7 @@ export default function ComparablesPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Quality Tier</span>
-                  <Badge variant="outline">Luxury</Badge>
+                  <Badge variant="outline" className="border-gray-200">Luxury</Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Competition Level</span>
@@ -266,7 +266,7 @@ export default function ComparablesPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Differentiators</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Differentiators</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-green-500 mr-2">•</span>
@@ -284,7 +284,7 @@ export default function ComparablesPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Market Trends</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Market Trends</h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Demand Trend</span>

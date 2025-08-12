@@ -40,19 +40,19 @@ export default function EmploymentPage() {
   ) / marketContextDetails.majorEmployers.length;
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Employment</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Employment</h1>
         <p className="text-gray-600 mt-2">Major employers and job market analysis</p>
       </div>
 
       {/* Employment Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <Building2 className="h-5 w-5 text-blue-500 mr-2" />
-              <h3 className="text-lg font-semibold">Major Employers</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Major Employers</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -61,11 +61,11 @@ export default function EmploymentPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <Users className="h-5 w-5 text-green-500 mr-2" />
-              <h3 className="text-lg font-semibold">Total Jobs</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Total Jobs</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -74,11 +74,11 @@ export default function EmploymentPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <TrendingUp className="h-5 w-5 text-purple-500 mr-2" />
-              <h3 className="text-lg font-semibold">Avg Growth</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Avg Growth</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -87,9 +87,9 @@ export default function EmploymentPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
-            <h3 className="text-lg font-semibold">Avg Distance</h3>
+            <h3 className="text-lg font-semibold text-gray-800">Avg Distance</h3>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-orange-600">
@@ -101,28 +101,28 @@ export default function EmploymentPage() {
       </div>
 
       {/* Major Employers Table */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Major Employers Analysis</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Major Employers Analysis</h3>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Company</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Employees</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Growth</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Distance</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Market Impact</th>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Company</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Employees</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Growth</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Distance</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Market Impact</th>
                 </tr>
               </thead>
               <tbody>
                 {marketContextDetails.majorEmployers.map((employer, index) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={index} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="py-4 px-4">
                       <div>
-                        <p className="font-medium text-gray-900">{employer.name}</p>
+                        <p className="font-medium text-gray-800">{employer.name}</p>
                         <p className="text-sm text-gray-500">{employer.employees.toLocaleString()} employees</p>
                       </div>
                     </td>
@@ -163,10 +163,10 @@ export default function EmploymentPage() {
       </Card>
 
       {/* Employment Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h3 className="text-xl font-semibold">Employment Distribution</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Employment Distribution</h3>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -185,9 +185,9 @@ export default function EmploymentPage() {
                 </div>
               ))}
               
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-100">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-900">Total Employment</span>
+                  <span className="text-sm font-medium text-gray-800">Total Employment</span>
                   <Badge className="bg-blue-100 text-blue-800">{totalEmployees.toLocaleString()}</Badge>
                 </div>
               </div>
@@ -195,16 +195,16 @@ export default function EmploymentPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h3 className="text-xl font-semibold">Growth Analysis</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Growth Analysis</h3>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {marketContextDetails.majorEmployers.map((employer, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <p className="font-medium text-gray-900">{employer.name}</p>
+                    <p className="font-medium text-gray-800">{employer.name}</p>
                     <p className="text-sm text-gray-500">{employer.employees.toLocaleString()} employees</p>
                   </div>
                   <div className="text-right">
@@ -221,14 +221,14 @@ export default function EmploymentPage() {
       </div>
 
       {/* Market Impact Analysis */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Market Impact Analysis</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Market Impact Analysis</h3>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Employment Strengths</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Employment Strengths</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-green-500 mr-2">•</span>
@@ -246,7 +246,7 @@ export default function EmploymentPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Market Opportunities</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Market Opportunities</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-blue-500 mr-2">•</span>
@@ -264,7 +264,7 @@ export default function EmploymentPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Target Market</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Target Market</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-purple-500 mr-2">•</span>
@@ -285,16 +285,16 @@ export default function EmploymentPage() {
       </Card>
 
       {/* Employment Map Placeholder */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Employment Map</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Employment Map</h3>
         </CardHeader>
         <CardContent>
           <div className="bg-gray-100 rounded-lg p-8 text-center">
             <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 font-medium">Interactive Employment Map</p>
             <p className="text-gray-500 text-sm mt-1">Coming soon - Geographic visualization of major employers</p>
-            <div className="mt-4 p-4 bg-white rounded border-2 border-dashed border-gray-300">
+            <div className="mt-4 p-4 bg-white rounded border border-dashed border-gray-200">
               <p className="text-sm text-gray-500">Employment density map will be integrated here</p>
               <p className="text-xs text-gray-400 mt-1">Including company locations and employee counts</p>
             </div>

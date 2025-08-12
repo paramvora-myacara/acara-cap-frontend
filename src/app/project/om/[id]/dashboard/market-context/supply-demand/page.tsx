@@ -34,20 +34,23 @@ export default function SupplyDemandPage() {
   const supplyUtilization = ((marketContextDetails.supplyAnalysis.currentInventory + 
                              marketContextDetails.supplyAnalysis.underConstruction) / totalSupply) * 100;
 
+  // Calculate the maximum units for histogram scaling
+  const maxUnits = Math.max(...marketContextDetails.supplyAnalysis.deliveryByQuarter.map(q => q.units));
+
   return (
-    <div className="space-y-6 p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Supply & Demand</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Supply & Demand</h1>
         <p className="text-gray-600 mt-2">Market supply analysis and demand trends</p>
       </div>
 
       {/* Supply Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <Building2 className="h-5 w-5 text-blue-500 mr-2" />
-              <h3 className="text-lg font-semibold">Current Supply</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Current Supply</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -58,11 +61,11 @@ export default function SupplyDemandPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <Clock className="h-5 w-5 text-yellow-500 mr-2" />
-              <h3 className="text-lg font-semibold">Under Construction</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Under Construction</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -73,11 +76,11 @@ export default function SupplyDemandPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <BarChart3 className="h-5 w-5 text-purple-500 mr-2" />
-              <h3 className="text-lg font-semibold">Planned 24M</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Planned 24M</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -88,9 +91,9 @@ export default function SupplyDemandPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
-            <h3 className="text-lg font-semibold">Occupancy</h3>
+            <h3 className="text-lg font-semibold text-gray-800">Occupancy</h3>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-green-600">
@@ -102,9 +105,9 @@ export default function SupplyDemandPage() {
       </div>
 
       {/* Supply Pipeline Chart */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Supply Pipeline</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Supply Pipeline</h3>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -156,9 +159,9 @@ export default function SupplyDemandPage() {
               />
             </div>
 
-            <div className="pt-4 border-t border-gray-200">
+            <div className="pt-4 border-t border-gray-100">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-900">Total Supply</span>
+                <span className="text-sm font-medium text-gray-800">Total Supply</span>
                 <Badge className="bg-gray-100 text-gray-800">{totalSupply.toLocaleString()} units</Badge>
               </div>
             </div>
@@ -166,38 +169,65 @@ export default function SupplyDemandPage() {
         </CardContent>
       </Card>
 
-      {/* Quarterly Delivery Schedule */}
-      <Card>
+      {/* Quarterly Delivery Schedule - Histogram */}
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Quarterly Delivery Schedule</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Quarterly Delivery Schedule</h3>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {marketContextDetails.supplyAnalysis.deliveryByQuarter.map((quarter, index) => (
-              <div key={index} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-gray-900">{quarter.quarter}</h4>
+          <div className="space-y-6">
+            {/* Histogram Bars */}
+            <div className="flex items-end justify-between space-x-4 h-48">
+              {marketContextDetails.supplyAnalysis.deliveryByQuarter.map((quarter, index) => {
+                const barHeight = (quarter.units / maxUnits) * 100;
+                return (
+                  <div key={index} className="flex-1 flex flex-col items-center">
+                    {/* Value Label above Bar */}
+                    <div className="text-sm font-medium text-gray-700 mb-2">
+                      {quarter.units.toLocaleString()}
+                    </div>
+                    
+                    {/* Bar */}
+                    <div 
+                      className="w-16 bg-blue-600 border border-blue-700 rounded-t-lg transition-all duration-300 hover:bg-blue-700"
+                      style={{ height: `${Math.max(barHeight, 20)}px` }}
+                    />
+                    
+                    {/* Quarter Label below Bar */}
+                    <div className="mt-2 text-xs font-medium text-gray-600 text-center">
+                      {quarter.quarter}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Legend and Summary */}
+            <div className="pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                    <span className="text-sm text-gray-600">Delivery Units</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-medium text-gray-800">Total: </span>
                   <Badge className="bg-blue-100 text-blue-800">
-                    {quarter.units.toLocaleString()} units
+                    {marketContextDetails.supplyAnalysis.deliveryByQuarter.reduce((sum, q) => sum + q.units, 0).toLocaleString()} units
                   </Badge>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div 
-                    className="h-3 rounded-full bg-blue-500"
-                    style={{ width: `${(quarter.units / Math.max(...marketContextDetails.supplyAnalysis.deliveryByQuarter.map(q => q.units))) * 100}%` }}
-                  />
-                </div>
               </div>
-            ))}
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Market Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h3 className="text-xl font-semibold">Supply Utilization</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Supply Utilization</h3>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -211,28 +241,28 @@ export default function SupplyDemandPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Available Units</span>
-                  <Badge variant="outline">
+                  <Badge variant="outline" className="border-gray-200">
                     {marketContextDetails.supplyAnalysis.currentInventory.toLocaleString()}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Pipeline Units</span>
-                  <Badge variant="outline">
+                  <Badge variant="outline" className="border-gray-200">
                     {(marketContextDetails.supplyAnalysis.underConstruction + marketContextDetails.supplyAnalysis.planned24Months).toLocaleString()}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Total Market</span>
-                  <Badge variant="outline">{totalSupply.toLocaleString()}</Badge>
+                  <Badge variant="outline" className="border-gray-200">{totalSupply.toLocaleString()}</Badge>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h3 className="text-xl font-semibold">Occupancy Trends</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Occupancy Trends</h3>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -268,14 +298,14 @@ export default function SupplyDemandPage() {
       </div>
 
       {/* Market Insights */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Market Insights</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Market Insights</h3>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Supply Strengths</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Supply Strengths</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-green-500 mr-2">•</span>
@@ -293,7 +323,7 @@ export default function SupplyDemandPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Market Opportunities</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Market Opportunities</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-blue-500 mr-2">•</span>
@@ -311,7 +341,7 @@ export default function SupplyDemandPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Risk Factors</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Risk Factors</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-yellow-500 mr-2">•</span>
@@ -332,16 +362,16 @@ export default function SupplyDemandPage() {
       </Card>
 
       {/* Supply Map Placeholder */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Supply Map</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Supply Map</h3>
         </CardHeader>
         <CardContent>
           <div className="bg-gray-100 rounded-lg p-8 text-center">
             <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 font-medium">Interactive Supply Map</p>
             <p className="text-gray-500 text-sm mt-1">Coming soon - Geographic visualization of supply pipeline</p>
-            <div className="mt-4 p-4 bg-white rounded border-2 border-dashed border-gray-300">
+            <div className="mt-4 p-4 bg-white rounded border border-dashed border-gray-200">
               <p className="text-sm text-gray-500">Supply pipeline map will be integrated here</p>
               <p className="text-xs text-gray-400 mt-1">Including current inventory and future deliveries</p>
             </div>

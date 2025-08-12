@@ -28,19 +28,19 @@ export default function ReturnsPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Return Projections</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Return Projections</h1>
         <p className="text-gray-600 mt-2">Comprehensive return analysis across multiple scenarios</p>
       </div>
 
       {/* Scenario Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <TrendingUp className="h-5 w-5 text-green-500 mr-2" />
-              <h3 className="text-lg font-semibold">Upside Scenario</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Upside Scenario</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -54,11 +54,11 @@ export default function ReturnsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <Minus className="h-5 w-5 text-blue-500 mr-2" />
-              <h3 className="text-lg font-semibold">Base Scenario</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Base Scenario</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -72,11 +72,11 @@ export default function ReturnsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <TrendingDown className="h-5 w-5 text-red-500 mr-2" />
-              <h3 className="text-lg font-semibold">Downside Scenario</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Downside Scenario</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -92,13 +92,13 @@ export default function ReturnsPage() {
       </div>
 
       {/* Detailed Scenario Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Upside Scenario */}
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center">
               <TrendingUp className="h-5 w-5 text-green-500 mr-2" />
-              <h3 className="text-xl font-semibold">Upside Scenario</h3>
+              <h3 className="text-xl font-semibold text-gray-800">Upside Scenario</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -133,11 +133,11 @@ export default function ReturnsPage() {
         </Card>
 
         {/* Base Scenario */}
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center">
               <Minus className="h-5 w-5 text-blue-500 mr-2" />
-              <h3 className="text-xl font-semibold">Base Scenario</h3>
+              <h3 className="text-xl font-semibold text-gray-800">Base Scenario</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -172,11 +172,11 @@ export default function ReturnsPage() {
         </Card>
 
         {/* Downside Scenario */}
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <div className="flex items-center">
               <TrendingDown className="h-5 w-5 text-red-500 mr-2" />
-              <h3 className="text-xl font-semibold">Downside Scenario</h3>
+              <h3 className="text-xl font-semibold text-gray-800">Downside Scenario</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -212,28 +212,28 @@ export default function ReturnsPage() {
       </div>
 
       {/* Sensitivity Analysis Grid */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Sensitivity Analysis</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Sensitivity Analysis</h3>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Scenario</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">IRR</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Multiple</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Profit Margin</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Risk Assessment</th>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Scenario</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">IRR</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Multiple</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Profit Margin</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-800">Risk Assessment</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-gray-100 hover:bg-gray-50">
+                <tr className="border-b border-gray-50 hover:bg-gray-50">
                   <td className="py-4 px-4">
                     <div className="flex items-center">
                       <TrendingUp className="h-4 w-4 text-green-500 mr-2" />
-                      <span className="font-medium text-gray-900">Upside</span>
+                      <span className="font-medium text-gray-800">Upside</span>
                     </div>
                   </td>
                   <td className="py-4 px-4">
@@ -255,11 +255,11 @@ export default function ReturnsPage() {
                     <Badge className="bg-green-100 text-green-800">Low Risk</Badge>
                   </td>
                 </tr>
-                <tr className="border-b border-gray-100 hover:bg-gray-50">
+                <tr className="border-b border-gray-50 hover:bg-gray-50">
                   <td className="py-4 px-4">
                     <div className="flex items-center">
                       <Minus className="h-4 w-4 text-blue-500 mr-2" />
-                      <span className="font-medium text-gray-900">Base</span>
+                      <span className="font-medium text-gray-800">Base</span>
                     </div>
                   </td>
                   <td className="py-4 px-4">
@@ -281,11 +281,11 @@ export default function ReturnsPage() {
                     <Badge className="bg-blue-100 text-blue-800">Medium Risk</Badge>
                   </td>
                 </tr>
-                <tr className="border-b border-gray-100 hover:bg-gray-50">
+                <tr className="border-b border-gray-50 hover:bg-gray-50">
                   <td className="py-4 px-4">
                     <div className="flex items-center">
                       <TrendingDown className="h-4 w-4 text-red-500 mr-2" />
-                      <span className="font-medium text-gray-900">Downside</span>
+                      <span className="font-medium text-gray-800">Downside</span>
                     </div>
                   </td>
                   <td className="py-4 px-4">
@@ -314,14 +314,14 @@ export default function ReturnsPage() {
       </Card>
 
       {/* Return Drivers */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Return Drivers</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Return Drivers</h3>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Key Success Factors</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Key Success Factors</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-green-500 mr-2">•</span>
@@ -339,7 +339,7 @@ export default function ReturnsPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Risk Factors</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Risk Factors</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-yellow-500 mr-2">•</span>
@@ -357,7 +357,7 @@ export default function ReturnsPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Mitigation Strategies</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Mitigation Strategies</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-blue-500 mr-2">•</span>
@@ -378,16 +378,16 @@ export default function ReturnsPage() {
       </Card>
 
       {/* Return Visualization Placeholder */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Return Visualization</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Return Visualization</h3>
         </CardHeader>
         <CardContent>
           <div className="bg-gray-100 rounded-lg p-8 text-center">
             <BarChart3 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 font-medium">Interactive Return Charts</p>
             <p className="text-gray-500 text-sm mt-1">Coming soon - Dynamic IRR and multiple visualization</p>
-            <div className="mt-4 p-4 bg-white rounded border-2 border-dashed border-gray-300">
+            <div className="mt-4 p-4 bg-white rounded border border-dashed border-gray-200">
               <p className="text-sm text-gray-500">Return analysis charts will be integrated here</p>
               <p className="text-xs text-gray-400 mt-1">Including sensitivity analysis and scenario modeling</p>
             </div>

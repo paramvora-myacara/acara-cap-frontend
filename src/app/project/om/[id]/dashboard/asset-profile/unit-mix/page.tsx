@@ -62,19 +62,19 @@ export default function UnitMixPage() {
   });
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Unit Mix</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Unit Mix</h1>
         <p className="text-gray-600 mt-2">Detailed breakdown of unit types, sizes, and pricing</p>
       </div>
 
       {/* Unit Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <Home className="h-5 w-5 text-blue-500 mr-2" />
-              <h3 className="text-lg font-semibold">Total Units</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Total Units</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -83,11 +83,11 @@ export default function UnitMixPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <Users className="h-5 w-5 text-green-500 mr-2" />
-              <h3 className="text-lg font-semibold">Total SF</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Total SF</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -96,11 +96,11 @@ export default function UnitMixPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <DollarSign className="h-5 w-5 text-purple-500 mr-2" />
-              <h3 className="text-lg font-semibold">Avg Rent</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Avg Rent</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -111,9 +111,9 @@ export default function UnitMixPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
-            <h3 className="text-lg font-semibold">Avg SF</h3>
+            <h3 className="text-lg font-semibold text-gray-800">Avg SF</h3>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-orange-600">
@@ -125,18 +125,18 @@ export default function UnitMixPage() {
       </div>
 
       {/* Unit Mix Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Unit Breakdown Table */}
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h3 className="text-xl font-semibold">Unit Breakdown</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Unit Breakdown</h3>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {Object.entries(assetProfileDetails.unitMixDetails).map(([type, unit]) => (
-                <div key={type} className="border rounded-lg p-4">
+                <div key={type} className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-gray-900">{getUnitTypeLabel(type)}</h4>
+                    <h4 className="font-semibold text-gray-800">{getUnitTypeLabel(type)}</h4>
                     <Badge className={getUnitTypeColor(type).replace('bg-', 'bg-')}>
                       {unit.count} units
                     </Badge>
@@ -144,19 +144,19 @@ export default function UnitMixPage() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-gray-500">Average SF</p>
-                      <p className="font-medium">{unit.avgSF.toLocaleString()} SF</p>
+                      <p className="font-medium text-gray-800">{unit.avgSF.toLocaleString()} SF</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Rent Range</p>
-                      <p className="font-medium">{unit.rentRange}</p>
+                      <p className="font-medium text-gray-800">{unit.rentRange}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Deposit</p>
-                      <p className="font-medium">{unit.deposit}</p>
+                      <p className="font-medium text-gray-800">{unit.deposit}</p>
                     </div>
                     <div>
                       <p className="text-gray-500">Percentage</p>
-                      <p className="font-medium">{Math.round((unit.count / totalUnits) * 100)}%</p>
+                      <p className="font-medium text-gray-800">{Math.round((unit.count / totalUnits) * 100)}%</p>
                     </div>
                   </div>
                 </div>
@@ -166,9 +166,9 @@ export default function UnitMixPage() {
         </Card>
 
         {/* Pie Chart */}
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h3 className="text-xl font-semibold">Unit Distribution</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Unit Distribution</h3>
           </CardHeader>
           <CardContent>
             <div className="flex justify-center mb-6">
@@ -193,10 +193,10 @@ export default function UnitMixPage() {
                     <div 
                       className={`w-3 h-3 rounded-full mr-2 ${getUnitTypeColor(segment.type)}`}
                     />
-                    <span className="text-sm font-medium">{getUnitTypeLabel(segment.type)}</span>
+                    <span className="text-sm font-medium text-gray-800">{getUnitTypeLabel(segment.type)}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-semibold">{segment.percentage}%</span>
+                    <span className="text-sm font-semibold text-gray-800">{segment.percentage}%</span>
                     <span className="text-xs text-gray-500 ml-1">({segment.unit.count} units)</span>
                   </div>
                 </div>
@@ -207,14 +207,14 @@ export default function UnitMixPage() {
       </div>
 
       {/* Pricing Analysis */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Pricing Analysis</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Pricing Analysis</h3>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Rent per Square Foot</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Rent per Square Foot</h4>
               <div className="space-y-2">
                 {Object.entries(assetProfileDetails.unitMixDetails).map(([type, unit]) => {
                   const avgRent = unit.rentRange.split('-').map(r => parseFloat(r.replace(/[^\d]/g, ''))).reduce((a, b) => a + b) / 2;
@@ -222,7 +222,7 @@ export default function UnitMixPage() {
                   return (
                     <div key={type} className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">{getUnitTypeLabel(type)}</span>
-                      <Badge variant="outline">${rentPSF.toFixed(2)}/SF</Badge>
+                      <Badge variant="outline" className="border-gray-200">${rentPSF.toFixed(2)}/SF</Badge>
                     </div>
                   );
                 })}
@@ -230,19 +230,19 @@ export default function UnitMixPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Deposit Requirements</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Deposit Requirements</h4>
               <div className="space-y-2">
                 {Object.entries(assetProfileDetails.unitMixDetails).map(([type, unit]) => (
                   <div key={type} className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">{getUnitTypeLabel(type)}</span>
-                    <Badge variant="outline">{unit.deposit}</Badge>
+                    <Badge variant="outline" className="border-gray-200">{unit.deposit}</Badge>
                   </div>
                 ))}
               </div>
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Market Positioning</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Market Positioning</h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Luxury Tier</span>
@@ -250,7 +250,7 @@ export default function UnitMixPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Target Market</span>
-                  <Badge variant="outline">Young Professionals</Badge>
+                  <Badge variant="outline" className="border-gray-200">Young Professionals</Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Competitive Position</span>

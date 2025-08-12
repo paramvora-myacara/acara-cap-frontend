@@ -22,19 +22,19 @@ export default function DemographicsPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Demographics</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Demographics</h1>
         <p className="text-gray-600 mt-2">Comprehensive demographic analysis and population trends</p>
       </div>
 
       {/* Radius Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <MapPin className="h-5 w-5 text-blue-500 mr-2" />
-              <h4 className="text-lg">1 Mile Radius</h4>
+              <h4 className="text-lg font-semibold text-gray-800">1 Mile Radius</h4>
             </div>
           </CardHeader>
           <CardContent>
@@ -51,11 +51,11 @@ export default function DemographicsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <MapPin className="h-5 w-5 text-green-500 mr-2" />
-              <h4 className="text-lg">3 Mile Radius</h4>
+              <h4 className="text-lg font-semibold text-gray-800">3 Mile Radius</h4>
             </div>
           </CardHeader>
           <CardContent>
@@ -72,11 +72,11 @@ export default function DemographicsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <MapPin className="h-5 w-5 text-purple-500 mr-2" />
-              <h4 className="text-lg">5 Mile Radius</h4>
+              <h4 className="text-lg font-semibold text-gray-800">5 Mile Radius</h4>
             </div>
           </CardHeader>
           <CardContent>
@@ -95,9 +95,9 @@ export default function DemographicsPage() {
       </div>
 
       {/* Growth Trends */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h4 className="text-xl">5-Year Growth Trends</h4>
+          <h4 className="text-xl font-semibold text-gray-800">5-Year Growth Trends</h4>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -105,7 +105,7 @@ export default function DemographicsPage() {
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <TrendingUp className="h-10 w-10 text-green-600" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Population Growth</h4>
+              <h4 className="font-semibold text-gray-800 mb-2">Population Growth</h4>
               <Badge className={getGrowthColor(marketContextDetails.demographicProfile.growthTrends.populationGrowth5yr)}>
                 {marketContextDetails.demographicProfile.growthTrends.populationGrowth5yr}
               </Badge>
@@ -116,7 +116,7 @@ export default function DemographicsPage() {
               <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <BarChart3 className="h-10 w-10 text-blue-600" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Income Growth</h4>
+              <h4 className="font-semibold text-gray-800 mb-2">Income Growth</h4>
               <Badge className={getGrowthColor(marketContextDetails.demographicProfile.growthTrends.incomeGrowth5yr)}>
                 {marketContextDetails.demographicProfile.growthTrends.incomeGrowth5yr}
               </Badge>
@@ -127,7 +127,7 @@ export default function DemographicsPage() {
               <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="h-10 w-10 text-purple-600" />
               </div>
-              <h4 className="font-semibold text-gray-900 mb-2">Job Growth</h4>
+              <h4 className="font-semibold text-gray-800 mb-2">Job Growth</h4>
               <Badge className={getGrowthColor(marketContextDetails.demographicProfile.growthTrends.jobGrowth5yr)}>
                 {marketContextDetails.demographicProfile.growthTrends.jobGrowth5yr}
               </Badge>
@@ -138,66 +138,86 @@ export default function DemographicsPage() {
       </Card>
 
       {/* Detailed Demographics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h4 className="text-xl">Population Analysis</h4>
+            <h4 className="text-xl font-semibold text-gray-800">Population Analysis</h4>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.entries(marketContextDetails.demographicProfile).filter(([key]) => key !== 'growthTrends').map(([radius, data]) => (
-                <div key={radius} className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-gray-900 capitalize">
-                      {radius.replace(/([A-Z])/g, ' $1').trim()} Radius
-                    </h4>
-                    <Badge variant="outline">{(data as any).population.toLocaleString()}</Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-500">Median Income</p>
-                      <p className="font-medium">${(data as any).medianIncome.toLocaleString()}</p>
+              {Object.entries(marketContextDetails.demographicProfile).filter(([key]) => key !== 'growthTrends').map(([radius, data], index) => {
+                const colors = [
+                  'bg-gradient-to-br from-blue-50 to-blue-100 border-l-4 border-blue-500',
+                  'bg-gradient-to-br from-green-50 to-green-100 border-l-4 border-green-500',
+                  'bg-gradient-to-br from-purple-50 to-purple-100 border-l-4 border-purple-500'
+                ];
+                const color = colors[index % colors.length];
+                
+                return (
+                  <div key={radius} className={`${color} rounded-lg p-4`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-gray-800 capitalize">
+                        {radius.replace(/([A-Z])/g, ' $1').trim()} Radius
+                      </h4>
+                      <Badge variant="outline" className="border-gray-200 bg-white">
+                        {(data as any).population.toLocaleString()}
+                      </Badge>
                     </div>
-                    <div>
-                      <p className="text-gray-500">Median Age</p>
-                      <p className="font-medium">{(data as any).medianAge} years</p>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="bg-white bg-opacity-60 rounded p-2">
+                        <p className="text-gray-500 text-xs uppercase tracking-wide">Median Income</p>
+                        <p className="font-semibold text-gray-800">${(data as any).medianIncome.toLocaleString()}</p>
+                      </div>
+                      <div className="bg-white bg-opacity-60 rounded p-2">
+                        <p className="text-gray-500 text-xs uppercase tracking-wide">Median Age</p>
+                        <p className="font-semibold text-gray-800">{(data as any).medianAge} years</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h4 className="text-xl">Income Distribution</h4>
+            <h4 className="text-xl font-semibold text-gray-800">Income Distribution</h4>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.entries(marketContextDetails.demographicProfile).filter(([key]) => key !== 'growthTrends').map(([radius, data]) => (
-                <div key={radius} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700 capitalize">
-                      {radius.replace(/([A-Z])/g, ' $1').trim()}
-                    </span>
-                    <span className="text-sm text-gray-500">${(data as any).medianIncome.toLocaleString()}</span>
+              {Object.entries(marketContextDetails.demographicProfile).filter(([key]) => key !== 'growthTrends').map(([radius, data], index) => {
+                const colors = [
+                  'from-blue-400 to-blue-600',
+                  'from-green-400 to-green-600',
+                  'from-purple-400 to-purple-600'
+                ];
+                const color = colors[index % colors.length];
+                
+                return (
+                  <div key={radius} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700 capitalize">
+                        {radius.replace(/([A-Z])/g, ' $1').trim()}
+                      </span>
+                      <span className="text-sm text-gray-500">${(data as any).medianIncome.toLocaleString()}</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                      <div 
+                        className={`h-3 rounded-full bg-gradient-to-r ${color} shadow-sm`}
+                        style={{ width: `${((data as any).medianIncome / 100000) * 100}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full ${getIncomeTier((data as any).medianIncome).replace('bg-', 'bg-').replace(' text-', '')}`}
-                      style={{ width: `${((data as any).medianIncome / 100000) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               
-              <div className="pt-4 border-t border-gray-200">
+              <div className="pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>$40K</span>
-                  <span>$60K</span>
-                  <span>$80K</span>
-                  <span>$100K+</span>
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">$40K</span>
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">$60K</span>
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">$80K</span>
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">$100K+</span>
                 </div>
               </div>
             </div>
@@ -206,14 +226,14 @@ export default function DemographicsPage() {
       </div>
 
       {/* Market Insights */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h4 className="text-xl">Market Insights</h4>
+          <h4 className="text-xl font-semibold text-gray-800">Market Insights</h4>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Demographic Strengths</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Demographic Strengths</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-green-500 mr-2">•</span>
@@ -231,7 +251,7 @@ export default function DemographicsPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Market Opportunities</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Market Opportunities</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-blue-500 mr-2">•</span>
@@ -249,7 +269,7 @@ export default function DemographicsPage() {
             </div>
             
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Target Demographics</h4>
+              <h4 className="font-semibold text-gray-800 mb-3">Target Demographics</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <span className="text-purple-500 mr-2">•</span>
@@ -270,16 +290,16 @@ export default function DemographicsPage() {
       </Card>
 
       {/* Population Density Visualization */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <h4 className="text-xl">Population Density Visualization</h4>
+          <h4 className="text-xl font-semibold text-gray-800">Population Density Visualization</h4>
         </CardHeader>
         <CardContent>
           <div className="bg-gray-100 rounded-lg p-8 text-center">
             <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 font-medium">Interactive Population Map</p>
             <p className="text-gray-500 text-sm mt-1">Coming soon - Geographic visualization of demographic data</p>
-            <div className="mt-4 p-4 bg-white rounded border-2 border-dashed border-gray-300">
+            <div className="mt-4 p-4 bg-white rounded border border-dashed border-gray-200">
               <p className="text-sm text-gray-500">Population density heat map will be integrated here</p>
               <p className="text-xs text-gray-400 mt-1">Including radius analysis and demographic overlays</p>
             </div>

@@ -7,19 +7,19 @@ import { MapPin, Building2, TreePine, Car } from 'lucide-react';
 
 export default function SitePlanPage() {
   return (
-    <div className="space-y-6 p-6">
+    <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Site Plan</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Site Plan</h1>
         <p className="text-gray-600 mt-2">Comprehensive site analysis and zoning information</p>
       </div>
 
       {/* Site Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <MapPin className="h-5 w-5 text-blue-500 mr-2" />
-              <h3 className="text-lg font-semibold">Lot Size</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Lot Size</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -28,11 +28,11 @@ export default function SitePlanPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <Building2 className="h-5 w-5 text-green-500 mr-2" />
-              <h3 className="text-lg font-semibold">Building</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Building</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -41,11 +41,11 @@ export default function SitePlanPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <Car className="h-5 w-5 text-purple-500 mr-2" />
-              <h3 className="text-lg font-semibold">Parking</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Parking</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -54,11 +54,11 @@ export default function SitePlanPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="pb-2">
             <div className="flex items-center">
               <TreePine className="h-5 w-5 text-emerald-500 mr-2" />
-              <h3 className="text-lg font-semibold">Green Space</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Green Space</h3>
             </div>
           </CardHeader>
           <CardContent>
@@ -69,39 +69,39 @@ export default function SitePlanPage() {
       </div>
 
       {/* Zoning Details */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Zoning Information</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Zoning Information</h3>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="space-y-3">
               <div>
                 <p className="text-sm text-gray-500">Current Zoning</p>
-                <p className="font-semibold">{assetProfileDetails.sitePlan.zoningDetails.current}</p>
+                <p className="font-semibold text-gray-800">{assetProfileDetails.sitePlan.zoningDetails.current}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Allowed FAR</p>
-                <p className="font-semibold">{assetProfileDetails.sitePlan.zoningDetails.allowedFAR}</p>
+                <p className="font-semibold text-gray-800">{assetProfileDetails.sitePlan.zoningDetails.allowedFAR}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Used FAR</p>
-                <p className="font-semibold">{assetProfileDetails.sitePlan.zoningDetails.usedFAR}</p>
+                <p className="font-semibold text-gray-800">{assetProfileDetails.sitePlan.zoningDetails.usedFAR}</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <div>
                 <p className="text-sm text-gray-500">Height Limit</p>
-                <p className="font-semibold">{assetProfileDetails.sitePlan.zoningDetails.heightLimit}</p>
+                <p className="font-semibold text-gray-800">{assetProfileDetails.sitePlan.zoningDetails.heightLimit}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Actual Height</p>
-                <p className="font-semibold">{assetProfileDetails.sitePlan.zoningDetails.actualHeight}</p>
+                <p className="font-semibold text-gray-800">{assetProfileDetails.sitePlan.zoningDetails.actualHeight}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">FAR Utilization</p>
-                <Badge variant="outline">
+                <Badge variant="outline" className="border-gray-200">
                   {Math.round((parseFloat(assetProfileDetails.sitePlan.zoningDetails.usedFAR) / parseFloat(assetProfileDetails.sitePlan.zoningDetails.allowedFAR)) * 100)}%
                 </Badge>
               </div>
@@ -122,16 +122,16 @@ export default function SitePlanPage() {
       </Card>
 
       {/* Site Map Placeholder */}
-      <Card>
+      <Card className="hover:shadow-lg transition-shadow mb-8">
         <CardHeader>
-          <h3 className="text-xl font-semibold">Interactive Site Map</h3>
+          <h3 className="text-xl font-semibold text-gray-800">Interactive Site Map</h3>
         </CardHeader>
         <CardContent>
           <div className="bg-gray-100 rounded-lg p-8 text-center">
             <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 font-medium">Interactive Site Map</p>
             <p className="text-gray-500 text-sm mt-1">Coming soon - Interactive visualization of site layout</p>
-            <div className="mt-4 p-4 bg-white rounded border-2 border-dashed border-gray-300">
+            <div className="mt-4 p-4 bg-white rounded border border-dashed border-gray-200">
               <p className="text-sm text-gray-500">Site map visualization will be integrated here</p>
               <p className="text-xs text-gray-400 mt-1">Including building footprint, parking, and green spaces</p>
             </div>
@@ -141,9 +141,9 @@ export default function SitePlanPage() {
 
       {/* Site Analysis */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h3 className="text-xl font-semibold">Site Efficiency</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Site Efficiency</h3>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -167,21 +167,21 @@ export default function SitePlanPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <h3 className="text-xl font-semibold">Development Potential</h3>
+            <h3 className="text-xl font-semibold text-gray-800">Development Potential</h3>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">FAR Remaining</span>
-                <Badge variant="outline">
+                <Badge variant="outline" className="border-gray-200">
                   {(parseFloat(assetProfileDetails.sitePlan.zoningDetails.allowedFAR) - parseFloat(assetProfileDetails.sitePlan.zoningDetails.usedFAR)).toFixed(1)}
                 </Badge>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Height Remaining</span>
-                <Badge variant="outline">
+                <Badge variant="outline" className="border-gray-200">
                   {(parseInt(assetProfileDetails.sitePlan.zoningDetails.heightLimit) - parseInt(assetProfileDetails.sitePlan.zoningDetails.actualHeight))} feet
                 </Badge>
               </div>
