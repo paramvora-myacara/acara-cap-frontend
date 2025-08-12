@@ -16,9 +16,10 @@ L.Icon.Default.mergeOptions({
 
 interface PopulationHeatmapProps {
   className?: string;
+  compact?: boolean;
 }
 
-export default function PopulationHeatmap({ className = '' }: PopulationHeatmapProps) {
+export default function PopulationHeatmap({ className = '', compact = false }: PopulationHeatmapProps) {
   // Mock population data for different radius areas
   const siteCenter = [37.7749, -122.4194]; // San Francisco coordinates
   
@@ -61,8 +62,10 @@ export default function PopulationHeatmap({ className = '' }: PopulationHeatmapP
     }
   };
 
+  const height = compact ? 'h-48' : 'h-96';
+
   return (
-    <div className={`w-full h-96 rounded-lg overflow-hidden ${className}`}>
+    <div className={`w-full ${height} rounded-lg overflow-hidden ${className}`}>
       <MapContainer
         center={siteCenter as [number, number]}
         zoom={12}

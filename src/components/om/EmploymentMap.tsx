@@ -17,9 +17,10 @@ L.Icon.Default.mergeOptions({
 
 interface EmploymentMapProps {
   className?: string;
+  compact?: boolean;
 }
 
-export default function EmploymentMap({ className = '' }: EmploymentMapProps) {
+export default function EmploymentMap({ className = '', compact = false }: EmploymentMapProps) {
   // Mock employment data - in a real app this would come from props or API
   const siteCenter = [37.7749, -122.4194]; // San Francisco coordinates
   
@@ -127,11 +128,14 @@ export default function EmploymentMap({ className = '' }: EmploymentMapProps) {
   const totalEmployees = employers.reduce((sum, employer) => sum + employer.employees, 0);
   const avgGrowth = employers.reduce((sum, employer) => sum + parseInt(employer.growth.replace(/[^\d-]/g, '')), 0) / employers.length;
 
+  const height = compact ? 'h-48' : 'h-96';
+  const zoom = compact ? 14 : 13;
+
   return (
-    <div className={`w-full h-96 rounded-lg overflow-hidden ${className}`}>
+    <div className={`w-full ${height} rounded-lg overflow-hidden ${className}`}>
       <MapContainer
         center={siteCenter as [number, number]}
-        zoom={13}
+        zoom={zoom}
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg"
       >

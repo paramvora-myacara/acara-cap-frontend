@@ -24,9 +24,10 @@ import { TrendingUp, TrendingDown, Minus, BarChart3, PieChart as PieChartIcon } 
 
 interface ReturnsChartsProps {
   className?: string;
+  compact?: boolean;
 }
 
-export default function ReturnsCharts({ className = '' }: ReturnsChartsProps) {
+export default function ReturnsCharts({ className = '', compact = false }: ReturnsChartsProps) {
   const [activeScenario, setActiveScenario] = useState<'base' | 'upside' | 'downside'>('base');
 
   // Mock data for charts
@@ -88,6 +89,46 @@ export default function ReturnsCharts({ className = '' }: ReturnsChartsProps) {
     }
     return null;
   };
+
+  if (compact) {
+    return (
+      <div className={`space-y-3 ${className}`}>
+        {/* Compact IRR Comparison */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-semibold text-gray-800 text-center">IRR by Scenario</h4>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { key: 'downside', label: 'Downside', irr: 12.5, color: '#ef4444' },
+              { key: 'base', label: 'Base', irr: 18.5, color: '#3b82f6' },
+              { key: 'upside', label: 'Upside', irr: 24.5, color: '#10b981' },
+            ].map(({ key, label, irr, color }) => (
+              <div key={key} className="text-center">
+                <div className="text-xs text-gray-500 mb-1">{label}</div>
+                <div className="text-lg font-bold" style={{ color }}>{irr}%</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Compact Cash Flow Preview */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-semibold text-gray-800 text-center">Cash Flow Trend</h4>
+          <div className="h-16 bg-gray-50 rounded-lg flex items-end justify-center p-2">
+            <div className="flex items-end space-x-1">
+              {[-2.5, 0.8, 1.2, 1.4, 15.5].map((value, index) => (
+                <div
+                  key={index}
+                  className="w-3 bg-blue-500 rounded-t"
+                  style={{ height: `${Math.max(4, Math.abs(value) * 2)}px` }}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="text-xs text-gray-500 text-center">5-Year Projection</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-6 ${className}`}>

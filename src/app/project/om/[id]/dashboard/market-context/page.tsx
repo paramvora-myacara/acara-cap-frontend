@@ -9,6 +9,9 @@ import { MetricCard } from '@/components/om/widgets/MetricCard';
 import { MiniChart } from '@/components/om/widgets/MiniChart';
 import { employerData } from '@/services/mockOMData';
 import { Users, Briefcase, Building2, Zap } from 'lucide-react';
+import PopulationHeatmap from '@/components/om/PopulationHeatmap';
+import EmploymentMap from '@/components/om/EmploymentMap';
+import SupplyDemandMap from '@/components/om/SupplyDemandMap';
 
 export default function MarketContextPage() {
     const params = useParams();
@@ -27,33 +30,23 @@ export default function MarketContextPage() {
             href: `/project/om/${projectId}/dashboard/market-context/demographics`,
             metrics: (
                 <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                        <MetricCard label="Population" value="425,000" size="sm" />
-                        <MetricCard label="5yr Growth" value={14.2} format="percent" size="sm" />
-                        <MetricCard label="Median Age" value="32.5" size="sm" />
-                        <MetricCard label="College Grad%" value={45} format="percent" size="sm" />
-                    </div>
-                    <div className="pt-2">
-                        <p className="text-xs text-gray-500 mb-2">Income Distribution</p>
-                        <div className="space-y-1">
-                            <div className="flex justify-between text-xs">
-                                <span>$100k+</span>
-                                <div className="flex items-center">
-                                    <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
-                                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '35%' }} />
-                                    </div>
-                                    <span>35%</span>
-                                </div>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                                <span>$50-100k</span>
-                                <div className="flex items-center">
-                                    <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                        <div className="bg-red-500 h-2 rounded-full" style={{ width: '40%' }} />
-                                    </div>
-                                    <span>40%</span>
-                                </div>
-                            </div>
+                    <PopulationHeatmap compact={true} />
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <p className="text-gray-500">Population</p>
+                            <p className="font-medium">425,000</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">5yr Growth</p>
+                            <p className="font-medium text-green-600">+14.2%</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Median Age</p>
+                            <p className="font-medium">32.5</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">College Grad%</p>
+                            <p className="font-medium">45%</p>
                         </div>
                     </div>
                 </div>
@@ -67,24 +60,23 @@ export default function MarketContextPage() {
             href: `/project/om/${projectId}/dashboard/market-context/employment`,
             metrics: (
                 <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                        <MetricCard label="Unemployment" value={3.2} format="percent" size="sm" />
-                        <MetricCard label="Job Growth" value={3.5} format="percent" size="sm" change={0.8} />
-                    </div>
-                    <div className="pt-2">
-                        <p className="text-xs text-gray-500 mb-2">Top Employers</p>
-                        <div className="space-y-2">
-                            {employerData.slice(0, 3).map((emp) => (
-                                <div key={emp.name} className="flex justify-between items-center text-xs">
-                                    <span className="truncate">{emp.name}</span>
-                                    <div className="flex items-center space-x-2">
-                                        <span>{emp.employees.toLocaleString()}</span>
-                                        <span className={`text-xs ${emp.growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                            {emp.growth >= 0 ? '+' : ''}{emp.growth}%
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                    <EmploymentMap compact={true} />
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <p className="text-gray-500">Unemployment</p>
+                            <p className="font-medium text-green-600">3.2%</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Job Growth</p>
+                            <p className="font-medium text-green-600">+3.5%</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Total Jobs</p>
+                            <p className="font-medium">42,000</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Avg Growth</p>
+                            <p className="font-medium text-green-600">+8.2%</p>
                         </div>
                     </div>
                 </div>
@@ -98,26 +90,23 @@ export default function MarketContextPage() {
             href: `/project/om/${projectId}/dashboard/market-context/supply-demand`,
             metrics: (
                 <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                        <MetricCard label="Units U/C" value="2,450" size="sm" />
-                        <MetricCard label="24mo Pipeline" value="4,200" size="sm" />
-                    </div>
-                    <div className="pt-2">
-                        <p className="text-xs text-gray-500 mb-2">Delivery Schedule</p>
-                        <MiniChart
-                            type="bar"
-                            data={[
-                                { value: 800 }, { value: 1200 }, { value: 950 },
-                                { value: 600 }, { value: 650 }
-                            ]}
-                            height={60}
-                        />
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Q3'25</span>
-                            <span>Q4'25</span>
-                            <span>Q1'26</span>
-                            <span>Q2'26</span>
-                            <span>Q3'26</span>
+                    <SupplyDemandMap compact={true} />
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <p className="text-gray-500">Units U/C</p>
+                            <p className="font-medium">2,450</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">24mo Pipeline</p>
+                            <p className="font-medium">4,200</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Current Supply</p>
+                            <p className="font-medium">12,500</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Occupancy</p>
+                            <p className="font-medium text-green-600">93.5%</p>
                         </div>
                     </div>
                 </div>

@@ -16,9 +16,10 @@ L.Icon.Default.mergeOptions({
 
 interface SupplyDemandMapProps {
   className?: string;
+  compact?: boolean;
 }
 
-export default function SupplyDemandMap({ className = '' }: SupplyDemandMapProps) {
+export default function SupplyDemandMap({ className = '', compact = false }: SupplyDemandMapProps) {
   // Mock supply data - in a real app this would come from props or API
   const siteCenter = [37.7749, -122.4194]; // San Francisco coordinates
   
@@ -123,11 +124,14 @@ export default function SupplyDemandMap({ className = '' }: SupplyDemandMapProps
     }
   };
 
+  const height = compact ? 'h-48' : 'h-96';
+  const zoom = compact ? 15 : 14;
+
   return (
-    <div className={`w-full h-96 rounded-lg overflow-hidden ${className}`}>
+    <div className={`w-full ${height} rounded-lg overflow-hidden ${className}`}>
       <MapContainer
         center={siteCenter as [number, number]}
-        zoom={14}
+        zoom={zoom}
         style={{ height: '100%', width: '100%' }}
         className="rounded-lg"
       >
