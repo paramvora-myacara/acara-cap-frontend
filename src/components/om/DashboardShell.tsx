@@ -166,11 +166,15 @@ export const DashboardShell: React.FC<DashboardShellProps> = ({
                     </div>
 
                     {/* Chat Sidebar */}
-                    {isChatOpen ? (
-                        <aside className="w-[30%] sticky top-[7rem] h-[calc(100vh-7rem)] flex-shrink-0 transition-all duration-300 ease-in-out">
-                            <OMChatSidebar setIsChatOpen={setIsChatOpen} />
-                        </aside>
-                    ) : (
+                    <aside className={cn(
+                        "sticky top-[7rem] h-[calc(100vh-7rem)] flex-shrink-0 transition-all duration-300 ease-in-out",
+                        isChatOpen ? "w-[30%] opacity-100" : "w-0 opacity-0 overflow-hidden"
+                    )}>
+                        <OMChatSidebar setIsChatOpen={setIsChatOpen} />
+                    </aside>
+                    
+                    {/* Chat Toggle Button - Only show when chat is closed */}
+                    {!isChatOpen && (
                         <div className="sticky top-[7rem] h-[calc(100vh-7rem)] p-4">
                             <Button
                                 variant="outline"

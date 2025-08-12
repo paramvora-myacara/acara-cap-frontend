@@ -21,6 +21,8 @@ interface Message {
   data?: Partial<z.infer<typeof OmQaSchema>>;
 }
 
+const CHAT_STORAGE_KEY = 'om-chat-messages';
+
 export const OMChatSidebar: React.FC<OMChatSidebarProps> = ({ setIsChatOpen }) => {
   const [question, setQuestion] = React.useState('');
   const [messages, setMessages] = React.useState<Message[]>([]);
@@ -31,6 +33,27 @@ export const OMChatSidebar: React.FC<OMChatSidebarProps> = ({ setIsChatOpen }) =
     api: '/api/om-qa',
     schema: OmQaSchema,
   });
+
+  // Load messages from session storage on component mount
+  React.useEffect(() => {
+    try {
+      const storedMessages = sessionStorage.getItem(CHAT_STORAGE_KEY);
+      if (storedMessages) {
+        setMessages(JSON.parse(storedMessages));
+      }
+    } catch (error) {
+      console.warn('Failed to load chat messages from session storage:', error);
+    }
+  }, []);
+
+  // Save messages to session storage whenever messages change
+  React.useEffect(() => {
+    try {
+      sessionStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
+    } catch (error) {
+      console.warn('Failed to save chat messages to session storage:', error);
+    }
+  }, [messages]);
 
   // Auto-resize textarea when question changes
   React.useEffect(() => {
