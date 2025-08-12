@@ -1,14 +1,14 @@
 // src/app/project/om/[id]/dashboard/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useProjects } from '@/hooks/useProjects';
-import { DashboardShell } from '@/components/om/DashboardShell';
 import { QuadrantGrid } from '@/components/om/QuadrantGrid';
 import { MetricCard } from '@/components/om/widgets/MetricCard';
 import { MiniChart } from '@/components/om/widgets/MiniChart';
 import { AIInsightsBar } from '@/components/om/AIInsightsBar';
+import { useOMDashboard } from '@/contexts/OMDashboardContext';
 import { scenarioData, timelineData, unitMixData } from '@/services/mockOMData';
 import { DollarSign, Building, TrendingUp, Users } from 'lucide-react';
 
@@ -18,8 +18,7 @@ export default function OMDashboardPage() {
     const projectId = params?.id as string;
     const { getProject } = useProjects();
     const project = projectId ? getProject(projectId) : null;
-    
-    const [scenario, setScenario] = useState<'base' | 'upside' | 'downside'>('base');
+    const { scenario } = useOMDashboard();
     const data = scenarioData[scenario];
     
 
@@ -150,16 +149,9 @@ export default function OMDashboardPage() {
     ];
     
     return (
-        <DashboardShell
-            projectId={projectId}
-            projectName={project.projectName}
-            currentScenario={scenario}
-            onScenarioChange={setScenario}
-        >
-            <div className="max-w-7xl mx-auto">
-                <AIInsightsBar scenario={scenario} />
-                <QuadrantGrid quadrants={quadrants} />
-            </div>
-        </DashboardShell>
+        <div className="max-w-7xl mx-auto">
+            <AIInsightsBar scenario={scenario} />
+            <QuadrantGrid quadrants={quadrants} />
+        </div>
     );
 }

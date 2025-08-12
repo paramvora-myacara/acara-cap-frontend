@@ -1,12 +1,12 @@
 // src/app/project/om/[id]/dashboard/deal-snapshot/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'next/navigation';
 import { useProjects } from '@/hooks/useProjects';
-import { DashboardShell } from '@/components/om/DashboardShell';
 import { QuadrantGrid } from '@/components/om/QuadrantGrid';
 import { MetricCard } from '@/components/om/widgets/MetricCard';
+import { useOMDashboard } from '@/contexts/OMDashboardContext';
 import { scenarioData } from '@/services/mockOMData';
 import { Layers, FileText, Calendar, AlertTriangle } from 'lucide-react';
 
@@ -15,8 +15,7 @@ export default function DealSnapshotPage() {
     const projectId = params?.id as string;
     const { getProject } = useProjects();
     const project = projectId ? getProject(projectId) : null;
-    
-    const [scenario, setScenario] = useState<'base' | 'upside' | 'downside'>('base');
+    const { scenario } = useOMDashboard();
     const data = scenarioData[scenario];
     
     if (!project) return <div>Project not found</div>;
@@ -118,11 +117,11 @@ export default function DealSnapshotPage() {
             )
         },
         {
-            id: 'risk-flags',
+            id: 'risk-analysis',
             title: 'Risk Flags & Mitigants',
             icon: AlertTriangle,
             color: 'from-amber-400 to-amber-500',
-            href: `/project/om/${projectId}/dashboard/deal-snapshot/risk-flags`,
+            href: `/project/om/${projectId}/dashboard/deal-snapshot/risk-analysis`,
             metrics: (
                 <div className="space-y-3">
                     <div className="space-y-2">
@@ -154,16 +153,9 @@ export default function DealSnapshotPage() {
     ];
     
     return (
-        <DashboardShell
-            projectId={projectId}
-            projectName={project.projectName}
-            currentScenario={scenario}
-            onScenarioChange={setScenario}
-        >
-            <div className="max-w-6xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Deal Snapshot Details</h2>
-                <QuadrantGrid quadrants={quadrants} />
-            </div>
-        </DashboardShell>
+        <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Deal Snapshot Details</h2>
+            <QuadrantGrid quadrants={quadrants} />
+        </div>
     );
 }

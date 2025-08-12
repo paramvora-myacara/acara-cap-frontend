@@ -1,13 +1,13 @@
 // src/app/project/om/[id]/dashboard/financial-sponsor/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'next/navigation';
 import { useProjects } from '@/hooks/useProjects';
-import { DashboardShell } from '@/components/om/DashboardShell';
 import { QuadrantGrid } from '@/components/om/QuadrantGrid';
 import { MetricCard } from '@/components/om/widgets/MetricCard';
 import { MiniChart } from '@/components/om/widgets/MiniChart';
+import { useOMDashboard } from '@/contexts/OMDashboardContext';
 import { scenarioData, sponsorDeals } from '@/services/mockOMData';
 import { DollarSign, BarChart3, Users, Activity } from 'lucide-react';
 
@@ -16,8 +16,7 @@ export default function FinancialSponsorPage() {
     const projectId = params?.id as string;
     const { getProject } = useProjects();
     const project = projectId ? getProject(projectId) : null;
-    
-    const [scenario, setScenario] = useState<'base' | 'upside' | 'downside'>('base');
+    const { scenario } = useOMDashboard();
     const data = scenarioData[scenario];
     
     if (!project) return <div>Project not found</div>;
@@ -28,6 +27,7 @@ export default function FinancialSponsorPage() {
             title: 'Sources & Uses',
             icon: DollarSign,
             color: 'from-green-400 to-green-500',
+            href: `/project/om/${projectId}/dashboard/financial-sponsor/sources-uses`,
             metrics: (
                 <div className="space-y-3">
                     <div className="space-y-2">
@@ -95,6 +95,7 @@ export default function FinancialSponsorPage() {
             title: 'Sponsor & Team',
             icon: Users,
             color: 'from-green-400 to-green-500',
+            href: `/project/om/${projectId}/dashboard/financial-sponsor/sponsor-profile`,
             metrics: (
                 <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
@@ -126,6 +127,7 @@ export default function FinancialSponsorPage() {
             title: 'Sensitivity / Stress Tests',
             icon: Activity,
             color: 'from-blue-400 to-blue-500',
+            href: `/project/om/${projectId}/dashboard/financial-sponsor/returns`,
             metrics: (
                 <div className="space-y-3">
                     <div className="space-y-2">
@@ -172,16 +174,9 @@ export default function FinancialSponsorPage() {
     ];
     
     return (
-        <DashboardShell
-            projectId={projectId}
-            projectName={project.projectName}
-            currentScenario={scenario}
-            onScenarioChange={setScenario}
-        >
-            <div className="max-w-6xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Financial & Sponsor Details</h2>
-                <QuadrantGrid quadrants={quadrants} />
-            </div>
-        </DashboardShell>
+        <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Financial & Sponsor Details</h2>
+            <QuadrantGrid quadrants={quadrants} />
+        </div>
     );
 }

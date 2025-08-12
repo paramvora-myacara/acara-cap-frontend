@@ -1,10 +1,9 @@
 // src/app/project/om/[id]/dashboard/market-context/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'next/navigation';
 import { useProjects } from '@/hooks/useProjects';
-import { DashboardShell } from '@/components/om/DashboardShell';
 import { QuadrantGrid } from '@/components/om/QuadrantGrid';
 import { MetricCard } from '@/components/om/widgets/MetricCard';
 import { MiniChart } from '@/components/om/widgets/MiniChart';
@@ -17,8 +16,6 @@ export default function MarketContextPage() {
     const { getProject } = useProjects();
     const project = projectId ? getProject(projectId) : null;
     
-    const [scenario, setScenario] = useState<'base' | 'upside' | 'downside'>('base');
-    
     if (!project) return <div>Project not found</div>;
     
     const quadrants = [
@@ -27,6 +24,7 @@ export default function MarketContextPage() {
             title: 'Macro & Demographics',
             icon: Users,
             color: 'from-blue-400 to-blue-500',
+            href: `/project/om/${projectId}/dashboard/market-context/demographics`,
             metrics: (
                 <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
@@ -50,8 +48,8 @@ export default function MarketContextPage() {
                             <div className="flex justify-between text-xs">
                                 <span>$50-100k</span>
                                 <div className="flex items-center">
-                                    <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
-                                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: '40%' }} />
+                                    <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                        <div className="bg-red-500 h-2 rounded-full" style={{ width: '40%' }} />
                                     </div>
                                     <span>40%</span>
                                 </div>
@@ -66,6 +64,7 @@ export default function MarketContextPage() {
             title: 'Employment Drivers',
             icon: Briefcase,
             color: 'from-green-400 to-green-500',
+            href: `/project/om/${projectId}/dashboard/market-context/employment`,
             metrics: (
                 <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
@@ -96,6 +95,7 @@ export default function MarketContextPage() {
             title: 'Supply Pipeline',
             icon: Building2,
             color: 'from-blue-400 to-blue-500',
+            href: `/project/om/${projectId}/dashboard/market-context/supply-demand`,
             metrics: (
                 <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
@@ -154,16 +154,9 @@ export default function MarketContextPage() {
     ];
     
     return (
-        <DashboardShell
-            projectId={projectId}
-            projectName={project.projectName}
-            currentScenario={scenario}
-            onScenarioChange={setScenario}
-        >
-            <div className="max-w-6xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Market Context Details</h2>
-                <QuadrantGrid quadrants={quadrants} />
-            </div>
-        </DashboardShell>
+        <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Market Context Details</h2>
+            <QuadrantGrid quadrants={quadrants} />
+        </div>
     );
 }

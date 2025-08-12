@@ -1,10 +1,9 @@
 // src/app/project/om/[id]/dashboard/asset-profile/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'next/navigation';
 import { useProjects } from '@/hooks/useProjects';
-import { DashboardShell } from '@/components/om/DashboardShell';
 import { QuadrantGrid } from '@/components/om/QuadrantGrid';
 import { MetricCard } from '@/components/om/widgets/MetricCard';
 import { MiniChart } from '@/components/om/widgets/MiniChart';
@@ -17,8 +16,6 @@ export default function AssetProfilePage() {
     const { getProject } = useProjects();
     const project = projectId ? getProject(projectId) : null;
     
-    const [scenario, setScenario] = useState<'base' | 'upside' | 'downside'>('base');
-    
     if (!project) return <div>Project not found</div>;
     
     const quadrants = [
@@ -27,6 +24,7 @@ export default function AssetProfilePage() {
             title: 'Site & Zoning',
             icon: MapPin,
             color: 'from-purple-400 to-purple-500',
+            href: `/project/om/${projectId}/dashboard/asset-profile/site-plan`,
             metrics: (
                 <div className="space-y-3">
                     <div className="bg-gray-100 rounded-lg h-32 flex items-center justify-center text-gray-400">
@@ -58,6 +56,7 @@ export default function AssetProfilePage() {
             title: 'Design & Amenities',
             icon: Home,
             color: 'from-blue-400 to-blue-500',
+            href: `/project/om/${projectId}/dashboard/asset-profile/amenities`,
             metrics: (
                 <div className="space-y-3">
                     <div className="grid grid-cols-3 gap-2">
@@ -92,6 +91,7 @@ export default function AssetProfilePage() {
             title: 'Unit Economics',
             icon: Package,
             color: 'from-green-400 to-green-500',
+            href: `/project/om/${projectId}/dashboard/asset-profile/unit-mix`,
             metrics: (
                 <div className="space-y-3">
                     <MiniChart
@@ -122,6 +122,7 @@ export default function AssetProfilePage() {
             title: 'Comparable Assets',
             icon: Building2,
             color: 'from-amber-400 to-amber-500',
+            href: `/project/om/${projectId}/dashboard/asset-profile/comparables`,
             metrics: (
                 <div className="space-y-3">
                     <div className="space-y-2">
@@ -146,16 +147,9 @@ export default function AssetProfilePage() {
     ];
     
     return (
-        <DashboardShell
-            projectId={projectId}
-            projectName={project.projectName}
-            currentScenario={scenario}
-            onScenarioChange={setScenario}
-        >
-            <div className="max-w-6xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Asset Profile Details</h2>
-                <QuadrantGrid quadrants={quadrants} />
-            </div>
-        </DashboardShell>
+        <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Asset Profile Details</h2>
+            <QuadrantGrid quadrants={quadrants} />
+        </div>
     );
 }

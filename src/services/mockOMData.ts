@@ -268,3 +268,95 @@ export const certifications = {
     { name: "LEED Silver", status: "Targeting", icon: "award" }
   ]
 };
+
+export const capitalStackData = {
+    base: {
+        totalCapitalization: 18750000,
+        sources: [
+            { type: "Senior Construction Loan", amount: 15000000, percentage: 80, rate: "SOFR + 275bps", term: "36 months" },
+            { type: "Sponsor Equity", amount: 2850000, percentage: 15.2, contribution: "Cash", timing: "Upfront" },
+            { type: "LP Equity", amount: 900000, percentage: 4.8, contribution: "Cash", timing: "Upfront" }
+        ],
+        uses: [
+            { type: "Land Acquisition", amount: 4500000, percentage: 24, timing: "Month 0" },
+            { type: "Hard Costs", amount: 11200000, percentage: 59.7, timing: "Months 1-18" },
+            { type: "Soft Costs", amount: 2100000, percentage: 11.2, timing: "Months 1-18" },
+            { type: "Financing Costs", amount: 950000, percentage: 5.1, timing: "Month 0" }
+        ],
+        debtTerms: {
+            loanType: "Senior Construction Loan",
+            lender: "Regional Bank",
+            rate: "SOFR + 275bps",
+            floor: "4.50%",
+            term: "36 months",
+            extension: "Two 12-month extensions available",
+            recourse: "25% Partial Recourse",
+            origination: "1.00%",
+            exitFee: "0.50%",
+            reserves: {
+                interest: "12 months",
+                taxInsurance: "6 months",
+                capEx: "$250,000"
+            }
+        }
+    },
+    upside: {
+        totalCapitalization: 18000000,
+        sources: [
+            { type: "Senior Construction Loan", amount: 16500000, percentage: 91.7, rate: "SOFR + 250bps", term: "36 months" },
+            { type: "Sponsor Equity", amount: 1500000, percentage: 8.3, contribution: "Cash", timing: "Upfront" }
+        ],
+        uses: [
+            { type: "Land Acquisition", amount: 4200000, percentage: 23.3, timing: "Month 0" },
+            { type: "Hard Costs", amount: 10800000, percentage: 60, timing: "Months 1-18" },
+            { type: "Soft Costs", amount: 2000000, percentage: 11.1, timing: "Months 1-18" },
+            { type: "Financing Costs", amount: 1000000, percentage: 5.6, timing: "Month 0" }
+        ],
+        debtTerms: {
+            loanType: "Senior Construction Loan",
+            lender: "Regional Bank",
+            rate: "SOFR + 250bps",
+            floor: "4.25%",
+            term: "36 months",
+            extension: "Two 12-month extensions available",
+            recourse: "20% Partial Recourse",
+            origination: "0.75%",
+            exitFee: "0.25%",
+            reserves: {
+                interest: "10 months",
+                taxInsurance: "6 months",
+                capEx: "$200,000"
+            }
+        }
+    },
+    downside: {
+        totalCapitalization: 20000000,
+        sources: [
+            { type: "Senior Construction Loan", amount: 13500000, percentage: 67.5, rate: "SOFR + 325bps", term: "36 months" },
+            { type: "Sponsor Equity", amount: 5000000, percentage: 25, contribution: "Cash", timing: "Upfront" },
+            { type: "LP Equity", amount: 1500000, percentage: 7.5, contribution: "Cash", timing: "Upfront" }
+        ],
+        uses: [
+            { type: "Land Acquisition", amount: 4800000, percentage: 24, timing: "Month 0" },
+            { type: "Hard Costs", amount: 12000000, percentage: 60, timing: "Months 1-18" },
+            { type: "Soft Costs", amount: 2500000, percentage: 12.5, timing: "Months 1-18" },
+            { type: "Financing Costs", amount: 700000, percentage: 3.5, timing: "Month 0" }
+        ],
+        debtTerms: {
+            loanType: "Senior Construction Loan",
+            lender: "Regional Bank",
+            rate: "SOFR + 325bps",
+            floor: "4.75%",
+            term: "36 months",
+            extension: "One 12-month extension available",
+            recourse: "35% Partial Recourse",
+            origination: "1.25%",
+            exitFee: "0.75%",
+            reserves: {
+                interest: "15 months",
+                taxInsurance: "8 months",
+                capEx: "$300,000"
+            }
+        }
+    }
+};
