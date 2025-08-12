@@ -8,13 +8,22 @@ import remarkGfm from 'remark-gfm';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
 import { OmQaSchema, OmQaAssumption } from '@/types/om-types';
+import { z } from 'zod';
 
 interface OMChatSidebarProps {
   setIsChatOpen: (isOpen: boolean) => void;
 }
 
+interface Message {
+  id: string;
+  role: 'user' | 'assistant' | 'thinking';
+  question?: string;
+  data?: Partial<z.infer<typeof OmQaSchema>>;
+}
+
 export const OMChatSidebar: React.FC<OMChatSidebarProps> = ({ setIsChatOpen }) => {
   const [question, setQuestion] = React.useState('');
+  const [messages, setMessages] = React.useState<Message[]>([]);
   const [assumptionsOpen, setAssumptionsOpen] = React.useState(false);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -34,8 +43,31 @@ export const OMChatSidebar: React.FC<OMChatSidebarProps> = ({ setIsChatOpen }) =
   const askQuestion = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!question.trim() || isLoading) return;
+    
+    const userMessage: Message = { id: Date.now().toString(), role: 'user', question };
+    const thinkingMessage: Message = { id: (Date.now() + 1).toString(), role: 'thinking' };
+    setMessages(prev => [...prev, userMessage, thinkingMessage]);
+
     submit({ question });
+    setQuestion('');
   };
+
+  React.useEffect(() => {
+    if (object) {
+      setMessages(prev => {
+        const newMessages = prev.filter(m => m.role !== 'thinking');
+        const lastMessage = newMessages[newMessages.length - 1];
+        if (lastMessage?.role === 'assistant') {
+          // Update last assistant message
+          lastMessage.data = object as Partial<z.infer<typeof OmQaSchema>>;
+          return [...newMessages];
+        } else {
+          // Add new assistant message
+          return [...newMessages, { id: Date.now().toString(), role: 'assistant', data: object as Partial<z.infer<typeof OmQaSchema>> }];
+        }
+      });
+    }
+  }, [object]);
 
   const assumptionsId = React.useId();
 
@@ -66,7 +98,7 @@ export const OMChatSidebar: React.FC<OMChatSidebarProps> = ({ setIsChatOpen }) =
       {/* Chat Content Area */}
       <div className="flex-grow overflow-y-auto p-4">
         {/* Welcome Message */}
-        {!object && !isLoading && !question && (
+        {messages.length === 0 && !isLoading && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
             <div className="flex items-start space-x-2">
               <div className="p-1.5 bg-blue-100 rounded-full">
@@ -84,80 +116,103 @@ export const OMChatSidebar: React.FC<OMChatSidebarProps> = ({ setIsChatOpen }) =
         )}
 
         {/* Chat Messages */}
-        {object && (
-          <div className="space-y-4">
-            {/* User Question */}
-            <div className="flex justify-end">
-              <div className="bg-blue-600 text-white rounded-lg px-3 py-2 max-w-[80%]">
-                <p className="text-sm">{question}</p>
-              </div>
-            </div>
-
-            {/* AI Answer */}
-            <div className="flex justify-start">
-              <div className="bg-gray-100 text-gray-800 rounded-lg px-3 py-2 max-w-[80%]">
-                <div className="prose prose-sm">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {object.answer_markdown}
-                  </ReactMarkdown>
+        <div className="space-y-4">
+          {messages.map((message) => {
+            if (message.role === 'user') {
+              return (
+                <div key={message.id} className="flex justify-end">
+                  <div className="bg-blue-600 text-white rounded-lg px-3 py-2 max-w-[80%]">
+                    <p className="text-sm">{message.question}</p>
+                  </div>
                 </div>
+              );
+            }
 
-                {/* Assumptions card at the bottom, collapsed by default */}
-                {object.assumptions?.length ? (
-                  <Card className="mt-4 border-gray-200">
-                    <CardHeader className="p-3 pb-0">
-                      <button
-                        type="button"
-                        onClick={() => setAssumptionsOpen(o => !o)}
-                        className="w-full flex items-center justify-between text-left"
-                        aria-expanded={assumptionsOpen}
-                        aria-controls={assumptionsId}
-                      >
-                        <span className="font-medium text-gray-900">
-                          Assumptions ({object.assumptions.length})
-                        </span>
-                        <ChevronDown
-                          className={`h-4 w-4 text-gray-500 transition-transform ${
-                            assumptionsOpen ? 'rotate-180' : ''
-                          }`}
-                        />
-                      </button>
-                    </CardHeader>
-                    <CardContent
-                      id={assumptionsId}
-                      className={`px-3 pb-3 ${assumptionsOpen ? 'block' : 'hidden'}`}
-                    >
-                      <div className="space-y-3">
-                        {object.assumptions?.map((a, idx) => {
-                          if (!a) return null;
-                          return (
-                            <Card key={idx} className="border-gray-100 bg-gray-50/50">
-                              <CardContent className="p-3">
-                                <div className="flex items-start gap-3">
-                                  <div className="flex-1">
-                                    <p className="text-sm text-gray-800 leading-relaxed">{a.text}</p>
-                                    {a.citation && (
-                                      <p className="text-xs text-gray-500 mt-2">
-                                        <span className="font-medium">Section:</span> {a.citation}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <span className="shrink-0 text-xs px-2.5 py-1 rounded-full bg-gray-200 text-gray-700 capitalize font-medium">
-                                    {a.source}
-                                  </span>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          )
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        )}
+            if (message.role === 'assistant' && message.data) {
+              const { answer_markdown, assumptions } = message.data;
+              return (
+                <div key={message.id} className="flex justify-start">
+                  <div className="bg-gray-100 text-gray-800 rounded-lg px-3 py-2 max-w-[80%]">
+                    <div className="prose prose-sm">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {answer_markdown || ''}
+                      </ReactMarkdown>
+                    </div>
+
+                    {/* Assumptions card at the bottom, collapsed by default */}
+                    {assumptions?.length ? (
+                      <Card className="mt-4 border-gray-200">
+                        <CardHeader className="p-3 pb-0">
+                          <button
+                            type="button"
+                            onClick={() => setAssumptionsOpen(o => !o)}
+                            className="w-full flex items-center justify-between text-left"
+                            aria-expanded={assumptionsOpen}
+                            aria-controls={assumptionsId}
+                          >
+                            <span className="font-medium text-gray-900">
+                              Assumptions ({assumptions.length})
+                            </span>
+                            <ChevronDown
+                              className={`h-4 w-4 text-gray-500 transition-transform ${
+                                assumptionsOpen ? 'rotate-180' : ''
+                              }`}
+                            />
+                          </button>
+                        </CardHeader>
+                        <CardContent
+                          id={assumptionsId}
+                          className={`px-3 pb-3 ${assumptionsOpen ? 'block' : 'hidden'}`}
+                        >
+                          <div className="space-y-3">
+                            {assumptions?.map((a, idx) => {
+                              if (!a) return null;
+                              return (
+                                <Card key={idx} className="border-gray-100 bg-gray-50/50">
+                                  <CardContent className="p-3">
+                                    <div className="flex items-start gap-3">
+                                      <div className="flex-1">
+                                        <p className="text-sm text-gray-800 leading-relaxed">{a.text}</p>
+                                        {a.citation && (
+                                          <p className="text-xs text-gray-500 mt-2">
+                                            <span className="font-medium">Section:</span> {a.citation}
+                                          </p>
+                                        )}
+                                      </div>
+                                      {a.source && (<span className="shrink-0 text-xs px-2.5 py-1 rounded-full bg-gray-200 text-gray-700 capitalize font-medium">
+                                        {a.source}
+                                      </span>)}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            }
+            
+            if (message.role === 'thinking') {
+                return (
+                    <div key={message.id} className="flex justify-start">
+                        <div className="bg-gray-100 text-gray-800 rounded-lg px-4 py-3 max-w-[80%]">
+                            <div className="flex items-center space-x-2">
+                                <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-0"></span>
+                                <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-150"></span>
+                                <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-300"></span>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            return null;
+          })}
+        </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4">
