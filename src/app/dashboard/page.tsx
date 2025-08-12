@@ -28,6 +28,22 @@ export default function DashboardPage() {
   // Combined loading state check
   const combinedLoading = authLoading || projectsLoading || profileLoading;
 
+  // Single function to handle project redirects with session storage check
+  const handleProjectRedirect = (project: any, reason: string) => {
+    const hasRedirected = sessionStorage.getItem('hasAutoRedirected');
+    if (!hasRedirected) {
+      console.log(`Dashboard: ${reason}, redirecting to: ${project.id}`);
+      sessionStorage.setItem('hasAutoRedirected', 'true');
+      setIsRedirecting(true);
+      setHasAttemptedRedirect(true);
+      router.replace(`/project/workspace/${project.id}`);
+      return true; // Indicate redirect was performed
+    } else {
+      console.log(`Dashboard: Auto-redirect has already occurred this session. Staying on dashboard.`);
+      return false; // Indicate no redirect was performed
+    }
+  };
+
   // Control Flow Logic & Loading
   useEffect(() => {
     // Don't run redirect logic until all initial loading is potentially complete
@@ -52,13 +68,11 @@ export default function DashboardPage() {
         waitForProjectCreation();
         return;
       } else if (projects.length === 1) {
-        // If they already have exactly one project, redirect to it
+        // If they already have exactly one project, redirect to it, but only once per session.
         const targetProject = projects[0];
-        console.log(`Dashboard: Existing borrower with single project, redirecting to: ${targetProject.id}`);
-        setIsRedirecting(true);
-        setHasAttemptedRedirect(true);
-        router.replace(`/project/workspace/${targetProject.id}`);
-        return;
+        if (handleProjectRedirect(targetProject, 'Existing borrower with single project')) {
+          return;
+        }
       } else {
         console.log(`Dashboard: Borrower has ${projects.length} projects, staying on dashboard for selection`);
       }
@@ -94,11 +108,8 @@ export default function DashboardPage() {
   // Additional effect to watch for project creation
   useEffect(() => {
     if (user?.role === 'borrower' && hasCheckedForNewUser && projects.length === 1 && !hasAttemptedRedirect) {
-      console.log('Dashboard: Project detected after initial check, redirecting now...');
       const targetProject = projects[0];
-      setIsRedirecting(true);
-      setHasAttemptedRedirect(true);
-      router.replace(`/project/workspace/${targetProject.id}`);
+      handleProjectRedirect(targetProject, 'Project detected after initial check');
     }
   }, [projects, user, hasCheckedForNewUser, hasAttemptedRedirect, router]);
 
@@ -113,9 +124,7 @@ export default function DashboardPage() {
         // Check if we have a project
         if (projects.length > 0) {
           const targetProject = projects[0]; // Get the first/only project
-          console.log(`Dashboard: Project created! Redirecting to project workspace: ${targetProject.id}`);
-          setIsRedirecting(true);
-          router.replace(`/project/workspace/${targetProject.id}`);
+          handleProjectRedirect(targetProject, 'Project created! Redirecting to project workspace');
           return;
         }
         
@@ -151,6 +160,7 @@ export default function DashboardPage() {
   const handleLogout = async () => {
     try {
       await logout();
+      sessionStorage.removeItem('hasAutoRedirected'); // Clear redirect flag
       showNotification({ type: 'success', message: 'Signed out successfully.' });
       router.push('/login'); // Redirect to login after logout
     } catch (error) {

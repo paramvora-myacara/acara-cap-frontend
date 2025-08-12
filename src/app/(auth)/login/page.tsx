@@ -130,16 +130,79 @@ const LoginForm = () => {
               />
             </FormGroup>
 
-            <div className="text-sm text-gray-500 mt-2 p-3 bg-gray-50 rounded border border-gray-200">
-              <p className="font-medium mb-1">
-                <strong>Test account options:</strong>
-              </p>
-              <ul className="mt-1 space-y-1 list-disc list-inside">
-                <li>Borrower 1 (Full Profile): <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower1@example.com</code></li>
-                <li>Borrower 2 (Partial Profile): <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower2@example.com</code></li>
-                <li>New Borrower: <code className="text-blue-600 text-xs bg-blue-50 px-1 rounded">borrower3@example.com</code></li>
-                <li>Advisor: <code className="text-purple-600 text-xs bg-purple-50 px-1 rounded">advisor@capmatch.com</code></li>
-              </ul>
+            {/* Quick Login Buttons */}
+            <div className="space-y-3">
+              <div className="flex space-x-3 justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 max-w-[calc(50%-6px)] h-12"
+                  onClick={async () => {
+                    try {
+                      setLoading(true);
+                      const role: 'borrower' = 'borrower';
+                      await login('borrower1@example.com', loginSource, role);
+                      
+                      showNotification({
+                        type: 'success',
+                        message: 'Successfully signed in!',
+                      });
+                      
+                      router.push('/dashboard');
+                    } catch (err) {
+                      console.error("Login Error:", err);
+                      showNotification({
+                        type: 'error',
+                        message: err instanceof Error ? err.message : 'An error occurred during login. Please try again.',
+                      });
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={authLoading}
+                >
+                  {authLoading ? 'Signing in...' : 'borrower1@example.com'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 max-w-[calc(50%-6px)] h-12"
+                  onClick={async () => {
+                    try {
+                      setLoading(true);
+                      const role: 'borrower' = 'borrower';
+                      await login('borrower2@example.com', loginSource, role);
+                      
+                      showNotification({
+                        type: 'success',
+                        message: 'Successfully signed in!',
+                      });
+                      
+                      router.push('/dashboard');
+                    } catch (err) {
+                      console.error("Login Error:", err);
+                      showNotification({
+                        type: 'error',
+                        message: err instanceof Error ? err.message : 'An error occurred during login. Please try again.',
+                      });
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={authLoading}
+                >
+                  {authLoading ? 'Signing in...' : 'borrower2@example.com'}
+                </Button>
+              </div>
+              
+              <div className="flex space-x-3 text-sm justify-center">
+                <div className="flex-1 max-w-[calc(50%-6px)] text-center text-gray-600">
+                  Full profile with Live OM
+                </div>
+                <div className="flex-1 max-w-[calc(50%-6px)] text-center text-gray-600">
+                  Partial profile
+                </div>
+              </div>
             </div>
 
             <Button
