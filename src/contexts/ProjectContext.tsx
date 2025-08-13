@@ -52,6 +52,7 @@ interface ProjectContextProps {
   autoSaveProject: () => Promise<void>;
   // Add a function to reset state, useful for borrower3 clearing
   resetProjectState: () => void;
+  autoCreatedFirstProjectThisSession: boolean;
 }
 
 // Default Project object
@@ -88,6 +89,7 @@ export const ProjectContext = createContext<ProjectContextProps>({
   setProjectChanges: () => {},
   autoSaveProject: async () => {},
   resetProjectState: () => {}, // Add reset function default
+  autoCreatedFirstProjectThisSession: false,
 });
 
 // Provider Implementation
@@ -103,6 +105,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
     const [documentRequirements, setDocumentRequirements] = useState<ProjectDocumentRequirement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [projectChanges, setProjectChanges] = useState(false);
+    const [autoCreatedFirstProjectThisSession, setAutoCreatedFirstProjectThisSession] = useState(false);
 
     const { user } = useAuth();
     const borrowerProfileContext = useContext(BorrowerProfileContext);
@@ -119,6 +122,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
         setProjectPrincipals([]);
         setDocumentRequirements([]);
         setProjectChanges(false);
+        setAutoCreatedFirstProjectThisSession(false);
         lastSavedRef.current = null;
         if (autoSaveTimerRef.current) {
             clearInterval(autoSaveTimerRef.current);
@@ -335,11 +339,13 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
                     }));
                     setProjects(withProgress);
                     setActiveProject(withProgress[0]);
+                    setAutoCreatedFirstProjectThisSession(false);
                     return;                          // nothing to create
                 }
 
                 // 2️⃣ Still none → create first project
                 await createProject({ projectName: 'Unnamed Project 1' });
+                setAutoCreatedFirstProjectThisSession(true); // Set flag to true after successful auto-creation
             } catch (err) {
                 console.error('[ProjectContext] Auto-create project failed:', err);
             }
@@ -428,7 +434,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
 
 
     return (
-        <ProjectContext.Provider value={{ projects, isLoading, activeProject, projectMessages, projectPrincipals, documentRequirements, createProject, updateProject, deleteProject, getProject: (id: string) => projects.find(p => p.id === id) || null, setActiveProject: setActiveProjectAndLoadData, addProjectMessage, addDocumentRequirement, updateDocumentRequirement, assignPrincipalToProject, updateProjectPrincipal, removeProjectPrincipal, updateProjectStatus, calculateProgress, getCompletionStats, projectChanges, setProjectChanges, autoSaveProject, resetProjectState }}>
+        <ProjectContext.Provider value={{ projects, isLoading, activeProject, projectMessages, projectPrincipals, documentRequirements, createProject, updateProject, deleteProject, getProject: (id: string) => projects.find(p => p.id === id) || null, setActiveProject: setActiveProjectAndLoadData, addProjectMessage, addDocumentRequirement, updateDocumentRequirement, assignPrincipalToProject, updateProjectPrincipal, removeProjectPrincipal, updateProjectStatus, calculateProgress, getCompletionStats, projectChanges, setProjectChanges, autoSaveProject, resetProjectState, autoCreatedFirstProjectThisSession }}>
             {children}
         </ProjectContext.Provider>
     );
