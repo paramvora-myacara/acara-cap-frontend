@@ -70,7 +70,17 @@ export const EnhancedHeader: React.FC<EnhancedHeaderProps> = ({
     >
       <div className="container mx-auto flex justify-between items-center px-4">
         <div>
-          <Link href="/" className="flex items-center">
+          <Link 
+            href="/" 
+            className="flex items-center"
+            onClick={() => {
+              try {
+                sessionStorage.setItem('navigatingFromApp', 'true');
+              } catch (error) {
+                console.warn('Could not set navigation flag:', error);
+              }
+            }}
+          >
             <div className="flex items-center justify-center">
               <img
                 ref={logoRef}

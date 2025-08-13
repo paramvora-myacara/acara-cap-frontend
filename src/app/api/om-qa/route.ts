@@ -24,6 +24,10 @@ const google = createGoogleGenerativeAI({
 const system = [
   'You are a super genius expert analyst in Commercial Real Estate with 20+ years experience.',
   'Answer using the OM content; be professional and analytical.',
+  'You have the ability to make forecasts, projections, and predictions by extrapolating from the provided data.',
+  'When making predictions, clearly indicate they are forecasts based on data analysis, not guaranteed outcomes.',
+  'Use historical trends, market dynamics, and financial metrics to project future performance.',
+  'Consider multiple scenarios (base case, upside, downside) when making projections.',
   'Output must match the provided JSON schema exactly. Return JSON only.',
 ].join(' ');
 
@@ -143,6 +147,13 @@ ${employerData.map(emp =>
 - **24MO Pipeline**: ${marketContextDetails.supplyAnalysis.planned24Months.toLocaleString()}
 - **Delivery Schedule**: ${marketContextDetails.supplyAnalysis.deliveryByQuarter.map(d => `${d.quarter}: ${d.units}`).join(', ')}
 
+### Market Trends & Forecasting Indicators
+- **Population Growth Trend**: ${marketContextDetails.demographicProfile.growthTrends.populationGrowth5yr} over 5 years
+- **Income Growth Trend**: ${marketContextDetails.demographicProfile.growthTrends.incomeGrowth5yr} over 5 years  
+- **Job Growth Trend**: ${marketContextDetails.demographicProfile.growthTrends.jobGrowth5yr} over 5 years
+- **Supply vs. Demand**: ${marketContextDetails.supplyAnalysis.currentInventory.toLocaleString()} current inventory vs. ${marketContextDetails.supplyAnalysis.underConstruction.toLocaleString()} under construction
+- **Market Absorption Rate**: Based on current delivery schedule and population growth trends
+
 ### Regulatory / Incentives
 - **Opportunity Zone**: Qualified
 - **Tax Abatement**: 10 Years
@@ -176,6 +187,12 @@ ${capitalStackData.base.uses.map(use =>
 - **Profit Margin**: ${financialDetails.returnProjections.base.profitMargin}%
 - **5-Year Cash Flow**: (graphical data)
 
+### Financial Forecasting Indicators
+- **Rent Growth Projections**: Base case ${scenarioData.base.rentGrowth}%, Upside ${scenarioData.upside.rentGrowth}%, Downside ${scenarioData.downside.rentGrowth}%
+- **Exit Cap Rate Trends**: Base case ${scenarioData.base.exitCap}%, Upside ${scenarioData.upside.exitCap}%, Downside ${scenarioData.downside.exitCap}%
+- **Interest Rate Sensitivity**: SOFR fluctuations impact debt service and project economics
+- **Construction Cost Variations**: Base case $${(scenarioData.base.constructionCost / 1000000).toFixed(1)}M, Upside $${(scenarioData.upside.constructionCost / 1000000).toFixed(1)}M, Downside $${(scenarioData.downside.constructionCost / 1000000).toFixed(1)}M
+
 ### Sponsor & Team
 - **Experience**: 15+ Years
 - **Total Developed**: $${financialDetails.sponsorProfile.totalDeveloped}
@@ -189,12 +206,24 @@ ${sponsorDeals.map(deal =>
   `- **${deal.project}** (${deal.year}): $${(deal.size / 1000000).toFixed(1)}M, ${deal.irr}% IRR, ${deal.multiple}x multiple`
 ).join('\n')}
 
+**Sponsor Performance Forecasting**:
+- **Historical IRR Range**: ${Math.min(...sponsorDeals.map(d => d.irr))}% to ${Math.max(...sponsorDeals.map(d => d.irr))}%
+- **Average IRR**: ${(sponsorDeals.reduce((sum, deal) => sum + deal.irr, 0) / sponsorDeals.length).toFixed(1)}%
+- **Project Size Trend**: ${sponsorDeals.sort((a, b) => a.year - b.year).map(d => `${d.year}: $${(d.size / 1000000).toFixed(1)}M`).join(', ')}
+- **Performance Consistency**: Based on ${sponsorDeals.length} completed projects over ${Math.max(...sponsorDeals.map(d => d.year)) - Math.min(...sponsorDeals.map(d => d.year))} years
+
 ### Sensitivity / Stress Tests
 - **IRR Sensitivity**:
     - Exit Cap +50bps: -3.2%
     - Rents -5%: -2.5%
     - Costs +10%: -4.1%
 - **Break-even Occupancy**: 78%
+
+### Market Timing & Exit Strategy Forecasting
+- **Optimal Exit Window**: Based on supply pipeline delivery schedule and market absorption rates
+- **Supply Pipeline Analysis**: ${marketContextDetails.supplyAnalysis.underConstruction.toLocaleString()} units under construction vs. ${marketContextDetails.supplyAnalysis.planned24Months.toLocaleString()} planned in next 24 months
+- **Market Absorption**: Based on population growth of ${marketContextDetails.demographicProfile.growthTrends.populationGrowth5yr} and job growth of ${marketContextDetails.demographicProfile.growthTrends.jobGrowth5yr}
+- **Exit Strategy Options**: Based on current market conditions and comparable sales data
 
 ---
 
@@ -283,7 +312,14 @@ export async function POST(req: NextRequest) {
       prompt:
         `Offering Memorandum Document:\n${omText}\n\n` +
         `User Question:\n${question}\n\n` +
-        `Return only JSON matching the schema.`,
+        `Instructions for Analysis:\n` +
+        `- Answer based on the OM content provided\n` +
+        `- You can make forecasts and projections by extrapolating from the data\n` +
+        `- Use historical trends, market dynamics, and financial metrics for predictions\n` +
+        `- Consider multiple scenarios (base case, upside, downside) when relevant\n` +
+        `- Clearly indicate when providing forecasts vs. factual data from the OM\n` +
+        `- For projections, explain your reasoning and the data points you're extrapolating from\n` +
+        `\nReturn only JSON matching the schema.`,
         providerOptions: {
             google: {
               thinkingConfig: {

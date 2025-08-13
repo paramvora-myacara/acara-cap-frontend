@@ -189,7 +189,17 @@ export default function DashboardPage() {
             {/* Header with Sign Out button */}
            <header className="bg-white shadow-sm sticky top-0 z-10">
                <div className="container mx-auto py-3 px-4 md:px-6 flex justify-between items-center">
-                  <Link href="/" className="flex items-center space-x-2">
+                  <Link 
+                    href="/" 
+                    className="flex items-center space-x-2"
+                    onClick={() => {
+                      try {
+                        sessionStorage.setItem('navigatingFromApp', 'true');
+                      } catch (error) {
+                        console.warn('Could not set navigation flag:', error);
+                      }
+                    }}
+                  >
                        {/* Use full logo or icon based on preference */}
                        <img
                          src="/CapMatchLogo.png"
@@ -211,25 +221,7 @@ export default function DashboardPage() {
            <main className="container mx-auto p-4 md:p-6 space-y-6">
                <ProfileSummaryCard profile={borrowerProfile} isLoading={profileLoading} />
                
-               {/* Manual Navigation Button for New Users */}
-               {projects.length === 1 && (
-                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                   <div className="flex items-center justify-between">
-                     <div>
-                       <h3 className="text-sm font-medium text-blue-800">Welcome to CapMatch!</h3>
-                       <p className="text-sm text-blue-600 mt-1">Your project has been created. Click below to get started.</p>
-                     </div>
-                     <Button 
-                       variant="primary" 
-                       size="sm"
-                       onClick={navigateToProject}
-                       className="bg-blue-600 hover:bg-blue-700"
-                     >
-                       Go to Project
-                     </Button>
-                   </div>
-                 </div>
-               )}
+
                
                <div className="flex justify-between items-center mt-8 mb-4">
                     <h2 className="text-2xl font-semibold text-gray-800">My Projects</h2>
