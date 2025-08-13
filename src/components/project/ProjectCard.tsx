@@ -117,6 +117,18 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           </div>
         </div>
         
+        {/* See OM Button - Only show for 100% complete projects */}
+        {project.completenessPercent === 100 && (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => router.push(`/project/om/${project.id}`)}
+            className="mb-3 w-full bg-green-600 hover:bg-green-700 text-white"
+          >
+            See OM
+          </Button>
+        )}
+        
         <Button
           variant="outline"
           size="sm"

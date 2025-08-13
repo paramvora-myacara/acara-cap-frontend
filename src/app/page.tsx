@@ -53,7 +53,21 @@ export default function HomePage() {
 
   useEffect(() => {
     try {
-      if (sessionStorage.getItem('splashAnimationComplete')) {
+      // Check if we're navigating from another page in the app
+      const isNavigatingFromApp = sessionStorage.getItem('navigatingFromApp');
+      
+      if (isNavigatingFromApp) {
+        // Clear the flag and skip splash screen
+        sessionStorage.removeItem('navigatingFromApp');
+        setSplashComplete(true);
+        setContentVisible(true);
+        setTextAnimation({ part1Visible: true, part2Visible: true, part3Visible: true });
+        setHeaderVisible(true);
+        setHeaderTextVisible(true);
+        setHeaderLogoHidden(false);
+        setLogoAnimating(false);
+      } else if (sessionStorage.getItem('splashAnimationComplete')) {
+        // Normal case - splash already completed
         setSplashComplete(true);
         setContentVisible(true);
         setTextAnimation({ part1Visible: true, part2Visible: true, part3Visible: true });

@@ -42,7 +42,17 @@ const MinimalSidebarLayout: React.FC<MinimalSidebarLayoutProps> = ({ children, t
           {/* Logo/Brand */}
           <div className="p-4 lg:p-6 border-b border-gray-200 flex items-center justify-center">
             {/* Simplified Logo - Maybe just initials or small icon */}
-            <Link href="/dashboard" className="flex items-center space-x-2">
+            <Link 
+              href="/" 
+              className="flex items-center space-x-2"
+              onClick={() => {
+                try {
+                  sessionStorage.setItem('navigatingFromApp', 'true');
+                } catch (error) {
+                  console.warn('Could not set navigation flag:', error);
+                }
+              }}
+            >
                 <img src="/CapMatchLogo.png" alt="CapMatch" className="h-auto w-14 lg:w-20" onError={(e)=>(e.target as HTMLImageElement).style.display='none'} />
             </Link>
           </div>

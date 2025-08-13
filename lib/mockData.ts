@@ -84,50 +84,7 @@ const borrower1Project1: ProjectProfile = {
   borrowerSections: {} // Add required properties
 };
 
-const borrower1Project2Id = generateId('borrower1@example.com', 'project', 2);
-const borrower1Project2: ProjectProfile = {
-  id: borrower1Project2Id,
-  borrowerProfileId: borrower1ProfileId,
-  assignedAdvisorUserId: 'advisor1@capmatch.com',
-  projectName: 'Suburban Retail Pad',
-  name: 'Suburban Retail Pad', // legacy
-  propertyAddressStreet: '456 Retail Row',
-  propertyAddressCity: 'Pleasanton',
-  propertyAddressState: 'CA',
-  propertyAddressCounty: 'Alameda',
-  propertyAddressZip: '94566',
-  assetType: 'Retail',
-  projectDescription: 'Refinance existing loan on a single-tenant retail pad.',
-  projectPhase: 'Refinance',
-  loanAmountRequested: 2000000,
-  loanType: 'Senior Debt',
-  targetLtvPercent: 70,
-  targetLtcPercent: 0,
-  amortizationYears: 25,
-  interestOnlyPeriodMonths: 0,
-  interestRateType: 'Fixed',
-  targetCloseDate: '', // Not filled
-  useOfProceeds: 'Refinance maturing loan.',
-  recoursePreference: 'Flexible',
-  purchasePrice: null, // Refi
-  totalProjectCost: null,
-  capexBudget: 0,
-  propertyNoiT12: 150000,
-  stabilizedNoiProjected: 150000, // Stabilized
-  exitStrategy: 'Long-Term Hold',
-  businessPlanSummary: '', // Not filled
-  marketOverviewSummary: '', // Not filled
-  equityCommittedPercent: 0, // Not relevant for refi like this
-  projectStatus: 'Info Gathering',
-  completenessPercent: 50, // Manually set
-  borrowerProgress: 100, // Basic info filled
-  projectProgress: 25, // Financials/Plan missing
-  internalAdvisorNotes: '',
-  createdAt: now,
-  updatedAt: now,
-  projectSections: {}, // Add required properties
-  borrowerSections: {} // Add required properties
-};
+
 
 // --- Test User 2 Data (borrower2@example.com) ---
 const borrower2ProfileId = generateId('borrower2@example.com', 'profile');
@@ -211,6 +168,6 @@ export const mockProfiles: Record<string, BorrowerProfile> = {
 };
 
 export const mockProjects: Record<string, ProjectProfile[]> = {
-  'borrower1@example.com': [borrower1Project1, borrower1Project2],
+  'borrower1@example.com': [borrower1Project1],
   'borrower2@example.com': [borrower2Project1],
 };

@@ -15,7 +15,17 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-indigo-100 flex flex-col">
       <header className="bg-white shadow-sm p-4">
         <div className="container mx-auto">
-          <Link href="/" className="flex items-center">
+          <Link 
+            href="/" 
+            className="flex items-center"
+            onClick={() => {
+              try {
+                sessionStorage.setItem('navigatingFromApp', 'true');
+              } catch (error) {
+                console.warn('Could not set navigation flag:', error);
+              }
+            }}
+          >
             <img src="/CapMatchLogo.png" alt="CapMatch Logo" className="h-8" />
           </Link>
         </div>

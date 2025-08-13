@@ -1,23 +1,23 @@
 // src/app/project/om/[id]/dashboard/financial-sponsor/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'next/navigation';
 import { useProjects } from '@/hooks/useProjects';
-import { DashboardShell } from '@/components/om/DashboardShell';
 import { QuadrantGrid } from '@/components/om/QuadrantGrid';
 import { MetricCard } from '@/components/om/widgets/MetricCard';
 import { MiniChart } from '@/components/om/widgets/MiniChart';
+import { useOMDashboard } from '@/contexts/OMDashboardContext';
 import { scenarioData, sponsorDeals } from '@/services/mockOMData';
 import { DollarSign, BarChart3, Users, Activity } from 'lucide-react';
+import ReturnsCharts from '@/components/om/ReturnsCharts';
 
 export default function FinancialSponsorPage() {
     const params = useParams();
     const projectId = params?.id as string;
     const { getProject } = useProjects();
     const project = projectId ? getProject(projectId) : null;
-    
-    const [scenario, setScenario] = useState<'base' | 'upside' | 'downside'>('base');
+    const { scenario } = useOMDashboard();
     const data = scenarioData[scenario];
     
     if (!project) return <div>Project not found</div>;
@@ -28,6 +28,7 @@ export default function FinancialSponsorPage() {
             title: 'Sources & Uses',
             icon: DollarSign,
             color: 'from-green-400 to-green-500',
+            href: `/project/om/${projectId}/dashboard/financial-sponsor/sources-uses`,
             metrics: (
                 <div className="space-y-3">
                     <div className="space-y-2">
@@ -95,6 +96,7 @@ export default function FinancialSponsorPage() {
             title: 'Sponsor & Team',
             icon: Users,
             color: 'from-green-400 to-green-500',
+            href: `/project/om/${projectId}/dashboard/financial-sponsor/sponsor-profile`,
             metrics: (
                 <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-2">
@@ -126,44 +128,28 @@ export default function FinancialSponsorPage() {
             title: 'Sensitivity / Stress Tests',
             icon: Activity,
             color: 'from-blue-400 to-blue-500',
+            href: `/project/om/${projectId}/dashboard/financial-sponsor/returns`,
             metrics: (
                 <div className="space-y-3">
-                    <div className="space-y-2">
-                        <p className="text-xs text-gray-500 mb-2">IRR Sensitivity</p>
-                        <div className="space-y-1">
-                            <div className="flex justify-between items-center text-xs">
-                                <span>Exit Cap +50bps</span>
-                                <div className="flex items-center">
-                                    <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                        <div className="bg-red-500 h-2 rounded-full" style={{ width: '60%' }} />
-                                    </div>
-                                    <span className="text-red-600">-3.2%</span>
-                                </div>
-                            </div>
-                            <div className="flex justify-between items-center text-xs">
-                                <span>Rents -5%</span>
-                                <div className="flex items-center">
-                                    <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                        <div className="bg-red-500 h-2 rounded-full" style={{ width: '45%' }} />
-                                    </div>
-                                    <span className="text-red-600">-2.5%</span>
-                                </div>
-                            </div>
-                            <div className="flex justify-between items-center text-xs">
-                                <span>Costs +10%</span>
-                                <div className="flex items-center">
-                                    <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                        <div className="bg-red-500 h-2 rounded-full" style={{ width: '75%' }} />
-                                    </div>
-                                    <span className="text-red-600">-4.1%</span>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="h-32 overflow-hidden">
+                        <ReturnsCharts compact={true} />
                     </div>
-                    <div className="pt-2 border-t">
-                        <div className="flex justify-between text-xs">
-                            <span className="text-gray-500">Break-even Occupancy</span>
-                            <span className="font-medium">78%</span>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <p className="text-gray-500">Base IRR</p>
+                            <p className="font-medium text-blue-600">18.5%</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Upside IRR</p>
+                            <p className="font-medium text-green-600">24.5%</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Downside IRR</p>
+                            <p className="font-medium text-red-600">12.5%</p>
+                        </div>
+                        <div>
+                            <p className="text-gray-500">Break-even</p>
+                            <p className="font-medium">78%</p>
                         </div>
                     </div>
                 </div>
@@ -172,16 +158,9 @@ export default function FinancialSponsorPage() {
     ];
     
     return (
-        <DashboardShell
-            projectId={projectId}
-            projectName={project.projectName}
-            currentScenario={scenario}
-            onScenarioChange={setScenario}
-        >
-            <div className="max-w-6xl mx-auto">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Financial & Sponsor Details</h2>
-                <QuadrantGrid quadrants={quadrants} />
-            </div>
-        </DashboardShell>
+        <div className="max-w-6xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Financial & Sponsor Details</h2>
+            <QuadrantGrid quadrants={quadrants} />
+        </div>
     );
 }
