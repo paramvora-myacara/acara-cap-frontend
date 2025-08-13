@@ -147,9 +147,9 @@ export default function ProjectDetailPage() {
         </div>
         
         {/* Split View Layout - 50/50 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Project Form - Left Side */}
-          <div>
+          <div className="lg:col-span-2">
             <Card className="shadow-sm h-full">
               <CardHeader className="border-b bg-gray-50 pb-3">
                 <h2 className="text-xl font-semibold text-gray-800">Project Details</h2>
@@ -164,7 +164,7 @@ export default function ProjectDetailPage() {
           </div>
           
           {/* Message Panel - Right Side */}
-          <div>
+          <div className="lg:col-span-1">
             <MessagePanel 
               projectId={activeProject.id}
               fullHeight={true}

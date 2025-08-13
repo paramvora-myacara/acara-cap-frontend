@@ -127,9 +127,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 
         if (!userProfile || !existingProjectFound) {
              console.log(`[Auth] First project condition met for ${loggedInUser.email}.`);
-             let projectData: Partial<ProjectProfile> = { projectName: `Unnamed Project` }; // Default name
-
-             if (source === 'lenderline') { /* ... apply prefs logic ... */ try { const d=localStorage.getItem('lastFormData'); if(d) { /* ... parsing ... */ projectData.assetType=JSON.parse(d).asset_types?.[0]||'';/*...*/ localStorage.removeItem('lastFormData');} } catch(e){ console.error("Err apply prefs", e); } }
+             // For new users (not borrower1/borrower2), create empty project without seeding details
+             const isTestUser = loggedInUser.email === 'borrower1@example.com' || loggedInUser.email === 'borrower2@example.com';
+             
+             let projectData: Partial<ProjectProfile>;
+             if (isTestUser) {
+               // For test users, use default project data
+               projectData = { projectName: `Unnamed Project` };
+               
+               if (source === 'lenderline') { /* ... apply prefs logic ... */ try { const d=localStorage.getItem('lastFormData'); if(d) { /* ... parsing ... */ projectData.assetType=JSON.parse(d).asset_types?.[0]||'';/*...*/ localStorage.removeItem('lastFormData');} } catch(e){ console.error("Err apply prefs", e); } }
+             } else {
+               // For new users, create completely empty project
+               projectData = { 
+                 projectName: 'New Project',
+                 projectDescription: '',
+                 assetType: '',
+                 projectPhase: undefined,
+                 loanAmountRequested: undefined,
+                 loanType: '',
+                 targetLtvPercent: undefined,
+                 targetLtcPercent: undefined,
+                 amortizationYears: undefined,
+                 interestOnlyPeriodMonths: undefined,
+                 interestRateType: undefined,
+                 targetCloseDate: '',
+                 useOfProceeds: '',
+                 recoursePreference: undefined,
+                 purchasePrice: null,
+                 totalProjectCost: null,
+                 capexBudget: null,
+                 propertyNoiT12: null,
+                 stabilizedNoiProjected: null,
+                 exitStrategy: undefined,
+                 businessPlanSummary: '',
+                 marketOverviewSummary: '',
+                 equityCommittedPercent: undefined
+               };
+             }
 
               try {
                  let finalProfileId = userProfile?.id;
@@ -137,15 +171,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
                  // *** Create Profile if needed ***
                  if (!finalProfileId) {
                      console.log(`[Auth] Creating minimal profile...`);
-                     // Ensure createBorrowerProfile resolves with the created profile
-                     const newProfile = await borrowerProfileContext.createBorrowerProfile({
-                         userId: loggedInUser.email, contactEmail: loggedInUser.email,
-                         fullLegalName: loggedInUser.email.split('@')[0] || 'New User',
-                         primaryEntityName: 'My Entity',
-                     });
-                     if (!newProfile?.id) throw new Error("Profile creation failed.");
-                     finalProfileId = newProfile.id;
-                      // Update user in Auth context state *and* storage
+                     // For new users (not borrower1/borrower2), create empty profile without seeding details
+                     const isTestUser = loggedInUser.email === 'borrower1@example.com' || loggedInUser.email === 'borrower2@example.com';
+                     
+                     if (isTestUser) {
+                       // For test users, create profile with seeded data
+                       const newProfile = await borrowerProfileContext.createBorrowerProfile({
+                           userId: loggedInUser.email, contactEmail: loggedInUser.email,
+                           fullLegalName: loggedInUser.email.split('@')[0] || 'New User',
+                           primaryEntityName: 'My Entity',
+                       });
+                       if (!newProfile?.id) throw new Error("Profile creation failed.");
+                       finalProfileId = newProfile.id;
+                     } else {
+                       // For new users, create completely empty profile
+                       const newProfile = await borrowerProfileContext.createBorrowerProfile({
+                           userId: loggedInUser.email, contactEmail: loggedInUser.email,
+                           fullLegalName: '',
+                           primaryEntityName: '',
+                       });
+                       if (!newProfile?.id) throw new Error("Profile creation failed.");
+                       finalProfileId = newProfile.id;
+                     }
+                     
+                     // Update user in Auth context state *and* storage
                      await updateUser({ profileId: finalProfileId }); // Use the updateUser function
                      console.log(`[Auth] Minimal profile created: ${finalProfileId}`);
                      // Allow profile context state to potentially update

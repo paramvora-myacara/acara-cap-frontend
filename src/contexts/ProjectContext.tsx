@@ -52,6 +52,7 @@ interface ProjectContextProps {
   autoSaveProject: () => Promise<void>;
   // Add a function to reset state, useful for borrower3 clearing
   resetProjectState: () => void;
+  autoCreatedFirstProjectThisSession: boolean;
 }
 
 // Default Project object
@@ -88,6 +89,7 @@ export const ProjectContext = createContext<ProjectContextProps>({
   setProjectChanges: () => {},
   autoSaveProject: async () => {},
   resetProjectState: () => {}, // Add reset function default
+  autoCreatedFirstProjectThisSession: false,
 });
 
 // Provider Implementation
@@ -103,6 +105,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
     const [documentRequirements, setDocumentRequirements] = useState<ProjectDocumentRequirement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [projectChanges, setProjectChanges] = useState(false);
+    const [autoCreatedFirstProjectThisSession, setAutoCreatedFirstProjectThisSession] = useState(false);
 
     const { user } = useAuth();
     const borrowerProfileContext = useContext(BorrowerProfileContext);
@@ -119,6 +122,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
         setProjectPrincipals([]);
         setDocumentRequirements([]);
         setProjectChanges(false);
+        setAutoCreatedFirstProjectThisSession(false);
         lastSavedRef.current = null;
         if (autoSaveTimerRef.current) {
             clearInterval(autoSaveTimerRef.current);
@@ -129,14 +133,52 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
 
     // Calculate Progress
     const calculateProgress = useCallback((project: ProjectProfile): { borrowerProgress: number; projectProgress: number; totalProgress: number; } => {
-        const borrowerRequiredFields: (keyof ProjectProfile)[] = [ 'projectName', 'propertyAddressStreet', 'propertyAddressCity', 'propertyAddressState', 'propertyAddressZip', 'assetType', ];
-        const projectRequiredFields: (keyof ProjectProfile)[] = [ 'projectDescription', 'projectPhase', 'loanAmountRequested', 'loanType', 'targetLtvPercent', 'targetCloseDate', 'useOfProceeds', 'recoursePreference', 'exitStrategy', 'businessPlanSummary', ];
-        const filledBorrowerFields = borrowerRequiredFields.filter((field) => { const value = project[field]; return value !== null && value !== undefined && String(value).trim() !== ''; }).length;
-        const filledProjectFields = projectRequiredFields.filter((field) => { const value = project[field]; if (typeof value === 'number') return true; return value !== null && value !== undefined && String(value).trim() !== ''; }).length;
-        const borrowerProgress = borrowerRequiredFields.length > 0 ? Math.round((filledBorrowerFields / borrowerRequiredFields.length) * 100) : 0;
-        const projectProgress = projectRequiredFields.length > 0 ? Math.round((filledProjectFields / projectRequiredFields.length) * 100) : 0;
-        const totalProgress = Math.round((borrowerProgress + projectProgress) / 2);
-        return { borrowerProgress, projectProgress, totalProgress };
+        // For new users (not borrower1/borrower2), start with 0% if they haven't filled meaningful info
+        const isTestUser = project.borrowerProfileId && (
+          project.borrowerProfileId.includes('borrower1@example.com') || 
+          project.borrowerProfileId.includes('borrower2@example.com')
+        );
+        
+                 if (!isTestUser) {
+           // For new users, only count fields that have meaningful content (not just defaults)
+           const meaningfulBorrowerFields: (keyof ProjectProfile)[] = [ 'projectName', 'propertyAddressStreet', 'propertyAddressCity', 'propertyAddressState', 'propertyAddressZip', 'assetType' ];
+           const meaningfulProjectFields: (keyof ProjectProfile)[] = [ 'projectDescription', 'loanAmountRequested', 'loanType', 'targetCloseDate', 'useOfProceeds', 'businessPlanSummary' ];
+           
+           let meaningfulBorrowerCount = 0;
+           meaningfulBorrowerFields.forEach(field => { 
+             const value = project[field]; 
+             if (value && String(value).trim() !== '') meaningfulBorrowerCount++; 
+           });
+           
+           let meaningfulProjectCount = 0;
+           meaningfulProjectFields.forEach(field => { 
+             const value = project[field]; 
+             if (typeof value === 'number' && value > 0) meaningfulProjectCount++;
+             else if (value && String(value).trim() !== '') meaningfulProjectCount++;
+           });
+           
+           // Only count other fields if they have meaningful values (not undefined or defaults)
+           if (project.projectPhase && project.projectPhase !== 'Acquisition') meaningfulProjectCount++;
+           if (project.targetLtvPercent && project.targetLtvPercent > 0) meaningfulProjectCount++;
+           if (project.recoursePreference && project.recoursePreference !== 'Flexible') meaningfulProjectCount++;
+           if (project.exitStrategy && project.exitStrategy !== 'Undecided') meaningfulProjectCount++;
+           
+           // For new users, be very strict - only count truly filled fields
+           const borrowerProgress = meaningfulBorrowerFields.length > 0 ? Math.round((meaningfulBorrowerCount / meaningfulBorrowerFields.length) * 100) : 0;
+           const projectProgress = meaningfulProjectFields.length > 0 ? Math.round((meaningfulProjectCount / meaningfulProjectFields.length) * 100) : 0;
+           const totalProgress = Math.round((borrowerProgress + projectProgress) / 2);
+           return { borrowerProgress, projectProgress, totalProgress };
+        } else {
+          // For test users, use the original calculation logic
+          const borrowerRequiredFields: (keyof ProjectProfile)[] = [ 'projectName', 'propertyAddressStreet', 'propertyAddressCity', 'propertyAddressState', 'propertyAddressZip', 'assetType', ];
+          const projectRequiredFields: (keyof ProjectProfile)[] = [ 'projectDescription', 'projectPhase', 'loanAmountRequested', 'loanType', 'targetLtvPercent', 'targetCloseDate', 'useOfProceeds', 'recoursePreference', 'exitStrategy', 'businessPlanSummary', ];
+          const filledBorrowerFields = borrowerRequiredFields.filter((field) => { const value = project[field]; return value !== null && value !== undefined && String(value).trim() !== ''; }).length;
+          const filledProjectFields = projectRequiredFields.filter((field) => { const value = project[field]; if (typeof value === 'number') return true; return value !== null && value !== undefined && String(value).trim() !== ''; }).length;
+          const borrowerProgress = borrowerRequiredFields.length > 0 ? Math.round((filledBorrowerFields / borrowerRequiredFields.length) * 100) : 0;
+          const projectProgress = projectRequiredFields.length > 0 ? Math.round((filledProjectFields / projectRequiredFields.length) * 100) : 0;
+          const totalProgress = Math.round((borrowerProgress + projectProgress) / 2);
+          return { borrowerProgress, projectProgress, totalProgress };
+        }
     }, []);
 
     // Auto Save Project
@@ -303,7 +345,20 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
         const defaultProjectName = `Unnamed Project ${nextProjectNumber}`;
 
         const newProject: ProjectProfile = { ...defaultProject, ...projectData, id: uniqueId, borrowerProfileId: user?.role === 'borrower' ? currentBorrowerProfileId! : '', assignedAdvisorUserId: randomAdvisor.id, projectName: projectData.projectName && projectData.projectName !== 'Unnamed Project' ? projectData.projectName : defaultProjectName, name: projectData.projectName && projectData.projectName !== 'Unnamed Project' ? projectData.projectName : defaultProjectName, projectStatus: 'Draft', createdAt: now, updatedAt: now, };
-        const progress = calculateProgress(newProject); newProject.borrowerProgress = progress.borrowerProgress; newProject.projectProgress = progress.projectProgress; newProject.completenessPercent = progress.totalProgress;
+        
+        // For new users (not borrower1/borrower2), start with 0% progress
+        const isTestUser = user?.email === 'borrower1@example.com' || user?.email === 'borrower2@example.com';
+        if (isTestUser) {
+          const progress = calculateProgress(newProject);
+          newProject.borrowerProgress = progress.borrowerProgress;
+          newProject.projectProgress = progress.projectProgress;
+          newProject.completenessPercent = progress.totalProgress;
+        } else {
+          // For new users, start at 0% progress
+          newProject.borrowerProgress = 0;
+          newProject.projectProgress = 0;
+          newProject.completenessPercent = 0;
+        }
 
         setProjects((prevProjects) => [...prevProjects, newProject]);
         setActiveProject(newProject); // Set new project active
@@ -335,11 +390,46 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
                     }));
                     setProjects(withProgress);
                     setActiveProject(withProgress[0]);
+                    setAutoCreatedFirstProjectThisSession(false);
                     return;                          // nothing to create
                 }
 
                 // 2️⃣ Still none → create first project
-                await createProject({ projectName: 'Unnamed Project 1' });
+                // For new users (not borrower1/borrower2), create completely empty project
+                const isTestUser = user.email === 'borrower1@example.com' || user.email === 'borrower2@example.com';
+                
+                if (isTestUser) {
+                  // For test users, create project with default name
+                  await createProject({ projectName: 'Unnamed Project 1' });
+                } else {
+                  // For new users, create project with truly minimal data - no defaults
+                  await createProject({ 
+                    projectName: 'New Project',
+                    projectDescription: '',
+                    assetType: '',
+                    projectPhase: undefined,
+                    loanAmountRequested: undefined,
+                    loanType: '',
+                    targetLtvPercent: undefined,
+                    targetLtcPercent: undefined,
+                    amortizationYears: undefined,
+                    interestOnlyPeriodMonths: undefined,
+                    interestRateType: undefined,
+                    targetCloseDate: '',
+                    useOfProceeds: '',
+                    recoursePreference: undefined,
+                    purchasePrice: null,
+                    totalProjectCost: null,
+                    capexBudget: null,
+                    propertyNoiT12: null,
+                    stabilizedNoiProjected: null,
+                    exitStrategy: undefined,
+                    businessPlanSummary: '',
+                    marketOverviewSummary: '',
+                    equityCommittedPercent: undefined
+                  });
+                }
+                setAutoCreatedFirstProjectThisSession(true); // Set flag to true after successful auto-creation
             } catch (err) {
                 console.error('[ProjectContext] Auto-create project failed:', err);
             }
@@ -428,7 +518,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
 
 
     return (
-        <ProjectContext.Provider value={{ projects, isLoading, activeProject, projectMessages, projectPrincipals, documentRequirements, createProject, updateProject, deleteProject, getProject: (id: string) => projects.find(p => p.id === id) || null, setActiveProject: setActiveProjectAndLoadData, addProjectMessage, addDocumentRequirement, updateDocumentRequirement, assignPrincipalToProject, updateProjectPrincipal, removeProjectPrincipal, updateProjectStatus, calculateProgress, getCompletionStats, projectChanges, setProjectChanges, autoSaveProject, resetProjectState }}>
+        <ProjectContext.Provider value={{ projects, isLoading, activeProject, projectMessages, projectPrincipals, documentRequirements, createProject, updateProject, deleteProject, getProject: (id: string) => projects.find(p => p.id === id) || null, setActiveProject: setActiveProjectAndLoadData, addProjectMessage, addDocumentRequirement, updateDocumentRequirement, assignPrincipalToProject, updateProjectPrincipal, removeProjectPrincipal, updateProjectStatus, calculateProgress, getCompletionStats, projectChanges, setProjectChanges, autoSaveProject, resetProjectState, autoCreatedFirstProjectThisSession }}>
             {children}
         </ProjectContext.Provider>
     );

@@ -89,14 +89,52 @@ export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = (
   // Calculate Completeness
   const calculateCompleteness = useCallback((profile: BorrowerProfile | null, profilePrincipals: Principal[]): number => {
         if (!profile) return 0;
-        const requiredFields: (keyof BorrowerProfile)[] = [ 'fullLegalName', 'primaryEntityName', 'primaryEntityStructure', 'contactEmail', 'contactPhone', 'contactAddress', 'yearsCREExperienceRange', 'assetClassesExperience', 'geographicMarketsExperience', 'creditScoreRange', 'netWorthRange', 'liquidityRange' ];
-        let filledCount = 0;
-        requiredFields.forEach(field => { const value = profile[field]; if (value && (Array.isArray(value) ? value.length > 0 : String(value).trim() !== '')) filledCount++; });
-        const optionalFields: (keyof BorrowerProfile)[] = [ 'bioNarrative', 'linkedinUrl', 'websiteUrl', 'totalDealValueClosedRange', 'existingLenderRelationships' ];
-        optionalFields.forEach(field => { const value = profile[field]; if (value && String(value).trim() !== '') filledCount += 0.5; });
-        if (profilePrincipals.length > 0) filledCount += 1 + (Math.min(profilePrincipals.length, 3) * 0.5);
-        const maxPoints = requiredFields.length + optionalFields.length * 0.5 + 2.5; // Adjusted max points
-        return Math.min(100, Math.round((filledCount / maxPoints) * 100));
+        
+        // For new users (not borrower1/borrower2), start with 0% if they haven't filled meaningful info
+        const isTestUser = profile.userId === 'borrower1@example.com' || profile.userId === 'borrower2@example.com';
+        
+        if (!isTestUser) {
+          // For new users, only count fields that have meaningful content (not just defaults)
+          const meaningfulFields: (keyof BorrowerProfile)[] = [ 'fullLegalName', 'primaryEntityName', 'contactPhone', 'contactAddress', 'bioNarrative', 'linkedinUrl', 'websiteUrl' ];
+          let meaningfulCount = 0;
+          meaningfulFields.forEach(field => { 
+            const value = profile[field]; 
+            if (value && String(value).trim() !== '') meaningfulCount++; 
+          });
+          
+          // Only count experience fields if they're not default values
+          if (profile.yearsCREExperienceRange && profile.yearsCREExperienceRange !== '0-2') meaningfulCount++;
+          if (profile.assetClassesExperience && profile.assetClassesExperience.length > 0) meaningfulCount++;
+          if (profile.geographicMarketsExperience && profile.geographicMarketsExperience.length > 0) meaningfulCount++;
+          if (profile.creditScoreRange && profile.creditScoreRange !== 'N/A') meaningfulCount++;
+          if (profile.netWorthRange && profile.netWorthRange !== '<$1M') meaningfulCount++;
+          if (profile.liquidityRange && profile.liquidityRange !== '<$100k') meaningfulCount++;
+          if (profile.totalDealValueClosedRange && profile.totalDealValueClosedRange !== 'N/A') meaningfulCount++;
+          if (profile.existingLenderRelationships && profile.existingLenderRelationships.trim() !== '') meaningfulCount++;
+          
+          // Count principals only if they have meaningful content
+          if (profilePrincipals.length > 0) {
+            const meaningfulPrincipals = profilePrincipals.filter(p => 
+              p.principalLegalName.trim() !== '' || 
+              p.principalBio.trim() !== '' || 
+              p.principalEmail.trim() !== ''
+            );
+            meaningfulCount += meaningfulPrincipals.length * 0.5;
+          }
+          
+          const maxMeaningfulPoints = meaningfulFields.length + 8 + 1.5; // 8 experience fields + max 3 principals
+          return Math.min(100, Math.round((meaningfulCount / maxMeaningfulPoints) * 100));
+        } else {
+          // For test users, use the original calculation logic
+          const requiredFields: (keyof BorrowerProfile)[] = [ 'fullLegalName', 'primaryEntityName', 'primaryEntityStructure', 'contactEmail', 'contactPhone', 'contactAddress', 'yearsCREExperienceRange', 'assetClassesExperience', 'geographicMarketsExperience', 'creditScoreRange', 'netWorthRange', 'liquidityRange' ];
+          let filledCount = 0;
+          requiredFields.forEach(field => { const value = profile[field]; if (value && (Array.isArray(value) ? value.length > 0 : String(value).trim() !== '')) filledCount++; });
+          const optionalFields: (keyof BorrowerProfile)[] = [ 'bioNarrative', 'linkedinUrl', 'websiteUrl', 'totalDealValueClosedRange', 'existingLenderRelationships' ];
+          optionalFields.forEach(field => { const value = profile[field]; if (value && String(value).trim() !== '') filledCount += 0.5; });
+          if (profilePrincipals.length > 0) filledCount += 1 + (Math.min(profilePrincipals.length, 3) * 0.5);
+          const maxPoints = requiredFields.length + optionalFields.length * 0.5 + 2.5; // Adjusted max points
+          return Math.min(100, Math.round((filledCount / maxPoints) * 100));
+        }
    }, []);
 
    // Auto Save Profile
@@ -146,20 +184,41 @@ export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = (
         if (!user) throw new Error('User must be logged in');
         const now = new Date().toISOString();
         const profileId = generateUniqueId();
+        // For new users (not borrower1/borrower2), create truly empty profile without defaults
+        const isTestUser = user.email === 'borrower1@example.com' || user.email === 'borrower2@example.com';
+        
         const newProfile: BorrowerProfile = {
             id: profileId, userId: user.email,
-            fullLegalName: profileData.fullLegalName || '', primaryEntityName: profileData.primaryEntityName || '',
-            primaryEntityStructure: profileData.primaryEntityStructure || 'LLC', contactEmail: profileData.contactEmail || user.email,
-            contactPhone: profileData.contactPhone || '', contactAddress: profileData.contactAddress || '',
-            bioNarrative: profileData.bioNarrative || '', linkedinUrl: profileData.linkedinUrl || '', websiteUrl: profileData.websiteUrl || '',
-            yearsCREExperienceRange: profileData.yearsCREExperienceRange || '0-2', assetClassesExperience: profileData.assetClassesExperience || [],
-            geographicMarketsExperience: profileData.geographicMarketsExperience || [], totalDealValueClosedRange: profileData.totalDealValueClosedRange || 'N/A',
-            existingLenderRelationships: profileData.existingLenderRelationships || '', creditScoreRange: profileData.creditScoreRange || 'N/A',
-            netWorthRange: profileData.netWorthRange || '<$1M', liquidityRange: profileData.liquidityRange || '<$100k',
-            bankruptcyHistory: profileData.bankruptcyHistory || false, foreclosureHistory: profileData.foreclosureHistory || false,
-            litigationHistory: profileData.litigationHistory || false, completenessPercent: 0, createdAt: now, updatedAt: now
+            fullLegalName: profileData.fullLegalName || '', 
+            primaryEntityName: profileData.primaryEntityName || '',
+            primaryEntityStructure: isTestUser ? (profileData.primaryEntityStructure || 'LLC') : (profileData.primaryEntityStructure || 'LLC'), 
+            contactEmail: profileData.contactEmail || user.email,
+            contactPhone: profileData.contactPhone || '', 
+            contactAddress: profileData.contactAddress || '',
+            bioNarrative: profileData.bioNarrative || '', 
+            linkedinUrl: profileData.linkedinUrl || '', 
+            websiteUrl: profileData.websiteUrl || '',
+            yearsCREExperienceRange: isTestUser ? (profileData.yearsCREExperienceRange || '0-2') : (profileData.yearsCREExperienceRange || '0-2'), 
+            assetClassesExperience: profileData.assetClassesExperience || [], 
+            geographicMarketsExperience: profileData.geographicMarketsExperience || [], 
+            totalDealValueClosedRange: isTestUser ? (profileData.totalDealValueClosedRange || 'N/A') : (profileData.totalDealValueClosedRange || 'N/A'), 
+            existingLenderRelationships: profileData.existingLenderRelationships || '', 
+            creditScoreRange: isTestUser ? (profileData.creditScoreRange || 'N/A') : (profileData.creditScoreRange || 'N/A'), 
+            netWorthRange: isTestUser ? (profileData.netWorthRange || '<$1M') : (profileData.netWorthRange || '<$1M'), 
+            liquidityRange: isTestUser ? (profileData.liquidityRange || '<$100k') : (profileData.liquidityRange || '<$100k'), 
+            bankruptcyHistory: profileData.bankruptcyHistory || false, 
+            foreclosureHistory: profileData.foreclosureHistory || false,
+            litigationHistory: profileData.litigationHistory || false, 
+            completenessPercent: 0, 
+            createdAt: now, 
+            updatedAt: now
         };
-        newProfile.completenessPercent = calculateCompleteness(newProfile, []); // Calculate initial completeness
+        // For new users (not borrower1/borrower2), start with 0% completeness
+        if (isTestUser) {
+          newProfile.completenessPercent = calculateCompleteness(newProfile, []); // Calculate initial completeness for test users
+        } else {
+          newProfile.completenessPercent = 0; // Start at 0% for new users
+        }
         setBorrowerProfile(newProfile); // Update state
         setPrincipals([]); // Reset principals for new profile
 
@@ -192,15 +251,28 @@ export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = (
         }
 
         // 2️⃣ Still missing → create minimal profile
-        const newProfile = await createBorrowerProfile({
-          userId: user.email,
-          contactEmail: user.email,
-          fullLegalName: user.email.split('@')[0] || 'New User',
-          primaryEntityName: 'My Entity',
-        });
-
-        // Persist the profileId back to AuthContext so the rest of the app knows it
-        await updateUser({ profileId: newProfile.id });
+        // For new users (not borrower1/borrower2), create empty profile without seeding details
+        const isTestUser = user.email === 'borrower1@example.com' || user.email === 'borrower2@example.com';
+        
+        if (isTestUser) {
+          // For test users, create profile with seeded data
+          const newProfile = await createBorrowerProfile({
+            userId: user.email,
+            contactEmail: user.email,
+            fullLegalName: user.email.split('@')[0] || 'New User',
+            primaryEntityName: 'My Entity',
+          });
+          await updateUser({ profileId: newProfile.id });
+        } else {
+          // For new users, create completely empty profile
+          const newProfile = await createBorrowerProfile({
+            userId: user.email,
+            contactEmail: user.email,
+            fullLegalName: '',
+            primaryEntityName: '',
+          });
+          await updateUser({ profileId: newProfile.id });
+        }
       } catch (err) {
         console.error('[BorrowerProfileContext] Auto-create failed:', err);
       }
