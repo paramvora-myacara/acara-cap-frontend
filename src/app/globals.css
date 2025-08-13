@@ -43,8 +43,8 @@
   background: #a8a8a8;
 }
 
-/* Smooth transitions */
-* {
+/* Smooth transitions - scoped to OM only */
+.om-scope * {
   transition: all 0.2s ease-in-out;
 }
 
