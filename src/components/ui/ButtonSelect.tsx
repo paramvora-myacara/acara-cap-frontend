@@ -47,7 +47,7 @@ export const ButtonSelect: React.FC<ButtonSelectProps> = ({
             // Use the safe handler
             onClick={() => handleClick(option)}
             className={cn(
-              "justify-center w-full px-2 py-1.5 md:px-3 md:py-2 whitespace-nowrap focus:ring-2 focus:ring-offset-1 focus:ring-blue-500",
+              "justify-center w-full px-2 py-1.5 md:px-3 md:py-2 focus:ring-2 focus:ring-offset-1 focus:ring-blue-500",
                selectedValue === option
                 ? 'ring-2 ring-blue-500 ring-offset-1 shadow-md'
                 : 'text-gray-700 hover:bg-gray-50',

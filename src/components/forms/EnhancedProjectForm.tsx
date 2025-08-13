@@ -162,7 +162,7 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormGroup> <Input id="loanAmountRequested" type="number" label="Requested Loan Amount ($)" value={formData.loanAmountRequested?.toString() || ''} onChange={(e) => handleInputChange('loanAmountRequested', e.target.value ? Number(e.target.value) : 0)} placeholder="e.g., 10000000" required /> </FormGroup>
                  {/* Capital Type uses ButtonSelect */}
-                <FormGroup> <ButtonSelect label="Capital Type" options={capitalTypeOptions} selectedValue={formData.loanType || ''} onSelect={(value) => handleInputChange('loanType', value)} required /> </FormGroup>
+                <FormGroup> <ButtonSelect label="Capital Type" options={capitalTypeOptions} selectedValue={formData.loanType || ''} onSelect={(value) => handleInputChange('loanType', value)} required gridCols="grid-cols-2 md:grid-cols-3" /> </FormGroup>
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormGroup> <Input id="targetLtvPercent" type="number" label="Target LTV (%)" value={formData.targetLtvPercent?.toString() || ''} onChange={(e) => handleInputChange('targetLtvPercent', e.target.value ? Number(e.target.value) : 0)} placeholder="e.g., 70" required /> </FormGroup>
@@ -174,14 +174,14 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  {/* Interest Rate Type uses ButtonSelect */}
-                <FormGroup> <ButtonSelect label="Interest Rate Type" options={interestRateTypeOptions} selectedValue={formData.interestRateType || 'Not Specified'} onSelect={(value) => handleInputChange('interestRateType', value as InterestRateType)} /> </FormGroup>
+                <FormGroup> <ButtonSelect label="Interest Rate Type" options={interestRateTypeOptions} selectedValue={formData.interestRateType || 'Not Specified'} onSelect={(value) => handleInputChange('interestRateType', value as InterestRateType)} gridCols="grid-cols-2 md:grid-cols-3" /> </FormGroup>
                 <FormGroup> <Input id="targetCloseDate" type="date" label="Target Close Date" value={formData.targetCloseDate || ''} onChange={(e) => handleInputChange('targetCloseDate', e.target.value)} /> </FormGroup>
              </div>
              {/* Recourse Preference uses ButtonSelect */}
-             <FormGroup> <ButtonSelect label="Recourse Preference" options={recourseOptions} selectedValue={formData.recoursePreference || 'Flexible'} onSelect={(value) => handleInputChange('recoursePreference', value as RecoursePreference)} /> </FormGroup>
-             {/* Use of Proceeds uses Textarea */}
-             <FormGroup> <label className="block text-sm font-medium text-gray-700 mb-1"> Use of Proceeds </label> <textarea id="useOfProceeds" value={formData.useOfProceeds || ''} onChange={(e) => handleInputChange('useOfProceeds', e.target.value)} placeholder="Describe how the loan proceeds will be used..." className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required /> </FormGroup>
-          </CardContent>
+             <FormGroup> <ButtonSelect label="Recourse Preference" options={recourseOptions} selectedValue={formData.recoursePreference || 'Flexible'} onSelect={(value) => handleInputChange('recoursePreference', value as RecoursePreference)} gridCols="grid-cols-2 md:grid-cols-3" /> </FormGroup>
+                                         {/* Use of Proceeds uses Textarea */}
+              <FormGroup> <label className="block text-sm font-medium text-gray-700 mb-1"> Use of Proceeds </label> <textarea id="useOfProceeds" value={formData.useOfProceeds || ''} onChange={(e) => handleInputChange('useOfProceeds', e.target.value)} placeholder="Describe how the loan proceeds will be used..." className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required /> </FormGroup>
+            </CardContent>
         </Card>
       ),
     },
