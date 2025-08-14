@@ -88,7 +88,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             variant="primary"
             fullWidth
             onClick={() => router.push(`/project/om/${project.id}`)}
-            className="mb-3 flex-shrink-0 bg-green-600 hover:bg-green-700 text-white"
+            className="mb-2 flex-shrink-0 bg-green-600 hover:bg-green-700 text-white"
           >
             See OM
           </Button>
@@ -100,7 +100,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           fullWidth
           rightIcon={<ChevronRight size={16} />}
           onClick={() => router.push(`/project/workspace/${project.id}`)} // Link to workspace
-          className="mt-4 flex-shrink-0" // Prevent button shrinking
+          className="flex-shrink-0" // Prevent button shrinking
         >
           View / Edit Project
         </Button>
