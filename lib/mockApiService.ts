@@ -11,7 +11,7 @@ export const getLenders = async (): Promise<LenderProfile[]> => {
       capital_types: ["Senior Debt"],
       min_deal_size: 2000000,
       max_deal_size: 50000000,
-      locations: ["National"],
+      locations: ["nationwide"],
       preference_scope: { asset_types: 0.8, deal_types: 0.7, capital_types: 0.9, locations: 0.5, deal_size: 0.7 },
       match_score: 0.8,
       debt_ranges: ["$25M - $100M"],
@@ -655,8 +655,21 @@ export const getLenders = async (): Promise<LenderProfile[]> => {
         preference_scope: { asset_types: 0.9, deal_types: 0.7, capital_types: 0.8, locations: 0.9, deal_size: 0.7 },
         match_score: 0.8,
         debt_ranges: ["$25M - $100M"],
-    },
-  ];
+      },
+      {
+        lender_id: 51,
+        name: "CapMatch Universal Lender",
+        asset_types: ["Multifamily", "Office", "Retail", "Industrial", "Hospitality", "Land", "Mixed-Use", "Self-Storage", "Data Center", "Medical Office", "Senior Housing", "Student Housing", "Other"],
+        deal_types: ["Acquisition", "Refinance", "Construction", "Bridge", "Development", "Value-Add", "Other"],
+        capital_types: ["Senior Debt", "Mezzanine", "Preferred Equity", "Common Equity", "JV Equity", "Other"],
+        min_deal_size: 100000,
+        max_deal_size: 1000000000,
+        locations: ["nationwide"],
+        preference_scope: { asset_types: 0.95, deal_types: 0.95, capital_types: 0.95, locations: 0.95, deal_size: 0.95 },
+        match_score: 1,
+        debt_ranges: ["$0 - $5M", "$5M - $25M", "$25M - $100M", "$100M+"],
+      },
+    ];
 
   return mockLenders;
 };
