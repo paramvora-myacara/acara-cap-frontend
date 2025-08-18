@@ -18,6 +18,9 @@ import { useBorrowerProfile } from '../../hooks/useBorrowerProfile';
 import { useUI } from '../../hooks/useUI';
 import { useAuth } from '../../hooks/useAuth';
 import { ContextHelp } from '../ui/ContextHelp';
+import { FormProvider, useFormContext } from '../../contexts/FormContext';
+import { AskAICard } from './AskAICard';
+import { DraggableField } from '../ui/DragDropProvider';
 
 import {
   FileText, MapPin, Building, DollarSign, Clock, CheckCircle,
@@ -124,28 +127,188 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
             </h2>
           </CardHeader>
           <CardContent className="p-4 space-y-6">
-            <FormGroup> <Input id="projectName" label="Project Name" value={formData.projectName || ''} onChange={(e) => handleInputChange('projectName', e.target.value)} placeholder="e.g., Riverfront Acquisition" required /> </FormGroup>
+            <FormGroup> 
+              <DraggableField id="projectName">
+                <Input 
+                  id="projectName" 
+                  label="Project Name" 
+                  value={formData.projectName || ''} 
+                  onChange={(e) => handleInputChange('projectName', e.target.value)} 
+                  placeholder="e.g., Riverfront Acquisition" 
+                  required 
+                  data-field-id="projectName"
+                  data-field-type="input"
+                  data-field-section="basic-info"
+                  data-field-required="true"
+                  data-field-label="Project Name"
+                  data-field-placeholder="e.g., Riverfront Acquisition"
+                />
+              </DraggableField>
+            </FormGroup>
             {/* Property Address Section */}
             <div className="border-t pt-4">
                 <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center"><MapPin className="h-4 w-4 mr-2 text-blue-600" /> Property Address</h3>
-                <FormGroup> <Input id="propertyAddressStreet" label="Street Address" value={formData.propertyAddressStreet || ''} onChange={(e) => handleInputChange('propertyAddressStreet', e.target.value)} placeholder="123 Main Street" required /> </FormGroup>
+                <FormGroup> 
+                  <DraggableField id="propertyAddressStreet">
+                    <Input 
+                      id="propertyAddressStreet" 
+                      label="Street Address" 
+                      value={formData.propertyAddressStreet || ''} 
+                      onChange={(e) => handleInputChange('propertyAddressStreet', e.target.value)} 
+                      placeholder="123 Main Street" 
+                      required 
+                      data-field-id="propertyAddressStreet"
+                      data-field-type="input"
+                      data-field-section="basic-info"
+                      data-field-required="true"
+                      data-field-label="Street Address"
+                      data-field-placeholder="123 Main Street"
+                    />
+                  </DraggableField>
+                </FormGroup>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <FormGroup> <Input id="propertyAddressCity" label="City" value={formData.propertyAddressCity || ''} onChange={(e) => handleInputChange('propertyAddressCity', e.target.value)} placeholder="Anytown" required /> </FormGroup>
+                    <FormGroup> 
+                      <DraggableField id="propertyAddressCity">
+                        <Input 
+                          id="propertyAddressCity" 
+                          label="City" 
+                          value={formData.propertyAddressCity || ''} 
+                          onChange={(e) => handleInputChange('propertyAddressCity', e.target.value)} 
+                          placeholder="Anytown" 
+                          required 
+                          data-field-id="propertyAddressCity"
+                          data-field-type="input"
+                          data-field-section="basic-info"
+                          data-field-required="true"
+                          data-field-label="City"
+                          data-field-placeholder="Anytown"
+                        />
+                      </DraggableField>
+                    </FormGroup>
                     {/* State uses Select */}
-                    <FormGroup> <Select id="propertyAddressState" label="State" value={formData.propertyAddressState || ''} onChange={(e) => handleInputChange('propertyAddressState', e.target.value)} options={stateOptions} required /> </FormGroup>
-                    <FormGroup> <Input id="propertyAddressZip" label="ZIP Code" value={formData.propertyAddressZip || ''} onChange={(e) => handleInputChange('propertyAddressZip', e.target.value)} placeholder="12345" required /> </FormGroup>
+                    <FormGroup> 
+                      <DraggableField id="propertyAddressState">
+                        <Select 
+                          id="propertyAddressState" 
+                          label="State" 
+                          value={formData.propertyAddressState || ''} 
+                          onChange={(e) => handleInputChange('propertyAddressState', e.target.value)} 
+                          options={stateOptions} 
+                          required 
+                          data-field-id="propertyAddressState"
+                          data-field-type="select"
+                          data-field-section="basic-info"
+                          data-field-required="true"
+                          data-field-label="State"
+                          data-field-options={JSON.stringify(stateOptions)}
+                        />
+                      </DraggableField>
+                    </FormGroup>
+                    <FormGroup> 
+                      <DraggableField id="propertyAddressZip">
+                        <Input 
+                          id="propertyAddressZip" 
+                          label="ZIP Code" 
+                          value={formData.propertyAddressZip || ''} 
+                          onChange={(e) => handleInputChange('propertyAddressZip', e.target.value)} 
+                          placeholder="12345" 
+                          required 
+                          data-field-id="propertyAddressZip"
+                          data-field-type="input"
+                          data-field-section="basic-info"
+                          data-field-required="true"
+                          data-field-label="ZIP Code"
+                          data-field-placeholder="12345"
+                        />
+                      </DraggableField>
+                    </FormGroup>
                 </div>
-                <FormGroup className="mt-4"> <Input id="propertyAddressCounty" label="County" value={formData.propertyAddressCounty || ''} onChange={(e) => handleInputChange('propertyAddressCounty', e.target.value)} placeholder="e.g., Orange County" /> </FormGroup>
+                <FormGroup className="mt-4"> 
+                  <DraggableField id="propertyAddressCounty">
+                    <Input 
+                      id="propertyAddressCounty" 
+                      label="County" 
+                      value={formData.propertyAddressCounty || ''} 
+                      onChange={(e) => handleInputChange('propertyAddressCounty', e.target.value)} 
+                      placeholder="e.g., Orange County" 
+                      data-field-id="propertyAddressCounty"
+                      data-field-type="input"
+                      data-field-section="basic-info"
+                      data-field-required="false"
+                      data-field-label="County"
+                      data-field-placeholder="e.g., Orange County"
+                    />
+                  </DraggableField>
+                </FormGroup>
             </div>
              {/* Property Info Section */}
             <div className="border-t pt-4">
                  <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center"><Building className="h-4 w-4 mr-2 text-blue-600" /> Property Information</h3>
                  {/* Asset Type uses ButtonSelect */}
-                 <FormGroup> <ButtonSelect label="Asset Type" options={assetTypeOptions} selectedValue={formData.assetType || ''} onSelect={(value) => handleInputChange('assetType', value)} required /> </FormGroup>
+                 <FormGroup> 
+                   <DraggableField id="assetType">
+                     <div
+                       data-field-id="assetType"
+                       data-field-type="button-select"
+                       data-field-section="basic-info"
+                       data-field-required="true"
+                       data-field-label="Asset Type"
+                       data-field-options={JSON.stringify(assetTypeOptions)}
+                     >
+                       <ButtonSelect 
+                         label="Asset Type" 
+                         options={assetTypeOptions} 
+                         selectedValue={formData.assetType || ''} 
+                         onSelect={(value) => handleInputChange('assetType', value)} 
+                         required 
+                       />
+                     </div>
+                   </DraggableField>
+                 </FormGroup>
                  {/* Project Phase uses ButtonSelect */}
-                 <FormGroup className="mt-4"> <ButtonSelect label="Project Phase / Deal Type" options={projectPhaseOptions} selectedValue={formData.projectPhase || ''} onSelect={(value) => handleInputChange('projectPhase', value as ProjectPhase)} required /> </FormGroup>
+                 <FormGroup className="mt-4"> 
+                   <DraggableField id="projectPhase">
+                     <div
+                       data-field-id="projectPhase"
+                       data-field-type="button-select"
+                       data-field-section="basic-info"
+                       data-field-required="true"
+                       data-field-label="Project Phase / Deal Type"
+                       data-field-options={JSON.stringify(projectPhaseOptions)}
+                     >
+                       <ButtonSelect 
+                         label="Project Phase / Deal Type" 
+                         options={projectPhaseOptions} 
+                         selectedValue={formData.projectPhase || ''} 
+                         onSelect={(value) => handleInputChange('projectPhase', value as ProjectPhase)} 
+                         required 
+                       />
+                     </div>
+                   </DraggableField>
+                 </FormGroup>
                  {/* Project Description uses Textarea */}
-                 <FormGroup className="mt-4"> <label className="block text-sm font-medium text-gray-700 mb-1"> Project Description </label> <textarea id="projectDescription" value={formData.projectDescription || ''} onChange={(e) => handleInputChange('projectDescription', e.target.value)} placeholder="Brief description of the project..." className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required /> </FormGroup>
+                 <FormGroup className="mt-4"> 
+                   <DraggableField id="projectDescription">
+                     <div
+                       data-field-id="projectDescription"
+                       data-field-type="textarea"
+                       data-field-section="basic-info"
+                       data-field-required="true"
+                       data-field-label="Project Description"
+                       data-field-placeholder="Brief description of the project..."
+                     >
+                       <label className="block text-sm font-medium text-gray-700 mb-1"> Project Description </label>
+                       <textarea 
+                         id="projectDescription" 
+                         value={formData.projectDescription || ''} 
+                         onChange={(e) => handleInputChange('projectDescription', e.target.value)} 
+                         placeholder="Brief description of the project..." 
+                         className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                         required 
+                       />
+                     </div>
+                   </DraggableField>
+                 </FormGroup>
             </div>
           </CardContent>
         </Card>
@@ -160,27 +323,208 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
           <CardHeader className="pb-3 border-b"> <h2 className="text-xl font-semibold text-gray-800 flex items-center"><DollarSign className="h-5 w-5 mr-2 text-blue-600" /> Loan Request Details</h2> </CardHeader>
           <CardContent className="p-4 space-y-6">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormGroup> <Input id="loanAmountRequested" type="number" label="Requested Loan Amount ($)" value={formData.loanAmountRequested?.toString() || ''} onChange={(e) => handleInputChange('loanAmountRequested', e.target.value ? Number(e.target.value) : 0)} placeholder="e.g., 10000000" required /> </FormGroup>
+                <FormGroup> 
+                  <DraggableField id="loanAmountRequested">
+                    <Input 
+                      id="loanAmountRequested" 
+                      type="number" 
+                      label="Requested Loan Amount ($)" 
+                      value={formData.loanAmountRequested?.toString() || ''} 
+                      onChange={(e) => handleInputChange('loanAmountRequested', e.target.value ? Number(e.target.value) : 0)} 
+                      placeholder="e.g., 10000000" 
+                      required 
+                      data-field-id="loanAmountRequested"
+                      data-field-type="number"
+                      data-field-section="loan-info"
+                      data-field-required="true"
+                      data-field-label="Requested Loan Amount ($)"
+                      data-field-placeholder="e.g., 10000000"
+                    />
+                  </DraggableField>
+                </FormGroup>
                  {/* Capital Type uses ButtonSelect */}
-                <FormGroup> <ButtonSelect label="Capital Type" options={capitalTypeOptions} selectedValue={formData.loanType || ''} onSelect={(value) => handleInputChange('loanType', value)} required gridCols="grid-cols-2 md:grid-cols-3" /> </FormGroup>
+                                 <FormGroup> 
+                   <DraggableField id="loanType">
+                     <div
+                       data-field-id="loanType"
+                       data-field-type="button-select"
+                       data-field-section="loan-info"
+                       data-field-required="true"
+                       data-field-label="Capital Type"
+                       data-field-options={JSON.stringify(capitalTypeOptions)}
+                     >
+                       <ButtonSelect 
+                         label="Capital Type" 
+                         options={capitalTypeOptions} 
+                         selectedValue={formData.loanType || ''} 
+                         onSelect={(value) => handleInputChange('loanType', value)} 
+                         required 
+                         gridCols="grid-cols-2 md:grid-cols-3" 
+                       />
+                     </div>
+                   </DraggableField>
+                 </FormGroup>
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormGroup> <Input id="targetLtvPercent" type="number" label="Target LTV (%)" value={formData.targetLtvPercent?.toString() || ''} onChange={(e) => handleInputChange('targetLtvPercent', e.target.value ? Number(e.target.value) : 0)} placeholder="e.g., 70" required /> </FormGroup>
-                <FormGroup> <Input id="targetLtcPercent" type="number" label="Target LTC (%) (Construction/Dev)" value={formData.targetLtcPercent?.toString() || ''} onChange={(e) => handleInputChange('targetLtcPercent', e.target.value ? Number(e.target.value) : 0)} placeholder="e.g., 80" /> </FormGroup>
+                <FormGroup> 
+                  <DraggableField id="targetLtvPercent">
+                    <Input 
+                      id="targetLtvPercent" 
+                      type="number" 
+                      label="Target LTV (%)" 
+                      value={formData.targetLtvPercent?.toString() || ''} 
+                      onChange={(e) => handleInputChange('targetLtvPercent', e.target.value ? Number(e.target.value) : 0)} 
+                      placeholder="e.g., 70" 
+                      required 
+                      data-field-id="targetLtvPercent"
+                      data-field-type="number"
+                      data-field-section="loan-info"
+                      data-field-required="true"
+                      data-field-label="Target LTV (%)"
+                      data-field-placeholder="e.g., 70"
+                    />
+                  </DraggableField>
+                </FormGroup>
+                <FormGroup> 
+                  <DraggableField id="targetLtcPercent">
+                    <Input 
+                      id="targetLtcPercent" 
+                      type="number" 
+                      label="Target LTC (%) (Construction/Dev)" 
+                      value={formData.targetLtcPercent?.toString() || ''} 
+                      onChange={(e) => handleInputChange('targetLtcPercent', e.target.value ? Number(e.target.value) : 0)} 
+                      placeholder="e.g., 80" 
+                      data-field-id="targetLtcPercent"
+                      data-field-type="number"
+                      data-field-section="loan-info"
+                      data-field-required="false"
+                      data-field-label="Target LTC (%) (Construction/Dev)"
+                      data-field-placeholder="e.g., 80"
+                    />
+                  </DraggableField>
+                </FormGroup>
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormGroup> <Input id="amortizationYears" type="number" label="Amortization (Years)" value={formData.amortizationYears?.toString() || ''} onChange={(e) => handleInputChange('amortizationYears', e.target.value ? Number(e.target.value) : 0)} placeholder="e.g., 30" /> </FormGroup>
-                <FormGroup> <Input id="interestOnlyPeriodMonths" type="number" label="Interest-Only Period (Months)" value={formData.interestOnlyPeriodMonths?.toString() || ''} onChange={(e) => handleInputChange('interestOnlyPeriodMonths', e.target.value ? Number(e.target.value) : 0)} placeholder="e.g., 36" /> </FormGroup>
+                <FormGroup> 
+                  <DraggableField id="amortizationYears">
+                    <Input 
+                      id="amortizationYears" 
+                      type="number" 
+                      label="Amortization (Years)" 
+                      value={formData.amortizationYears?.toString() || ''} 
+                      onChange={(e) => handleInputChange('amortizationYears', e.target.value ? Number(e.target.value) : 0)} 
+                      placeholder="e.g., 30" 
+                      data-field-id="amortizationYears"
+                      data-field-type="number"
+                      data-field-section="loan-info"
+                      data-field-required="false"
+                      data-field-label="Amortization (Years)"
+                      data-field-placeholder="e.g., 30"
+                    />
+                  </DraggableField>
+                </FormGroup>
+                <FormGroup> 
+                  <DraggableField id="interestOnlyPeriodMonths">
+                    <Input 
+                      id="interestOnlyPeriodMonths" 
+                      type="number" 
+                      label="Interest-Only Period (Months)" 
+                      value={formData.interestOnlyPeriodMonths?.toString() || ''} 
+                      onChange={(e) => handleInputChange('interestOnlyPeriodMonths', e.target.value ? Number(e.target.value) : 0)} 
+                      placeholder="e.g., 36" 
+                      data-field-id="interestOnlyPeriodMonths"
+                      data-field-type="number"
+                      data-field-section="loan-info"
+                      data-field-required="false"
+                      data-field-label="Interest-Only Period (Months)"
+                      data-field-placeholder="e.g., 36"
+                    />
+                  </DraggableField>
+                </FormGroup>
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  {/* Interest Rate Type uses ButtonSelect */}
-                <FormGroup> <ButtonSelect label="Interest Rate Type" options={interestRateTypeOptions} selectedValue={formData.interestRateType || 'Not Specified'} onSelect={(value) => handleInputChange('interestRateType', value as InterestRateType)} gridCols="grid-cols-2 md:grid-cols-3" /> </FormGroup>
-                <FormGroup> <Input id="targetCloseDate" type="date" label="Target Close Date" value={formData.targetCloseDate || ''} onChange={(e) => handleInputChange('targetCloseDate', e.target.value)} /> </FormGroup>
+                <FormGroup> 
+                  <DraggableField id="interestRateType">
+                    <div
+                      data-field-id="interestRateType"
+                      data-field-type="button-select"
+                      data-field-section="loan-info"
+                      data-field-required="false"
+                      data-field-label="Interest Rate Type"
+                      data-field-options={JSON.stringify(interestRateTypeOptions)}
+                    >
+                      <ButtonSelect 
+                        label="Interest Rate Type" 
+                        options={interestRateTypeOptions} 
+                        selectedValue={formData.interestRateType || 'Not Specified'} 
+                        onSelect={(value) => handleInputChange('interestRateType', value as InterestRateType)} 
+                        gridCols="grid-cols-2 md:grid-cols-3" 
+                      />
+                    </div>
+                  </DraggableField>
+                </FormGroup>
+                <FormGroup> 
+                  <DraggableField id="targetCloseDate">
+                    <Input 
+                      id="targetCloseDate" 
+                      type="date" 
+                      label="Target Close Date" 
+                      value={formData.targetCloseDate || ''} 
+                      onChange={(e) => handleInputChange('targetCloseDate', e.target.value)} 
+                      data-field-id="targetCloseDate"
+                      data-field-type="date"
+                      data-field-section="loan-info"
+                      data-field-required="false"
+                      data-field-label="Target Close Date"
+                    />
+                  </DraggableField>
+                </FormGroup>
              </div>
              {/* Recourse Preference uses ButtonSelect */}
-             <FormGroup> <ButtonSelect label="Recourse Preference" options={recourseOptions} selectedValue={formData.recoursePreference || 'Flexible'} onSelect={(value) => handleInputChange('recoursePreference', value as RecoursePreference)} gridCols="grid-cols-2 md:grid-cols-3" /> </FormGroup>
+             <FormGroup> 
+               <DraggableField id="recoursePreference">
+                 <div
+                   data-field-id="recoursePreference"
+                   data-field-type="button-select"
+                   data-field-section="loan-info"
+                   data-field-required="false"
+                   data-field-label="Recourse Preference"
+                   data-field-options={JSON.stringify(recourseOptions)}
+                 >
+                   <ButtonSelect 
+                     label="Recourse Preference" 
+                     options={recourseOptions} 
+                     selectedValue={formData.recoursePreference || 'Flexible'} 
+                     onSelect={(value) => handleInputChange('recoursePreference', value as RecoursePreference)} 
+                     gridCols="grid-cols-2 md:grid-cols-3" 
+                   />
+                 </div>
+               </DraggableField>
+             </FormGroup>
                                          {/* Use of Proceeds uses Textarea */}
-              <FormGroup> <label className="block text-sm font-medium text-gray-700 mb-1"> Use of Proceeds </label> <textarea id="useOfProceeds" value={formData.useOfProceeds || ''} onChange={(e) => handleInputChange('useOfProceeds', e.target.value)} placeholder="Describe how the loan proceeds will be used..." className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" required /> </FormGroup>
+              <FormGroup> 
+                <DraggableField id="useOfProceeds">
+                  <div
+                    data-field-id="useOfProceeds"
+                    data-field-type="textarea"
+                    data-field-section="loan-info"
+                    data-field-required="true"
+                    data-field-label="Use of Proceeds"
+                    data-field-placeholder="Describe how the loan proceeds will be used..."
+                  >
+                    <label className="block text-sm font-medium text-gray-700 mb-1"> Use of Proceeds </label>
+                    <textarea 
+                      id="useOfProceeds" 
+                      value={formData.useOfProceeds || ''} 
+                      onChange={(e) => handleInputChange('useOfProceeds', e.target.value)} 
+                      placeholder="Describe how the loan proceeds will be used..." 
+                      className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                      required 
+                    />
+                  </div>
+                </DraggableField>
+              </FormGroup>
             </CardContent>
         </Card>
       ),
@@ -194,22 +538,182 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
           <CardHeader className="pb-3 border-b"> <h2 className="text-xl font-semibold text-gray-800 flex items-center"><BarChart className="h-5 w-5 mr-2 text-blue-600" /> Financial Information</h2> </CardHeader>
           <CardContent className="p-4 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormGroup> <Input id="purchasePrice" type="number" label="Purchase Price / Current Basis ($)" value={formData.purchasePrice?.toString() || ''} onChange={(e) => handleInputChange('purchasePrice', e.target.value ? Number(e.target.value) : null)} placeholder="e.g., 15000000" /> </FormGroup>
-              <FormGroup> <Input id="totalProjectCost" type="number" label="Total Project Cost ($)" value={formData.totalProjectCost?.toString() || ''} onChange={(e) => handleInputChange('totalProjectCost', e.target.value ? Number(e.target.value) : null)} placeholder="e.g., 18000000" /> </FormGroup>
+              <FormGroup> 
+                <DraggableField id="purchasePrice">
+                  <Input 
+                    id="purchasePrice" 
+                    type="number" 
+                    label="Purchase Price / Current Basis ($)" 
+                    value={formData.purchasePrice?.toString() || ''} 
+                    onChange={(e) => handleInputChange('purchasePrice', e.target.value ? Number(e.target.value) : null)} 
+                    placeholder="e.g., 15000000" 
+                    data-field-id="purchasePrice"
+                    data-field-type="number"
+                    data-field-section="financials"
+                    data-field-required="false"
+                    data-field-label="Purchase Price / Current Basis ($)"
+                    data-field-placeholder="e.g., 15000000"
+                  />
+                </DraggableField>
+              </FormGroup>
+              <FormGroup> 
+                <DraggableField id="totalProjectCost">
+                  <Input 
+                    id="totalProjectCost" 
+                    type="number" 
+                    label="Total Project Cost ($)" 
+                    value={formData.totalProjectCost?.toString() || ''} 
+                    onChange={(e) => handleInputChange('totalProjectCost', e.target.value ? Number(e.target.value) : null)} 
+                    placeholder="e.g., 18000000" 
+                    data-field-id="totalProjectCost"
+                    data-field-type="number"
+                    data-field-section="financials"
+                    data-field-required="false"
+                    data-field-label="Total Project Cost ($)"
+                    data-field-placeholder="e.g., 18000000"
+                  />
+                </DraggableField>
+              </FormGroup>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormGroup> <Input id="capexBudget" type="number" label="CapEx Budget ($)" value={formData.capexBudget?.toString() || ''} onChange={(e) => handleInputChange('capexBudget', e.target.value ? Number(e.target.value) : null)} placeholder="e.g., 1500000" /> </FormGroup>
-              <FormGroup> <Input id="equityCommittedPercent" type="number" label="Equity Committed (%)" value={formData.equityCommittedPercent?.toString() || ''} onChange={(e) => handleInputChange('equityCommittedPercent', e.target.value ? Number(e.target.value) : 0)} placeholder="e.g., 100" /> </FormGroup>
+              <FormGroup> 
+                <DraggableField id="capexBudget">
+                  <Input 
+                    id="capexBudget" 
+                    type="number" 
+                    label="CapEx Budget ($)" 
+                    value={formData.capexBudget?.toString() || ''} 
+                    onChange={(e) => handleInputChange('capexBudget', e.target.value ? Number(e.target.value) : null)} 
+                    placeholder="e.g., 1500000" 
+                    data-field-id="capexBudget"
+                    data-field-type="number"
+                    data-field-section="financials"
+                    data-field-required="false"
+                    data-field-label="CapEx Budget ($)"
+                    data-field-placeholder="e.g., 1500000"
+                  />
+                </DraggableField>
+              </FormGroup>
+              <FormGroup> 
+                <DraggableField id="equityCommittedPercent">
+                  <Input 
+                    id="equityCommittedPercent" 
+                    type="number" 
+                    label="Equity Committed (%)" 
+                    value={formData.equityCommittedPercent?.toString() || ''} 
+                    onChange={(e) => handleInputChange('equityCommittedPercent', e.target.value ? Number(e.target.value) : 0)} 
+                    placeholder="e.g., 100" 
+                    data-field-id="equityCommittedPercent"
+                    data-field-type="number"
+                    data-field-section="financials"
+                    data-field-required="false"
+                    data-field-label="Equity Committed (%)"
+                    data-field-placeholder="e.g., 100"
+                  />
+                </DraggableField>
+              </FormGroup>
             </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <FormGroup> <Input id="propertyNoiT12" type="number" label="Current/T12 NOI ($)" value={formData.propertyNoiT12?.toString() || ''} onChange={(e) => handleInputChange('propertyNoiT12', e.target.value ? Number(e.target.value) : null)} placeholder="e.g., 450000" /> </FormGroup>
-               <FormGroup> <Input id="stabilizedNoiProjected" type="number" label="Projected Stabilized NOI ($)" value={formData.stabilizedNoiProjected?.toString() || ''} onChange={(e) => handleInputChange('stabilizedNoiProjected', e.target.value ? Number(e.target.value) : null)} placeholder="e.g., 750000" /> </FormGroup>
+               <FormGroup> 
+                 <DraggableField id="propertyNoiT12">
+                   <Input 
+                     id="propertyNoiT12" 
+                     type="number" 
+                     label="Current/T12 NOI ($)" 
+                     value={formData.propertyNoiT12?.toString() || ''} 
+                     onChange={(e) => handleInputChange('propertyNoiT12', e.target.value ? Number(e.target.value) : null)} 
+                     placeholder="e.g., 450000" 
+                     data-field-id="propertyNoiT12"
+                     data-field-type="number"
+                     data-field-section="financials"
+                     data-field-required="false"
+                     data-field-label="Current/T12 NOI ($)"
+                     data-field-placeholder="e.g., 450000"
+                   />
+                 </DraggableField>
+               </FormGroup>
+               <FormGroup> 
+                 <DraggableField id="stabilizedNoiProjected">
+                   <Input 
+                     id="stabilizedNoiProjected" 
+                     type="number" 
+                     label="Projected Stabilized NOI ($)" 
+                     value={formData.stabilizedNoiProjected?.toString() || ''} 
+                     onChange={(e) => handleInputChange('stabilizedNoiProjected', e.target.value ? Number(e.target.value) : null)} 
+                     placeholder="e.g., 750000" 
+                     data-field-id="stabilizedNoiProjected"
+                     data-field-type="number"
+                     data-field-section="financials"
+                     data-field-required="false"
+                     data-field-label="Projected Stabilized NOI ($)"
+                     data-field-placeholder="e.g., 750000"
+                   />
+                 </DraggableField>
+               </FormGroup>
              </div>
              {/* Exit Strategy uses ButtonSelect */}
-             <FormGroup> <ButtonSelect label="Exit Strategy" options={exitStrategyOptions} selectedValue={formData.exitStrategy || 'Undecided'} onSelect={(value) => handleInputChange('exitStrategy', value as ExitStrategy)} /> </FormGroup>
+             <FormGroup> 
+               <DraggableField id="exitStrategy">
+                 <div
+                   data-field-id="exitStrategy"
+                   data-field-type="button-select"
+                   data-field-section="financials"
+                   data-field-required="false"
+                   data-field-label="Exit Strategy"
+                   data-field-options={JSON.stringify(exitStrategyOptions)}
+                 >
+                   <ButtonSelect 
+                     label="Exit Strategy" 
+                     options={exitStrategyOptions} 
+                     selectedValue={formData.exitStrategy || 'Undecided'} 
+                     onSelect={(value) => handleInputChange('exitStrategy', value as ExitStrategy)} 
+                   />
+                 </div>
+               </DraggableField>
+             </FormGroup>
              {/* Business Plan & Market Overview use Textarea */}
-             <FormGroup> <label className="block text-sm font-medium text-gray-700 mb-1"> Business Plan Summary </label> <textarea id="businessPlanSummary" value={formData.businessPlanSummary || ''} onChange={(e) => handleInputChange('businessPlanSummary', e.target.value)} placeholder="Summary of your business plan..." className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" /> </FormGroup>
-             <FormGroup> <label className="block text-sm font-medium text-gray-700 mb-1"> Market Overview </label> <textarea id="marketOverviewSummary" value={formData.marketOverviewSummary || ''} onChange={(e) => handleInputChange('marketOverviewSummary', e.target.value)} placeholder="Brief overview of the market..." className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" /> </FormGroup>
+             <FormGroup> 
+               <DraggableField id="businessPlanSummary">
+                 <div
+                   data-field-id="businessPlanSummary"
+                   data-field-type="textarea"
+                   data-field-section="financials"
+                   data-field-required="false"
+                   data-field-label="Business Plan Summary"
+                   data-field-placeholder="Summary of your business plan..."
+                 >
+                   <label className="block text-sm font-medium text-gray-700 mb-1"> Business Plan Summary </label>
+                   <textarea 
+                     id="businessPlanSummary" 
+                     value={formData.businessPlanSummary || ''} 
+                     onChange={(e) => handleInputChange('businessPlanSummary', e.target.value)} 
+                     placeholder="Summary of your business plan..." 
+                     className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                   />
+                 </div>
+               </DraggableField>
+             </FormGroup>
+             <FormGroup> 
+               <DraggableField id="marketOverviewSummary">
+                 <div
+                   data-field-id="marketOverviewSummary"
+                   data-field-type="textarea"
+                   data-field-section="financials"
+                   data-field-required="false"
+                   data-field-label="Market Overview"
+                   data-field-placeholder="Brief overview of the market..."
+                 >
+                   <label className="block text-sm font-medium text-gray-700 mb-1"> Market Overview </label>
+                   <textarea 
+                     id="marketOverviewSummary" 
+                     value={formData.marketOverviewSummary || ''} 
+                     onChange={(e) => handleInputChange('marketOverviewSummary', e.target.value)} 
+                     placeholder="Brief overview of the market..." 
+                     className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                   />
+                 </div>
+               </DraggableField>
+             </FormGroup>
           </CardContent>
         </Card>
       ),
@@ -265,12 +769,14 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
   ], [formData, formSaved, handleInputChange, handleFormSubmit, router]); // Include dependencies for useMemo
 
   return (
-    <FormWizard
-      steps={steps}
-      onComplete={handleFormSubmit} // Trigger save on final step if needed
-      showProgressBar={true}
-      showStepIndicators={true}
-      allowSkip={true} // Allow skipping optional steps
-    />
+    <FormProvider initialFormData={formData}>
+      <FormWizard
+        steps={steps}
+        onComplete={handleFormSubmit} // Trigger save on final step if needed
+        showProgressBar={true}
+        showStepIndicators={true}
+        allowSkip={true} // Allow skipping optional steps
+      />
+    </FormProvider>
   );
 };

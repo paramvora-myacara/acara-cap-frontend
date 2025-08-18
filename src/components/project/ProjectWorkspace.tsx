@@ -1,7 +1,7 @@
 // src/components/project/ProjectWorkspace.tsx
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjects } from '../../hooks/useProjects';
 import { useBorrowerProfile } from '../../hooks/useBorrowerProfile';
@@ -13,6 +13,8 @@ import { Loader2, FileSpreadsheet } from 'lucide-react'; // Added FileSpreadshee
 import { ProjectProfile } from '@/types/enhanced-types';
 import { Button } from '../ui/Button'; // Import Button
 import { useAuth } from '@/hooks/useAuth'; // Add this import
+import { DragDropProvider } from '../ui/DragDropProvider';
+import { AskAICard } from '../forms/AskAICard';
 
 interface ProjectWorkspaceProps {
     projectId: string;
@@ -26,6 +28,9 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
     const { borrowerProfile, isLoading: profileLoading } = useBorrowerProfile();
     const { user, isLoading: authLoading } = useAuth(); // Add auth loading state
     const { setLoading, showNotification } = useUI();
+    
+    // State for Ask AI field drop
+    const [droppedFieldId, setDroppedFieldId] = useState<string | null>(null);
 
     // Calculate if we're still in initial loading phase
     const isInitialLoading = authLoading || projectsLoading || (user?.role === 'borrower' && profileLoading);
@@ -107,24 +112,36 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
             )}
 
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left Column: Project Form */}
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                     <div className="mb-4 border-b pb-3">
-                        <div className="flex justify-between items-center mb-1">
-                            <h2 className="text-lg font-semibold text-gray-800">Project Resume</h2>
-                            <span className={`text-sm font-semibold ${projectCompleteness === 100 ? 'text-green-600' : 'text-blue-600'}`}>{projectCompleteness}% Complete</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2"><div className={`h-2 rounded-full transition-all duration-500 ${projectProgressColor}`} style={{ width: `${projectCompleteness}%` }} /></div>
-                    </div>
-                    <EnhancedProjectForm existingProject={activeProject} onComplete={handleProjectUpdateComplete} />
-                </div>
+            <DragDropProvider onFieldDrop={(fieldId) => {
+              setDroppedFieldId(fieldId);
+            }}>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column: Project Form */}
+                  <div className="lg:col-span-2 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                       <div className="mb-4 border-b pb-3">
+                          <div className="flex justify-between items-center mb-1">
+                              <h2 className="text-lg font-semibold text-gray-800">Project Resume</h2>
+                              <span className={`text-sm font-semibold ${projectCompleteness === 100 ? 'text-green-600' : 'text-blue-600'}`}>{projectCompleteness}% Complete</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2"><div className={`h-2 rounded-full transition-all duration-500 ${projectProgressColor}`} style={{ width: `${projectCompleteness}%` }} /></div>
+                      </div>
+                      <EnhancedProjectForm existingProject={activeProject} onComplete={handleProjectUpdateComplete} />
+                  </div>
 
-                {/* Right Column: Message Panel */}
-                <div className="h-full">
-                    <MessagePanel projectId={activeProject.id} />
-                </div>
-            </div>
+                  {/* Right Column: Ask AI Card and Message Panel */}
+                  <div className="space-y-6">
+                      <AskAICard 
+                        projectId={activeProject.id} 
+                        formData={activeProject} 
+                        droppedFieldId={droppedFieldId}
+                        onFieldProcessed={() => {
+                          setDroppedFieldId(null);
+                        }}
+                      />
+                      <MessagePanel projectId={activeProject.id} />
+                  </div>
+              </div>
+            </DragDropProvider>
         </div>
     );
 };
