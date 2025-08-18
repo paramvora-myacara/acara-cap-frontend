@@ -8,13 +8,12 @@ import { useBorrowerProfile } from '../../hooks/useBorrowerProfile';
 import { useUI } from '../../hooks/useUI';
 import { ProfileSummaryCard } from './ProfileSummaryCard';
 import { EnhancedProjectForm } from '../forms/EnhancedProjectForm';
-import { MessagePanel } from '../dashboard/MessagePanel';
 import { Loader2, FileSpreadsheet } from 'lucide-react'; // Added FileSpreadsheet
 import { ProjectProfile } from '@/types/enhanced-types';
 import { Button } from '../ui/Button'; // Import Button
 import { useAuth } from '@/hooks/useAuth'; // Add this import
 import { DragDropProvider } from '../ui/DragDropProvider';
-import { AskAICard } from '../forms/AskAICard';
+import { ConsolidatedSidebar } from './ConsolidatedSidebar';
 
 interface ProjectWorkspaceProps {
     projectId: string;
@@ -117,20 +116,22 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
             }}>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Left Column: Project Form */}
-                  <div className="lg:col-span-2 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-                       <div className="mb-4 border-b pb-3">
+                  <div className="lg:col-span-2 bg-white p-4 rounded-lg shadow-sm border border-gray-200 max-h-[calc(100vh-200px)] overflow-hidden flex flex-col">
+                       <div className="mb-4 border-b pb-3 flex-shrink-0">
                           <div className="flex justify-between items-center mb-1">
                               <h2 className="text-lg font-semibold text-gray-800">Project Resume</h2>
                               <span className={`text-sm font-semibold ${projectCompleteness === 100 ? 'text-green-600' : 'text-blue-600'}`}>{projectCompleteness}% Complete</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2"><div className={`h-2 rounded-full transition-all duration-500 ${projectProgressColor}`} style={{ width: `${projectCompleteness}%` }} /></div>
                       </div>
-                      <EnhancedProjectForm existingProject={activeProject} onComplete={handleProjectUpdateComplete} />
+                      <div className="flex-1 overflow-y-auto">
+                        <EnhancedProjectForm existingProject={activeProject} onComplete={handleProjectUpdateComplete} />
+                      </div>
                   </div>
 
-                  {/* Right Column: Ask AI Card and Message Panel */}
-                  <div className="space-y-6">
-                      <AskAICard 
+                  {/* Right Column: Consolidated Sidebar */}
+                  <div className="h-[calc(100vh-200px)]">
+                      <ConsolidatedSidebar 
                         projectId={activeProject.id} 
                         formData={activeProject} 
                         droppedFieldId={droppedFieldId}
@@ -138,7 +139,6 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
                           setDroppedFieldId(null);
                         }}
                       />
-                      <MessagePanel projectId={activeProject.id} />
                   </div>
               </div>
             </DragDropProvider>

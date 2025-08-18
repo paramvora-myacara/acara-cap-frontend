@@ -13,11 +13,7 @@ const MODEL_NAME = 'gemini-2.5-pro';
 
 // Schema for AI response with markdown support
 const ProjectQASchema = z.object({
-  answer_markdown: z.string().describe('A comprehensive, helpful answer to the user\'s question about the form field, formatted in markdown'),
-  suggestions: z.array(z.string()).describe('Actionable suggestions for completing the field or related actions'),
-  relatedFields: z.array(z.string()).describe('Related form fields that might need attention or are connected to this field'),
-  confidence: z.number().min(0).max(1).describe('Confidence level in the answer (0-1)'),
-  sources: z.array(z.string()).describe('Sources of information or industry standards referenced')
+  answer_markdown: z.string().describe('A comprehensive, helpful answer to the user\'s question about the form field, formatted in markdown')
 });
 
 export async function POST(req: NextRequest) {
@@ -46,11 +42,10 @@ INSTRUCTIONS:
 1. Answer questions specifically about this field and its context
 2. Reference the current project details when relevant
 3. Provide actionable advice for completing this field
-4. Suggest related fields that might need attention
-5. Explain industry standards and best practices
-6. Always consider the user's specific project type and phase
-7. Use the chat history to provide contextual follow-up responses
-8. Format your response using markdown for better readability
+4. Explain industry standards and best practices
+5. Always consider the user's specific project type and phase
+6. Use the chat history to provide contextual follow-up responses
+7. Format your response using markdown for better readability
 
 RESPONSE FORMAT:
 - Use markdown formatting for structure (headers, lists, emphasis)

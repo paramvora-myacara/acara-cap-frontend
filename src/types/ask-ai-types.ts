@@ -58,10 +58,6 @@ export interface AIContextRequest {
 
 export interface AIContextResponse {
   answer: string;
-  suggestions: string[];
-  relatedFields: string[];
-  confidence: number;
-  sources: string[];
 }
 
 export interface FormContextType {

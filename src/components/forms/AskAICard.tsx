@@ -54,12 +54,12 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
 
   // Automatically send a comprehensive question when field context is built
   useEffect(() => {
-    if (fieldContext && messages.length === 0 && !isLoading) {
+    if (fieldContext && messages.length === 0 && !isLoading && !isBuildingContext) {
       // Send a comprehensive question that will trigger the AI to answer the preset questions
       const comprehensiveQuestion = `Please provide comprehensive guidance and answers for the "${fieldContext.label}" field, including best practices, validation rules, and common considerations.`;
       sendMessage(comprehensiveQuestion);
     }
-  }, [fieldContext, messages.length, isLoading, sendMessage]);
+  }, [fieldContext, messages.length, isLoading, isBuildingContext, sendMessage]);
 
   return (
     <Card 

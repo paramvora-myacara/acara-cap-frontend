@@ -1,17 +1,13 @@
 // src/hooks/useAskAI.ts
 import { useState, useCallback, useEffect } from 'react';
 import { experimental_useObject as useObject } from '@ai-sdk/react';
-import { Message, FieldContext, PresetQuestion, AIContextRequest, AIContextResponse } from '../types/ask-ai-types';
+import { Message, FieldContext, PresetQuestion, AIContextRequest } from '../types/ask-ai-types';
 import { AIContextBuilder } from '../services/aiContextBuilder';
 import { z } from 'zod';
 
 // Schema for AI response with markdown support
 const ProjectQASchema = z.object({
-  answer_markdown: z.string().describe('A comprehensive, helpful answer to the user\'s question about the form field, formatted in markdown'),
-  suggestions: z.array(z.string()).describe('Actionable suggestions for completing the field or related actions'),
-  relatedFields: z.array(z.string()).describe('Related form fields that might need attention or are connected to this field'),
-  confidence: z.number().min(0).max(1).describe('Confidence level in the answer (0-1)'),
-  sources: z.array(z.string()).describe('Sources of information or industry standards referenced')
+  answer_markdown: z.string().describe('A comprehensive, helpful answer to the user\'s question about the form field, formatted in markdown')
 });
 
 interface UseAskAIOptions {
@@ -45,17 +41,17 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
         throw new Error('Field ID is required');
       }
 
-      // Clear previous context and start fresh
+      // Clear previous context and start fresh - do this synchronously to prevent race conditions
       setMessages([]);
       setFieldContext(null);
       setPresetQuestions([]);
       setContextError(null);
+      setIsBuildingContext(true);
 
       // 1. Immediate visual feedback (optimistic)
       setDroppedField(fieldId);
       
-      // 2. Start context building in background
-      setIsBuildingContext(true);
+      // 2. Context building will continue in background
       
       try {
         // Check cache first
@@ -97,7 +93,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
 
   // Send message to AI
   const sendMessage = useCallback(async (content: string) => {
-    if (!fieldContext || !content.trim()) return;
+    if (!fieldContext || !content.trim() || isBuildingContext) return;
     
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -159,7 +155,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
       
       setMessages(prev => [...prev, errorMessage]);
     }
-  }, [fieldContext, formData, messages, submit, presetQuestions]);
+  }, [fieldContext, formData, messages, submit, presetQuestions, isBuildingContext]);
 
   // Handle streaming response
   useEffect(() => {
