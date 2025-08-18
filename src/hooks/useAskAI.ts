@@ -1,11 +1,22 @@
 // src/hooks/useAskAI.ts
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { Message, FieldContext, ProjectContext, PresetQuestion, AIContextRequest, AIContextResponse } from '../types/ask-ai-types';
+import { useState, useCallback, useEffect } from 'react';
+import { experimental_useObject as useObject } from '@ai-sdk/react';
+import { Message, FieldContext, PresetQuestion, AIContextRequest, AIContextResponse } from '../types/ask-ai-types';
 import { AIContextBuilder } from '../services/aiContextBuilder';
+import { z } from 'zod';
+
+// Schema for AI response with markdown support
+const ProjectQASchema = z.object({
+  answer_markdown: z.string().describe('A comprehensive, helpful answer to the user\'s question about the form field, formatted in markdown'),
+  suggestions: z.array(z.string()).describe('Actionable suggestions for completing the field or related actions'),
+  relatedFields: z.array(z.string()).describe('Related form fields that might need attention or are connected to this field'),
+  confidence: z.number().min(0).max(1).describe('Confidence level in the answer (0-1)'),
+  sources: z.array(z.string()).describe('Sources of information or industry standards referenced')
+});
 
 interface UseAskAIOptions {
   projectId: string;
-  formData: any;
+  formData: any; // Accept any object type for flexibility
 }
 
 export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
@@ -19,11 +30,14 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
   // Context management
   const [contextCache, setContextCache] = useState<Map<string, FieldContext>>(new Map());
   const [droppedField, setDroppedField] = useState<string | null>(null);
-  const [showDropSuccess, setShowDropSuccess] = useState(false);
+  const [isContextCleared, setIsContextCleared] = useState(false);
   
-  // Chat functionality
-  const [question, setQuestion] = useState('');
-  
+  // Streaming AI response
+  const { object, submit, isLoading: isStreaming, error: streamError } = useObject({
+    api: '/api/project-qa',
+    schema: ProjectQASchema,
+  });
+
   // Storage keys for this project
   const getStorageKeys = useCallback((projectId: string) => ({
     chatHistory: `project-ai-chat-${projectId}`,
@@ -33,7 +47,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
 
   // Load project context from session storage
   const loadProjectContext = useCallback((projectId: string) => {
-    if (!projectId) return;
+    if (!projectId || isContextCleared) return;
     
     try {
       const keys = getStorageKeys(projectId);
@@ -42,9 +56,9 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
       
       if (savedChat) {
         const parsedChat = JSON.parse(savedChat);
-        setMessages(parsedChat.map((msg: any) => ({
+        setMessages(parsedChat.map((msg: Record<string, unknown>) => ({
           ...msg,
-          timestamp: new Date(msg.timestamp)
+          timestamp: new Date(msg.timestamp as string)
         })));
       }
       
@@ -59,7 +73,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     } catch (error) {
       console.error('Error loading project context:', error);
     }
-  }, [getStorageKeys]);
+  }, [getStorageKeys, isContextCleared]);
 
   // Save project context to session storage
   const saveProjectContext = useCallback((projectId: string) => {
@@ -96,6 +110,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     setFieldContext(null);
     setDroppedField(null);
     setPresetQuestions([]);
+    setIsContextCleared(true); // Set flag to prevent loading old context
   }, [getStorageKeys]);
 
   // Handle field drop
@@ -106,9 +121,11 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
         throw new Error('Field ID is required');
       }
 
+      // Reset the context cleared flag for new field drops
+      setIsContextCleared(false);
+
       // 1. Immediate visual feedback (optimistic)
       setDroppedField(fieldId);
-      setShowDropSuccess(true);
       setContextError(null);
       
       // 2. Start context building in background
@@ -120,7 +137,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
           const cachedContext = contextCache.get(fieldId)!;
           setFieldContext(cachedContext);
           
-          // Generate preset questions
+          // Generate preset questions (but don't show them to user)
           const questions = AIContextBuilder.generatePresetQuestions(cachedContext);
           setPresetQuestions(questions);
           
@@ -135,7 +152,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
         // Cache the context
         setContextCache(prev => new Map(prev).set(fieldId, context));
         
-        // Generate preset questions
+        // Generate preset questions (but don't show them to user)
         const questions = AIContextBuilder.generatePresetQuestions(context);
         setPresetQuestions(questions);
         
@@ -149,8 +166,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
         setIsBuildingContext(false);
       }
       
-      // Hide success message after delay
-      setTimeout(() => setShowDropSuccess(false), 2000);
+
       
     } catch (error) {
       console.error('Error handling field drop:', error);
@@ -172,68 +188,46 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     
     // Add user message immediately
     setMessages(prev => [...prev, userMessage]);
-    setQuestion('');
-    setIsLoading(true);
+    
+    // Add thinking message for streaming feedback
+    const thinkingMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      type: 'ai',
+      content: '',
+      timestamp: new Date(),
+      fieldContext,
+      isStreaming: true
+    };
+    setMessages(prev => [...prev, thinkingMessage]);
     
     try {
       // Build project context
       const projectContext = AIContextBuilder.buildProjectContext(formData);
       
+      // Enhance the user's question with preset questions context
+      let enhancedQuestion = content.trim();
+      if (presetQuestions.length > 0) {
+        const questionSuggestions = presetQuestions.map(q => q.text).join('\n- ');
+        enhancedQuestion = `${content.trim()}\n\nNote: The user is working on the "${fieldContext.label}" field. Here are some relevant questions that might help provide context:\n- ${questionSuggestions}\n\nPlease provide a comprehensive answer that considers these aspects.`;
+      }
+      
       // Prepare AI request
       const aiRequest: AIContextRequest = {
         fieldContext,
         projectContext,
-        question: content.trim(),
+        question: enhancedQuestion,
         chatHistory: messages
       };
       
-      // Call AI API
-      const response = await fetch('/api/project-qa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(aiRequest)
-      });
-      
-      if (!response.ok) {
-        throw new Error(`AI service error: ${response.status}`);
-      }
-      
-      // Parse streaming response
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('No response body');
-      
-      let aiResponse = '';
-      const decoder = new TextDecoder();
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        const chunk = decoder.decode(value);
-        aiResponse += chunk;
-      }
-      
-      // Parse the complete response
-      const parsedResponse: AIContextResponse = JSON.parse(aiResponse);
-      
-      // Add AI message
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'ai',
-        content: parsedResponse.answer,
-        timestamp: new Date(),
-        fieldContext
-      };
-      
-      setMessages(prev => [...prev, aiMessage]);
-      
-      // Save to session storage
-      saveProjectContext(projectId);
+      // Submit to streaming API
+      submit(aiRequest);
       
     } catch (error) {
       console.error('Error sending message:', error);
       
-      // Add error message
+      // Remove thinking message and add error message
+      setMessages(prev => prev.filter(msg => !msg.isStreaming));
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
@@ -243,10 +237,53 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
       };
       
       setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
     }
-  }, [fieldContext, formData, messages, projectId, saveProjectContext]);
+  }, [fieldContext, formData, messages, submit, presetQuestions]);
+
+  // Handle streaming response
+  useEffect(() => {
+    if (object) {
+      setMessages(prev => {
+        const newMessages = prev.filter(m => !m.isStreaming);
+        const lastMessage = newMessages[newMessages.length - 1];
+        
+        if (lastMessage?.type === 'ai' && !lastMessage.isStreaming) {
+          // Update last assistant message
+          lastMessage.content = object.answer_markdown || '';
+          lastMessage.isStreaming = false;
+          return [...newMessages];
+        } else {
+          // Add new assistant message
+          return [...newMessages, { 
+            id: Date.now().toString(), 
+            type: 'ai', 
+            content: object.answer_markdown || '', 
+            timestamp: new Date(), 
+            fieldContext,
+            isStreaming: false
+          }];
+        }
+      });
+      // Note: Do not call saveProjectContext here. A separate effect persists on state changes.
+    }
+  }, [object, fieldContext, projectId]);
+
+  // Handle streaming errors
+  useEffect(() => {
+    if (streamError) {
+      setMessages(prev => {
+        const newMessages = prev.filter(m => !m.isStreaming);
+        return [...newMessages, {
+          id: Date.now().toString(),
+          type: 'ai',
+          content: 'Sorry, I encountered an error while processing your question. Please try again.',
+          timestamp: new Date(),
+          fieldContext: fieldContext!,
+          isStreaming: false
+        }];
+      });
+    }
+  }, [streamError, fieldContext]);
 
   // Ask preset question
   const askPresetQuestion = useCallback((question: PresetQuestion) => {
@@ -259,22 +296,12 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     setFieldContext(null);
     setPresetQuestions([]);
     setDroppedField(null);
-    setShowDropSuccess(false);
     setContextError(null);
-    setQuestion('');
-    saveProjectContext(projectId);
-  }, [projectId, saveProjectContext]);
-
-  // Reset everything to initial state
-  const resetAll = useCallback(() => {
-    setMessages([]);
-    setFieldContext(null);
-    setPresetQuestions([]);
-    setDroppedField(null);
-    setShowDropSuccess(false);
-    setContextError(null);
-    setQuestion('');
-    // Clear from session storage
+    // Clear context cache to prevent old field contexts from persisting
+    setContextCache(new Map());
+    // Set flag to prevent loading old context
+    setIsContextCleared(true);
+    // Clear from session storage completely
     clearProjectContext(projectId);
   }, [projectId, clearProjectContext]);
 
@@ -292,21 +319,17 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     // State
     messages,
     fieldContext,
-    presetQuestions,
-    isLoading,
+    isLoading: isLoading || isStreaming,
     isBuildingContext,
     contextError,
     droppedField,
-    showDropSuccess,
-    question,
+    isContextCleared,
     
     // Actions
     handleFieldDrop,
     sendMessage,
     askPresetQuestion,
     clearChat,
-    resetAll,
-    setQuestion,
     clearProjectContext,
     
     // Utilities

@@ -39,6 +39,7 @@ export interface Message {
   content: string;
   timestamp: Date;
   fieldContext?: FieldContext | null;
+  isStreaming?: boolean;
 }
 
 export interface PresetQuestion {

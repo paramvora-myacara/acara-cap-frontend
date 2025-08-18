@@ -3,28 +3,23 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAskAI } from '../../hooks/useAskAI';
-import { PresetQuestion } from '../../types/ask-ai-types';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
 import { useDroppable } from '@dnd-kit/core';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 import { 
   MessageSquare, 
   Bot, 
   User, 
-  Send, 
-  X, 
-  HelpCircle, 
-  CheckCircle,
   Loader2,
-  AlertCircle,
-  Sparkles
+  AlertCircle
 } from 'lucide-react';
 
 interface AskAICardProps {
   projectId: string;
-  formData: any;
+  formData: any; // Accept any object type for flexibility
   droppedFieldId?: string | null;
   onFieldProcessed?: () => void;
 }
@@ -33,24 +28,15 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
   const {
     messages,
     fieldContext,
-    presetQuestions,
     isLoading,
     isBuildingContext,
     contextError,
-    droppedField,
-    showDropSuccess,
-    question,
     handleFieldDrop,
     sendMessage,
-    askPresetQuestion,
     clearChat,
-    resetAll,
-    setQuestion,
     hasActiveContext,
     hasMessages
   } = useAskAI({ projectId, formData });
-
-  const [isExpanded, setIsExpanded] = useState(false);
 
   // Make the entire card a drop target
   const { setNodeRef, isOver } = useDroppable({
@@ -68,79 +54,48 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
     }
   }, [droppedFieldId, hasActiveContext, onFieldProcessed, handleFieldDrop]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (question.trim() && !isLoading) {
-      sendMessage(question);
+  // Automatically send a comprehensive question when field context is built
+  useEffect(() => {
+    if (fieldContext && messages.length === 0 && !isLoading) {
+      // Send a comprehensive question that will trigger the AI to answer the preset questions
+      const comprehensiveQuestion = `Please provide comprehensive guidance and answers for the "${fieldContext.label}" field, including best practices, validation rules, and common considerations.`;
+      sendMessage(comprehensiveQuestion);
     }
-  };
-
-  const handlePresetQuestionClick = (presetQuestion: PresetQuestion) => {
-    askPresetQuestion(presetQuestion);
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-600 bg-red-50 border-red-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'low': return 'text-green-600 bg-green-50 border-green-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
-  };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'field-specific': return <HelpCircle className="h-4 w-4" />;
-      case 'validation': return <AlertCircle className="h-4 w-4" />;
-      case 'best-practices': return <CheckCircle className="h-4 w-4" />;
-      default: return <Sparkles className="h-4 w-4" />;
-    }
-  };
+  }, [fieldContext, messages.length, isLoading, sendMessage]);
 
   return (
     <Card 
       ref={setNodeRef}
-      className={`w-full max-w-md bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 transition-all duration-200 ${
-        isOver ? 'ring-4 ring-blue-400 bg-blue-100 shadow-lg scale-105 animate-pulse' : ''
+      className={`transition-all duration-200 ${
+        isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
       }`}
     >
-      <CardHeader className="pb-3 border-b border-blue-200">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Bot className="h-5 w-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-800">Ask AI Assistant</h3>
+            <MessageSquare className="h-5 w-5 text-blue-600" />
+            <h3 className="font-semibold text-gray-900">AI Field Assistant</h3>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            {isExpanded ? '−' : '+'}
-          </Button>
+
         </div>
         
         {!hasActiveContext && (
-          <p className={`text-sm mt-2 transition-colors ${
-            isOver ? 'text-blue-700 font-medium' : 'text-gray-600'
-          }`}>
-            {isOver ? 'Drop the field here for AI assistance!' : 'Drag any form field here to get AI assistance'}
+          <p className="text-sm text-gray-600">
+            Drag and drop a form field here to get AI assistance
           </p>
         )}
         
         {hasActiveContext && fieldContext && (
-          <div className="mt-2 p-2 bg-blue-100 rounded-md">
-            <p className="text-sm font-medium text-blue-800">
-              Helping with: <span className="font-semibold">{fieldContext.label}</span>
-            </p>
-            <p className="text-xs text-blue-600 mt-1">
-              Section: {fieldContext.section}
-            </p>
+          <div className="flex items-center space-x-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+            <Bot className="h-4 w-4 text-blue-600" />
+            <span className="text-sm text-blue-700">
+              Assisting with: <strong>{fieldContext.label}</strong>
+            </span>
           </div>
         )}
       </CardHeader>
 
-      <CardContent className="p-4">
+      <CardContent className="pt-0">
         {!hasActiveContext ? (
           // Drop zone
           <div className={`min-h-[200px] flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition-all duration-200 ${
@@ -162,17 +117,8 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
             </div>
           </div>
         ) : (
-          // Chat interface
+          // AI Assistant interface
           <div className="space-y-4">
-            {/* Success message */}
-            {showDropSuccess && (
-              <div className="flex items-center space-x-2 p-2 bg-green-100 border border-green-200 rounded-md">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span className="text-sm text-green-700">
-                  Field dropped successfully! Building context...
-                </span>
-              </div>
-            )}
 
             {/* Error message */}
             {contextError && (
@@ -187,28 +133,6 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
               <div className="flex items-center space-x-2 p-2 bg-blue-100 border border-blue-200 rounded-md">
                 <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
                 <span className="text-sm text-blue-700">Building field context...</span>
-              </div>
-            )}
-
-            {/* Preset questions */}
-            {presetQuestions.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700">Suggested questions:</p>
-                <div className="space-y-2">
-                  {presetQuestions.map((presetQuestion) => (
-                    <button
-                      key={presetQuestion.id}
-                      onClick={() => handlePresetQuestionClick(presetQuestion)}
-                      disabled={isLoading}
-                      className={`w-full text-left p-2 rounded-md border text-xs transition-colors hover:bg-gray-50 disabled:opacity-50 ${getPriorityColor(presetQuestion.priority)}`}
-                    >
-                      <div className="flex items-center space-x-2">
-                        {getCategoryIcon(presetQuestion.category)}
-                        <span>{presetQuestion.text}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
               </div>
             )}
 
@@ -237,66 +161,51 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
                           {message.timestamp.toLocaleTimeString()}
                         </span>
                       </div>
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      
+                      {message.type === 'user' ? (
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      ) : (
+                        <div className="prose prose-sm max-w-none">
+                          {message.isStreaming ? (
+                            // Streaming indicator
+                            <div className="flex items-center space-x-2">
+                              <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-0"></span>
+                              <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-150"></span>
+                              <span className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-300"></span>
+                              <span className="text-sm text-gray-600">AI is thinking...</span>
+                            </div>
+                          ) : (
+                            // Rendered markdown content
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {message.content}
+                            </ReactMarkdown>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Input form */}
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="flex space-x-2">
-                <Input
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="Ask a question about this field..."
-                  disabled={isLoading}
-                  className="flex-1"
-                />
-                <Button
-                  type="submit"
-                  disabled={!question.trim() || isLoading}
-                  size="sm"
-                  className="px-3"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </form>
-
             {/* Actions */}
             <div className="flex justify-between items-center pt-2 border-t border-gray-200">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={clearChat}
+                onClick={() => {
+                  clearChat();
+                  // Notify parent that field was processed
+                  if (onFieldProcessed) {
+                    onFieldProcessed();
+                  }
+                }}
                 disabled={!hasMessages}
                 className="text-gray-500 hover:text-gray-700"
               >
                 Clear Chat
               </Button>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  // Reset everything to initial state
-                  resetAll();
-                  // Notify parent that field was processed
-                  if (onFieldProcessed) {
-                    onFieldProcessed();
-                  }
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Reset
-              </Button>
             </div>
           </div>
         )}

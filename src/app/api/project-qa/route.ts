@@ -2,7 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { streamObject } from 'ai';
 import { createGoogleGenerativeAI, GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
-import { AIContextRequest, AIContextResponse } from '@/types/ask-ai-types';
+import { AIContextRequest } from '@/types/ask-ai-types';
+import { z } from 'zod';
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY!,
@@ -10,36 +11,14 @@ const google = createGoogleGenerativeAI({
 
 const MODEL_NAME = 'gemini-2.5-pro';
 
-// Schema for AI response
-const ProjectQASchema = {
-  type: 'object',
-  properties: {
-    answer: {
-      type: 'string',
-      description: 'A comprehensive, helpful answer to the user\'s question about the form field'
-    },
-    suggestions: {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'Actionable suggestions for completing the field or related actions'
-    },
-    relatedFields: {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'Related form fields that might need attention or are connected to this field'
-    },
-    confidence: {
-      type: 'number',
-      description: 'Confidence level in the answer (0-1)'
-    },
-    sources: {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'Sources of information or industry standards referenced'
-    }
-  },
-  required: ['answer', 'suggestions', 'relatedFields', 'confidence', 'sources']
-};
+// Schema for AI response with markdown support
+const ProjectQASchema = z.object({
+  answer_markdown: z.string().describe('A comprehensive, helpful answer to the user\'s question about the form field, formatted in markdown'),
+  suggestions: z.array(z.string()).describe('Actionable suggestions for completing the field or related actions'),
+  relatedFields: z.array(z.string()).describe('Related form fields that might need attention or are connected to this field'),
+  confidence: z.number().min(0).max(1).describe('Confidence level in the answer (0-1)'),
+  sources: z.array(z.string()).describe('Sources of information or industry standards referenced')
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -71,13 +50,16 @@ INSTRUCTIONS:
 5. Explain industry standards and best practices
 6. Always consider the user's specific project type and phase
 7. Use the chat history to provide contextual follow-up responses
+8. Format your response using markdown for better readability
 
 RESPONSE FORMAT:
+- Use markdown formatting for structure (headers, lists, emphasis)
 - Clear, concise explanations
 - Bullet points for actionable items
 - Specific examples relevant to their project
 - References to related form sections
 - Industry benchmarks when applicable
+- Use **bold** for important points and *italic* for emphasis
 
 Remember: You're helping someone complete a real commercial real estate project form. Be specific and practical.`;
 
