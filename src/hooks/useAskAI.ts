@@ -30,88 +30,12 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
   // Context management
   const [contextCache, setContextCache] = useState<Map<string, FieldContext>>(new Map());
   const [droppedField, setDroppedField] = useState<string | null>(null);
-  const [isContextCleared, setIsContextCleared] = useState(false);
   
   // Streaming AI response
   const { object, submit, isLoading: isStreaming, error: streamError } = useObject({
     api: '/api/project-qa',
     schema: ProjectQASchema,
   });
-
-  // Storage keys for this project
-  const getStorageKeys = useCallback((projectId: string) => ({
-    chatHistory: `project-ai-chat-${projectId}`,
-    fieldContext: `project-ai-context-${projectId}`,
-    lastActive: `project-ai-last-active-${projectId}`
-  }), []);
-
-  // Load project context from session storage
-  const loadProjectContext = useCallback((projectId: string) => {
-    if (!projectId || isContextCleared) return;
-    
-    try {
-      const keys = getStorageKeys(projectId);
-      const savedChat = sessionStorage.getItem(keys.chatHistory);
-      const savedContext = sessionStorage.getItem(keys.fieldContext);
-      
-      if (savedChat) {
-        const parsedChat = JSON.parse(savedChat);
-        setMessages(parsedChat.map((msg: Record<string, unknown>) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp as string)
-        })));
-      }
-      
-      if (savedContext) {
-        const parsedContext = JSON.parse(savedContext);
-        setFieldContext(parsedContext);
-        setDroppedField(parsedContext.id);
-      }
-      
-      // Update last active timestamp
-      sessionStorage.setItem(keys.lastActive, new Date().toISOString());
-    } catch (error) {
-      console.error('Error loading project context:', error);
-    }
-  }, [getStorageKeys, isContextCleared]);
-
-  // Save project context to session storage
-  const saveProjectContext = useCallback((projectId: string) => {
-    if (!projectId) return;
-    
-    try {
-      const keys = getStorageKeys(projectId);
-      
-      if (messages.length > 0) {
-        sessionStorage.setItem(keys.chatHistory, JSON.stringify(messages));
-      }
-      
-      if (fieldContext) {
-        sessionStorage.setItem(keys.fieldContext, JSON.stringify(fieldContext));
-      }
-      
-      sessionStorage.setItem(keys.lastActive, new Date().toISOString());
-    } catch (error) {
-      console.error('Error saving project context:', error);
-    }
-  }, [getStorageKeys, messages, fieldContext]);
-
-  // Clear project context
-  const clearProjectContext = useCallback((projectId: string) => {
-    if (!projectId) return;
-    
-    const keys = getStorageKeys(projectId);
-    sessionStorage.removeItem(keys.chatHistory);
-    sessionStorage.removeItem(keys.fieldContext);
-    sessionStorage.removeItem(keys.lastActive);
-    
-    setContextCache(new Map());
-    setMessages([]);
-    setFieldContext(null);
-    setDroppedField(null);
-    setPresetQuestions([]);
-    setIsContextCleared(true); // Set flag to prevent loading old context
-  }, [getStorageKeys]);
 
   // Handle field drop
   const handleFieldDrop = useCallback(async (fieldId: string) => {
@@ -121,12 +45,14 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
         throw new Error('Field ID is required');
       }
 
-      // Reset the context cleared flag for new field drops
-      setIsContextCleared(false);
+      // Clear previous context and start fresh
+      setMessages([]);
+      setFieldContext(null);
+      setPresetQuestions([]);
+      setContextError(null);
 
       // 1. Immediate visual feedback (optimistic)
       setDroppedField(fieldId);
-      setContextError(null);
       
       // 2. Start context building in background
       setIsBuildingContext(true);
@@ -137,7 +63,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
           const cachedContext = contextCache.get(fieldId)!;
           setFieldContext(cachedContext);
           
-          // Generate preset questions (but don't show them to user)
+          // Generate preset questions
           const questions = AIContextBuilder.generatePresetQuestions(cachedContext);
           setPresetQuestions(questions);
           
@@ -152,12 +78,9 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
         // Cache the context
         setContextCache(prev => new Map(prev).set(fieldId, context));
         
-        // Generate preset questions (but don't show them to user)
+        // Generate preset questions
         const questions = AIContextBuilder.generatePresetQuestions(context);
         setPresetQuestions(questions);
-        
-        // Save to session storage
-        saveProjectContext(projectId);
         
       } catch (error) {
         console.error('Error building field context:', error);
@@ -166,13 +89,11 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
         setIsBuildingContext(false);
       }
       
-
-      
     } catch (error) {
       console.error('Error handling field drop:', error);
       setContextError(error instanceof Error ? error.message : 'Failed to process field drop');
     }
-  }, [formData, projectId, contextCache, saveProjectContext]);
+  }, [formData, contextCache]);
 
   // Send message to AI
   const sendMessage = useCallback(async (content: string) => {
@@ -264,9 +185,8 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
           }];
         }
       });
-      // Note: Do not call saveProjectContext here. A separate effect persists on state changes.
     }
-  }, [object, fieldContext, projectId]);
+  }, [object, fieldContext]);
 
   // Handle streaming errors
   useEffect(() => {
@@ -290,31 +210,6 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     sendMessage(question.text);
   }, [sendMessage]);
 
-  // Clear chat
-  const clearChat = useCallback(() => {
-    setMessages([]);
-    setFieldContext(null);
-    setPresetQuestions([]);
-    setDroppedField(null);
-    setContextError(null);
-    // Clear context cache to prevent old field contexts from persisting
-    setContextCache(new Map());
-    // Set flag to prevent loading old context
-    setIsContextCleared(true);
-    // Clear from session storage completely
-    clearProjectContext(projectId);
-  }, [projectId, clearProjectContext]);
-
-  // Load context when project changes
-  useEffect(() => {
-    loadProjectContext(projectId);
-  }, [projectId, loadProjectContext]);
-
-  // Save context when messages or field context changes
-  useEffect(() => {
-    saveProjectContext(projectId);
-  }, [projectId, saveProjectContext, messages, fieldContext]);
-
   return {
     // State
     messages,
@@ -323,14 +218,11 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     isBuildingContext,
     contextError,
     droppedField,
-    isContextCleared,
     
     // Actions
     handleFieldDrop,
     sendMessage,
     askPresetQuestion,
-    clearChat,
-    clearProjectContext,
     
     // Utilities
     hasActiveContext: !!fieldContext,

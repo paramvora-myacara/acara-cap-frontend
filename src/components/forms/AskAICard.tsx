@@ -4,7 +4,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAskAI } from '../../hooks/useAskAI';
 import { Card, CardContent, CardHeader } from '../ui/card';
-import { Button } from '../ui/Button';
 import { useDroppable } from '@dnd-kit/core';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -33,7 +32,6 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
     contextError,
     handleFieldDrop,
     sendMessage,
-    clearChat,
     hasActiveContext,
     hasMessages
   } = useAskAI({ projectId, formData });
@@ -48,11 +46,11 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
 
   // Handle field drop from DragDropProvider
   useEffect(() => {
-    if (droppedFieldId && !hasActiveContext) {
+    if (droppedFieldId) {
       handleFieldDrop(droppedFieldId);
       onFieldProcessed?.();
     }
-  }, [droppedFieldId, hasActiveContext, onFieldProcessed, handleFieldDrop]);
+  }, [droppedFieldId, onFieldProcessed, handleFieldDrop]);
 
   // Automatically send a comprehensive question when field context is built
   useEffect(() => {
@@ -190,22 +188,9 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
 
             {/* Actions */}
             <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  clearChat();
-                  // Notify parent that field was processed
-                  if (onFieldProcessed) {
-                    onFieldProcessed();
-                  }
-                }}
-                disabled={!hasMessages}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                Clear Chat
-              </Button>
-              
+              <div className="text-sm text-gray-500">
+                Drop a new field to start a fresh conversation
+              </div>
             </div>
           </div>
         )}
