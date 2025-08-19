@@ -35,6 +35,7 @@ interface EnhancedProjectFormProps {
   onComplete?: (project: ProjectProfile) => void; // Make onComplete optional
   compact?: boolean; // Add compact prop
   onAskAI?: (fieldId: string) => void; // Add onAskAI prop
+  onFormDataChange?: (formData: ProjectProfile) => void; // Add onFormDataChange prop
 }
 
 // Define options for ButtonSelect components
@@ -64,7 +65,8 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
   existingProject,
   onComplete,
   compact = false,
-  onAskAI
+  onAskAI,
+  onFormDataChange
 }) => {
   const router = useRouter();
   const { updateProject, setProjectChanges, autoSaveProject } = useProjects(); // Use updateProject
@@ -78,12 +80,18 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
   // Update local form state if the existingProject prop changes externally
   useEffect(() => {
     setFormData(existingProject);
-  }, [existingProject]);
+    // Notify parent component of initial form data for AskAI
+    onFormDataChange?.(existingProject);
+  }, [existingProject, onFormDataChange]);
 
   // Handle form field changes
   const handleInputChange = (field: keyof ProjectProfile, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    const newFormData = { ...formData, [field]: value };
+    setFormData(newFormData);
     setProjectChanges(true); // Indicate unsaved changes
+    
+    // Notify parent component of form data changes for AskAI
+    onFormDataChange?.(newFormData);
   };
 
   // Handle form submission (manual save via button)

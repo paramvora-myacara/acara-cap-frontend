@@ -374,6 +374,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
         if (!user || user.role !== 'borrower') return;
         if (!borrowerProfileContext.borrowerProfile) return; // Need profile
         if (projects.length > 0) return;             // Already have projects
+        if (autoCreatedFirstProjectThisSession) return; // Prevent multiple auto-creations in same session
 
         (async () => {
             try {
@@ -434,7 +435,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
                 console.error('[ProjectContext] Auto-create project failed:', err);
             }
         })();
-    }, [isLoading, user, borrowerProfileContext.borrowerProfile, projects.length, createProject, calculateProgress, storageService]);
+    }, [isLoading, user, borrowerProfileContext.borrowerProfile, createProject, calculateProgress, storageService]);
 
     // Update Project
     const updateProject = useCallback(async (id: string, updates: Partial<ProjectProfile>, manual = false): Promise<ProjectProfile | null> => {

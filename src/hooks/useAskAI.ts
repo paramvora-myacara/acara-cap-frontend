@@ -36,6 +36,14 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
   const [contextCache, setContextCache] = useState<Map<string, FieldContext>>(new Map());
   const [droppedField, setDroppedField] = useState<string | null>(null);
   
+  // Clear context cache when form data changes to ensure fresh context
+  useEffect(() => {
+    setContextCache(new Map());
+    setFieldContext(null);
+    setMessages([]);
+    setPresetQuestions([]);
+  }, [formData]);
+  
   // Streaming AI response
   const { object, submit, isLoading: isStreaming, error: streamError, stop } = useObject({
     api: '/api/project-qa',
@@ -66,24 +74,18 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
       // 2. Context building will continue in background
       
       try {
-        // Check cache first
-        if (contextCache.has(fieldId)) {
-          const cachedContext = contextCache.get(fieldId)!;
-          setFieldContext(cachedContext);
-          
-          // Generate preset questions
-          const questions = AIContextBuilder.generatePresetQuestions(cachedContext);
-          setPresetQuestions(questions);
-          
-          setIsBuildingContext(false);
-          return;
-        }
+        // Clear cache for this specific field to ensure fresh context
+        setContextCache(prev => {
+          const newCache = new Map(prev);
+          newCache.delete(fieldId);
+          return newCache;
+        });
         
-        // Build context from scratch
+        // Build context from scratch with latest form data
         const context = await AIContextBuilder.buildFieldContext(fieldId, formData);
         setFieldContext(context);
         
-        // Cache the context
+        // Cache the new context
         setContextCache(prev => new Map(prev).set(fieldId, context));
         
         // Generate preset questions
@@ -101,10 +103,10 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
       console.error('Error handling field drop:', error);
       setContextError(error instanceof Error ? error.message : 'Failed to process field drop');
     }
-  }, [formData, contextCache, stop]);
+  }, [formData, stop]);
 
   // Send message to AI
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, displayMessage?: string) => {
     if (!fieldContext || !content.trim() || isBuildingContext) return;
     
     // Abort any previous requests
@@ -113,7 +115,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content: content.trim(),
+      content: displayMessage?.trim() || content.trim(), // Use displayMessage if provided, otherwise use content
       timestamp: new Date(),
       fieldContext
     };
@@ -136,18 +138,11 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
       // Build project context
       const projectContext = AIContextBuilder.buildProjectContext(formData);
       
-      // Enhance the user's question with preset questions context
-      let enhancedQuestion = content.trim();
-      if (presetQuestions.length > 0) {
-        const questionSuggestions = presetQuestions.map(q => q.text).join('\n- ');
-        enhancedQuestion = `${content.trim()}\n\nNote: The user is working on the "${fieldContext.label}" field. Here are some relevant questions that might help provide context:\n- ${questionSuggestions}\n\nPlease provide a comprehensive answer that considers these aspects.`;
-      }
-      
-      // Prepare AI request
+      // Prepare AI request with the actual content (not display message)
       const aiRequest: AIContextRequest = {
         fieldContext,
         projectContext,
-        question: enhancedQuestion,
+        question: content.trim(), // Always use the actual content for the API
         chatHistory: messages
       };
       
@@ -165,7 +160,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
       setMessages(prev => prev.filter(msg => !msg.isStreaming));
       setMessages(prev => [...prev, createErrorMessage(fieldContext)]);
     }
-  }, [fieldContext, formData, messages, submit, presetQuestions, isBuildingContext, stop]);
+  }, [fieldContext, formData, messages, submit, isBuildingContext, stop]);
 
   // Handle streaming response
   useEffect(() => {
@@ -213,11 +208,6 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     }
   }, [isStreaming]);
 
-  // Ask preset question
-  const askPresetQuestion = useCallback((question: PresetQuestion) => {
-    sendMessage(question.text);
-  }, [sendMessage]);
-
   return {
     // State
     messages,
@@ -230,7 +220,6 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     // Actions
     handleFieldDrop,
     sendMessage,
-    askPresetQuestion,
     
     // Utilities
     hasActiveContext: !!fieldContext,

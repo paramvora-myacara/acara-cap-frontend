@@ -32,6 +32,9 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
     // State for Ask AI field drop
     const [droppedFieldId, setDroppedFieldId] = useState<string | null>(null);
     
+    // State to track current form data for AskAI
+    const [currentFormData, setCurrentFormData] = useState<ProjectProfile | null>(null);
+    
     // Welcome message state management
     const [welcomeMessageGenerated, setWelcomeMessageGenerated] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -186,20 +189,29 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
     const isProjectComplete = projectCompleteness === 100; // Check if project is complete
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-2 animate-fadeIn">
             <ProfileSummaryCard profile={borrowerProfile} isLoading={profileLoading} />
 
             {/* Section for OM Link - Only show if project is complete */}
             {isProjectComplete && (
-                <div className="bg-green-50 border border-green-200 rounded-md p-4 flex items-center justify-between shadow-sm">
-                    <div>
-                        <h3 className="text-base font-semibold text-green-800">Project Ready!</h3>
-                        <p className="text-sm text-green-700">This project profile is complete. You can view the generated Offering Memorandum.</p>
+                <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 border border-emerald-200 rounded-lg p-4 flex items-center justify-between shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group animate-fadeInUp">
+                    {/* Animated background pattern */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-100/20 via-transparent to-green-100/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    
+                    {/* Success pulse effect */}
+                    <div className="absolute -inset-1 bg-gradient-to-r from-emerald-200 to-green-200 rounded-lg blur-sm opacity-30 group-hover:opacity-50 transition-opacity duration-300 animate-pulse" />
+                    
+                    <div className="relative z-10">
+                        <h3 className="text-base font-semibold text-emerald-800 flex items-center">
+                            <span className="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></span>
+                            Project Ready!
+                        </h3>
+                        <p className="text-sm text-emerald-700">This project profile is complete. You can view the generated Offering Memorandum.</p>
                     </div>
                     <Button
                         variant="outline"
                         onClick={() => router.push(`/project/om/${projectId}`)}
-                        className="border-green-300 text-green-700 hover:bg-green-100 hover:border-green-400 px-6 py-3 text-base font-medium"
+                        className="border-emerald-300 text-emerald-700 hover:bg-gradient-to-r hover:from-emerald-100 hover:to-green-100 hover:border-emerald-400 px-6 py-3 text-base font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 relative z-10"
                     >
                         <FileSpreadsheet className="mr-2 h-5 w-5" />
                         View OM
@@ -213,19 +225,39 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
             }}>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Left Column: Project Form */}
-                  <div className="lg:col-span-2 bg-white p-4 rounded-lg shadow-sm border border-gray-200 max-h-[calc(100vh-280px)] overflow-hidden flex flex-col"> {/* Adjusted height to extend to bottom of sign out button */}
-                       <div className="mb-4 border-b pb-3 flex-shrink-0">
+                  <div className="lg:col-span-2 bg-white p-4 rounded-lg shadow-sm border border-gray-200 max-h-[calc(100vh-280px)] overflow-hidden flex flex-col transition-all duration-300 hover:shadow-md hover:shadow-blue-100/30 relative group"> 
+                       {/* Subtle background gradient on hover */}
+                       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-purple-50/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg" />
+                       
+                       <div className="mb-4 border-b pb-3 flex-shrink-0 relative z-10">
                           <div className="flex justify-between items-center mb-1">
-                              <h2 className="text-lg font-semibold text-gray-800">Project Resume</h2>
-                              <span className={`text-sm font-semibold ${projectCompleteness === 100 ? 'text-green-600' : 'text-blue-600'}`}>{projectCompleteness}% Complete</span>
+                              <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2 animate-pulse"></span>
+                                  Project Resume
+                              </h2>
+                              <span className={`text-sm font-semibold transition-colors duration-300 ${projectCompleteness === 100 ? 'text-emerald-600' : 'text-blue-600'}`}>{projectCompleteness}% Complete</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2"><div className={`h-2 rounded-full transition-all duration-500 ${projectProgressColor}`} style={{ width: `${projectCompleteness}%` }} /></div>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
+                              <div 
+                                  className={`h-full rounded-full transition-all duration-1000 ease-out ${projectProgressColor} shadow-sm relative overflow-hidden`} 
+                                  style={{ width: `${projectCompleteness}%` }}
+                              >
+                                  {/* Shimmer effect for progress bar */}
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" 
+                                       style={{ 
+                                         backgroundSize: '200% 100%',
+                                         animation: 'shimmer 2s infinite'
+                                       }} 
+                                  />
+                              </div>
+                          </div>
                       </div>
-                      <div className="flex-1 overflow-y-auto">
+                      <div className="flex-1 overflow-y-auto relative z-10">
                         <EnhancedProjectForm 
                           existingProject={activeProject} 
                           onComplete={handleProjectUpdateComplete}
                           onAskAI={(fieldId) => setDroppedFieldId(fieldId)}
+                          onFormDataChange={setCurrentFormData}
                         />
                       </div>
                   </div>
@@ -234,7 +266,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
                   <div className="h-[calc(100vh-280px)]"> {/* Adjusted height to match form card and extend to bottom of sign out button */}
                       <ConsolidatedSidebar 
                         projectId={activeProject.id} 
-                        formData={activeProject} 
+                        formData={currentFormData || activeProject} 
                         droppedFieldId={droppedFieldId}
                         onFieldProcessed={() => {
                           setDroppedFieldId(null);
