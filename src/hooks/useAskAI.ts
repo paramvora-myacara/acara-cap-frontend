@@ -162,52 +162,6 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     }
   }, [fieldContext, formData, messages, submit, isBuildingContext, stop]);
 
-  // Send message to AI without adding to UI (for auto-generated questions)
-  const sendMessageSilently = useCallback(async (content: string) => {
-    if (!fieldContext || !content.trim() || isBuildingContext) return;
-    
-    // Abort any previous requests
-    stop();
-    
-    // Don't add user message to UI - just add thinking message
-    const thinkingMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      type: 'ai',
-      content: '',
-      timestamp: new Date(),
-      fieldContext,
-      isStreaming: true
-    };
-    setMessages(prev => [...prev, thinkingMessage]);
-    
-    try {
-      // Build project context
-      const projectContext = AIContextBuilder.buildProjectContext(formData);
-      
-      // Prepare AI request with the question as-is (preset questions are already included)
-      const aiRequest: AIContextRequest = {
-        fieldContext,
-        projectContext,
-        question: content.trim(),
-        chatHistory: messages
-      };
-      
-      // Submit to streaming API
-      submit(aiRequest);
-      
-    } catch (error) {
-      if ((error as Error).name === 'AbortError') {
-        // Request was cancelled, no need to show an error
-        return;
-      }
-      console.error('Error sending message silently:', error);
-      
-      // Remove thinking message and add error message
-      setMessages(prev => prev.filter(msg => !msg.isStreaming));
-      setMessages(prev => [...prev, createErrorMessage(fieldContext)]);
-    }
-  }, [fieldContext, formData, messages, submit, isBuildingContext, stop]);
-
   // Handle streaming response
   useEffect(() => {
     if (!object) return;
@@ -266,7 +220,6 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     // Actions
     handleFieldDrop,
     sendMessage,
-    sendMessageSilently,
     
     // Utilities
     hasActiveContext: !!fieldContext,

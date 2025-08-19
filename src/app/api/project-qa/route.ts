@@ -54,6 +54,7 @@ INSTRUCTIONS:
 
 RESPONSE FORMAT:
 - **Start with a direct answer** to their immediate question
+- **CRITICAL: The first answer MUST remain in bold formatting throughout the response**
 - Use markdown formatting for structure (headers, lists, emphasis)
 - **CRITICAL: You MUST add proper spacing and line breaks - NO WALLS OF TEXT**
 - **BE CONCISE: Keep answers focused and to-the-point**
@@ -68,7 +69,8 @@ RESPONSE FORMAT:
 - Structure your response with clear visual hierarchy
 
 SPACING GUIDELINES (MANDATORY):
-- **ALWAYS start with your direct answer (1-2 sentences)**
+- **ALWAYS start with your direct answer (1-2 sentences) in bold formatting**
+- **ALWAYS keep the first answer in bold throughout the entire response**
 - **ALWAYS use the format \`**Heading:** Text...\` for each new topic.**
 - **ALWAYS use ## for section headers with spacing above and below**
 - **ALWAYS separate different topics with double line breaks (\\n\\n)**
@@ -77,14 +79,14 @@ SPACING GUIDELINES (MANDATORY):
 - **NEVER create walls of text - break up content with proper spacing**
 
 EXAMPLE FORMAT:
-Your direct answer here.
+**Your direct answer here.**
 
 **Key Points:**
 - Covers land acquisition and construction costs
 - Interest-only payments during construction
 - Converts to permanent financing upon completion
 
-Remember: Get straight to the point. Users want quick, actionable answers, not lengthy explanations.`;
+Remember: Get straight to the point. Users want quick, actionable answers, not lengthy explanations. **Keep the first answer in bold throughout.**`;
 
     // Build user prompt
     const userPrompt = question 
