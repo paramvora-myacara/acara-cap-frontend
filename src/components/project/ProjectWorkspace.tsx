@@ -116,7 +116,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
             }}>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Left Column: Project Form */}
-                  <div className="lg:col-span-2 bg-white p-4 rounded-lg shadow-sm border border-gray-200 max-h-[calc(100vh-200px)] overflow-hidden flex flex-col">
+                  <div className="lg:col-span-2 bg-white p-4 rounded-lg shadow-sm border border-gray-200 max-h-[calc(100vh-280px)] overflow-hidden flex flex-col"> {/* Adjusted height to extend to bottom of sign out button */}
                        <div className="mb-4 border-b pb-3 flex-shrink-0">
                           <div className="flex justify-between items-center mb-1">
                               <h2 className="text-lg font-semibold text-gray-800">Project Resume</h2>
@@ -134,7 +134,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
                   </div>
 
                   {/* Right Column: Consolidated Sidebar */}
-                  <div className="h-[calc(100vh-200px)]">
+                  <div className="h-[calc(100vh-280px)]"> {/* Adjusted height to match form card and extend to bottom of sign out button */}
                       <ConsolidatedSidebar 
                         projectId={activeProject.id} 
                         formData={activeProject} 
