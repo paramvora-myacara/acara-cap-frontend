@@ -10,6 +10,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { ProjectMessage } from '../../types/enhanced-types';
 import { getAdvisorById, generateAdvisorMessage } from '../../../lib/enhancedMockApiService';
 import { cn } from '@/utils/cn';
+import { AIContextBuilder } from '../../services/aiContextBuilder';
+import { PresetQuestion } from '../../types/ask-ai-types';
 
 import { 
   MessageSquare, 
@@ -81,7 +83,37 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
   // Automatically send a comprehensive question when field context is built
   useEffect(() => {
     if (fieldContext && aiMessages.length === 0 && !aiLoading && !isBuildingContext) {
-      const comprehensiveQuestion = `Please provide comprehensive guidance and answers for the "${fieldContext.label}" field, including best practices, validation rules, and common considerations.`;
+      // Get the preset questions for this field
+      const presetQuestions = AIContextBuilder.generatePresetQuestions(fieldContext);
+      
+      // Determine if field has a value and create context-aware question
+      const hasValue = fieldContext.currentValue && fieldContext.currentValue !== '';
+      const fieldType = fieldContext.type;
+      
+      let primaryQuestion;
+      if (!hasValue) {
+        // Field is empty - user wants to know what it is and what to choose
+        primaryQuestion = `I haven't filled out the "${fieldContext.label}" field yet. I need to understand:
+1. What is this field asking for?
+2. What are my options and which one should I choose?
+3. How does my choice affect my loan application?`;
+      } else {
+        // Field has a value - user wants to verify their choice
+        primaryQuestion = `I've filled in "${fieldContext.currentValue}" for the "${fieldContext.label}" field. I need to know:
+1. Is this the right choice for my project?
+2. Should I consider changing it to something else?
+3. How does this choice impact my loan terms?`;
+      }
+      
+      // Create a comprehensive question that prioritizes user intent
+      const questionSuggestions = presetQuestions.map((q: PresetQuestion) => q.text).join('\n- ');
+      const comprehensiveQuestion = `${primaryQuestion}
+
+Please also address these additional considerations:
+- ${questionSuggestions}
+
+Provide actionable advice that helps me make the best decision for my project.`;
+      
       sendMessage(comprehensiveQuestion);
     }
   }, [fieldContext, aiMessages.length, aiLoading, isBuildingContext, sendMessage]);
@@ -390,9 +422,11 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
                                   <span>Thinking...</span>
                                 </div>
                               ) : (
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                  {message.content}
-                                </ReactMarkdown>
+                                <div className="prose prose-sm max-w-none prose-p:mb-4" style={{ whiteSpace: 'pre-wrap' }}>
+                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {message.content}
+                                  </ReactMarkdown>
+                                </div>
                               )}
                             </div>
                           </div>

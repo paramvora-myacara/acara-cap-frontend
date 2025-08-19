@@ -32,6 +32,9 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
     // State for Ask AI field drop
     const [droppedFieldId, setDroppedFieldId] = useState<string | null>(null);
     
+    // State to track current form data for AskAI
+    const [currentFormData, setCurrentFormData] = useState<ProjectProfile | null>(null);
+    
     // Welcome message state management
     const [welcomeMessageGenerated, setWelcomeMessageGenerated] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -226,6 +229,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
                           existingProject={activeProject} 
                           onComplete={handleProjectUpdateComplete}
                           onAskAI={(fieldId) => setDroppedFieldId(fieldId)}
+                          onFormDataChange={setCurrentFormData}
                         />
                       </div>
                   </div>
@@ -234,7 +238,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
                   <div className="h-[calc(100vh-280px)]"> {/* Adjusted height to match form card and extend to bottom of sign out button */}
                       <ConsolidatedSidebar 
                         projectId={activeProject.id} 
-                        formData={activeProject} 
+                        formData={currentFormData || activeProject} 
                         droppedFieldId={droppedFieldId}
                         onFieldProcessed={() => {
                           setDroppedFieldId(null);

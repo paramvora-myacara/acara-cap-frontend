@@ -132,7 +132,7 @@ const borrower2Project1: ProjectProfile = {
   projectDescription: 'Ground-up development of a 100,000 sqft warehouse.',
   projectPhase: 'Development',
   loanAmountRequested: 8000000,
-  loanType: 'Construction',
+  loanType: '',
   targetLtvPercent: 0, // LTC more relevant
   targetLtcPercent: 75,
   amortizationYears: 0, // IO during construction

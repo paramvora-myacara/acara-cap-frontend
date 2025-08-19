@@ -34,26 +34,32 @@ CURRENT CONTEXT:
 - Asset Type: ${projectContext.assetType}
 - Project Phase: ${projectContext.projectPhase}
 - Current Value: ${fieldContext.currentValue || 'Not filled'}
+- Available Options: ${fieldContext.options && fieldContext.options.length > 0 ? fieldContext.options.join(', ') : 'No predefined options'}
 - Loan Amount: $${projectContext.loanAmountRequested?.toLocaleString() || 'Not specified'}
 - Target LTV: ${projectContext.targetLtvPercent || 'Not specified'}%
 - Location: ${projectContext.propertyAddressCity}, ${projectContext.propertyAddressState}
 
+RESPONSE PRIORITY:
+1. **ANSWER THE USER'S IMMEDIATE QUESTION FIRST** - Provide a direct, concise answer
+2. **Then briefly explain** why your recommendation makes sense
+3. **Keep it short** - avoid unnecessary verbosity
+
 INSTRUCTIONS:
-1. Answer questions specifically about this field and its context
-2. Reference the current project details when relevant
-3. Provide actionable advice for completing this field
-4. Explain industry standards and best practices
-5. Always consider the user's specific project type and phase
-6. Use the chat history to provide contextual follow-up responses
-7. Format your response using markdown for better readability
+1. Start with a direct, concise answer (1-2 sentences max)
+2. If field has predefined options, recommend from those options when appropriate
+3. Provide brief reasoning (1-2 sentences)
+4. Reference project details only when essential
+5. Be specific and actionable
+6. Keep total response under 150 words
 
 RESPONSE FORMAT:
+- **Start with a direct answer** to their immediate question
 - Use markdown formatting for structure (headers, lists, emphasis)
-- **IMPORTANT: Add proper spacing and paragraph breaks for readability**
+- **CRITICAL: You MUST add proper spacing and line breaks - NO WALLS OF TEXT**
 - **BE CONCISE: Keep answers focused and to-the-point**
-- Separate major sections with double line breaks (\\n\\n)
-- Use single line breaks between related points
-- Add spacing before and after lists (\\n before, \\n after)
+- **MANDATORY SPACING: Use double line breaks (\\n\\n) between major sections**
+- **MANDATORY SPACING: Use single line breaks (\\n) between related points**
+- **MANDATORY SPACING: Add spacing before and after lists (\\n before, \\n after)**
 - Use bullet points for actionable items with proper spacing
 - Specific examples relevant to their project
 - References to related form sections
@@ -61,22 +67,24 @@ RESPONSE FORMAT:
 - Use **bold** for important points and *italic* for emphasis
 - Structure your response with clear visual hierarchy
 
-SPACING GUIDELINES:
-- Start with a brief overview paragraph
-- Use ## for section headers with spacing above and below
-- Separate different topics with double line breaks
-- Add spacing around lists and examples
-- End with a summary or next steps section
+SPACING GUIDELINES (MANDATORY):
+- **ALWAYS start with your direct answer (1-2 sentences)**
+- **ALWAYS use the format \`**Heading:** Text...\` for each new topic.**
+- **ALWAYS use ## for section headers with spacing above and below**
+- **ALWAYS separate different topics with double line breaks (\\n\\n)**
+- **ALWAYS add spacing around lists and examples**
+- **ALWAYS end with a summary or next steps section**
+- **NEVER create walls of text - break up content with proper spacing**
 
-CONCISENESS REQUIREMENTS:
-- **Keep responses under 300 words unless absolutely necessary**
-- Focus on the most critical information first
-- Use bullet points instead of long paragraphs
-- Avoid unnecessary explanations or repetition
-- Get straight to actionable advice
-- Prioritize what the user needs to know right now
+EXAMPLE FORMAT:
+Your direct answer here.
 
-Remember: You're helping someone complete a real commercial real estate project form. Be specific, practical, concise, and ensure your response is easy to read with proper spacing.`;
+**Key Points:**
+- Covers land acquisition and construction costs
+- Interest-only payments during construction
+- Converts to permanent financing upon completion
+
+Remember: Get straight to the point. Users want quick, actionable answers, not lengthy explanations.`;
 
     // Build user prompt
     const userPrompt = question 
