@@ -37,13 +37,16 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
   const [droppedField, setDroppedField] = useState<string | null>(null);
   
   // Streaming AI response
-  const { object, submit, isLoading: isStreaming, error: streamError } = useObject({
+  const { object, submit, isLoading: isStreaming, error: streamError, stop } = useObject({
     api: '/api/project-qa',
     schema: ProjectQASchema,
   });
 
   // Handle field drop
   const handleFieldDrop = useCallback(async (fieldId: string) => {
+    // Abort any ongoing streaming requests
+    stop();
+    
     try {
       // Validate field exists
       if (!fieldId) {
@@ -98,11 +101,14 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
       console.error('Error handling field drop:', error);
       setContextError(error instanceof Error ? error.message : 'Failed to process field drop');
     }
-  }, [formData, contextCache]);
+  }, [formData, contextCache, stop]);
 
   // Send message to AI
   const sendMessage = useCallback(async (content: string) => {
     if (!fieldContext || !content.trim() || isBuildingContext) return;
+    
+    // Abort any previous requests
+    stop();
     
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -149,13 +155,17 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
       submit(aiRequest);
       
     } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        // Request was cancelled, no need to show an error
+        return;
+      }
       console.error('Error sending message:', error);
       
       // Remove thinking message and add error message
       setMessages(prev => prev.filter(msg => !msg.isStreaming));
       setMessages(prev => [...prev, createErrorMessage(fieldContext)]);
     }
-  }, [fieldContext, formData, messages, submit, presetQuestions, isBuildingContext]);
+  }, [fieldContext, formData, messages, submit, presetQuestions, isBuildingContext, stop]);
 
   // Handle streaming response
   useEffect(() => {

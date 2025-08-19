@@ -73,6 +73,7 @@ Remember: You're helping someone complete a real commercial real estate project 
       system: systemPrompt,
       schema: ProjectQASchema,
       prompt: `${userPrompt}${historyContext}`,
+      abortSignal: req.signal,
     });
 
     return result.toTextStreamResponse();
