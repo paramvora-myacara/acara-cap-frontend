@@ -5,6 +5,16 @@ import { Message, FieldContext, PresetQuestion, AIContextRequest } from '../type
 import { AIContextBuilder } from '../services/aiContextBuilder';
 import { z } from 'zod';
 
+// Helper to create a standardized error message
+const createErrorMessage = (fieldContext: FieldContext | null): Message => ({
+  id: Date.now().toString(),
+  type: 'ai',
+  content: 'Sorry, I encountered an error while processing your question. Please try again.',
+  timestamp: new Date(),
+  fieldContext: fieldContext,
+  isStreaming: false,
+});
+
 // Schema for AI response with markdown support
 const ProjectQASchema = z.object({
   answer_markdown: z.string().describe('A comprehensive, helpful answer to the user\'s question about the form field, formatted in markdown')
@@ -19,7 +29,6 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [fieldContext, setFieldContext] = useState<FieldContext | null>(null);
   const [presetQuestions, setPresetQuestions] = useState<PresetQuestion[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isBuildingContext, setIsBuildingContext] = useState(false);
   const [contextError, setContextError] = useState<string | null>(null);
   
@@ -144,44 +153,29 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
       
       // Remove thinking message and add error message
       setMessages(prev => prev.filter(msg => !msg.isStreaming));
-      
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'ai',
-        content: 'Sorry, I encountered an error while processing your question. Please try again.',
-        timestamp: new Date(),
-        fieldContext
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, createErrorMessage(fieldContext)]);
     }
   }, [fieldContext, formData, messages, submit, presetQuestions, isBuildingContext]);
 
   // Handle streaming response
   useEffect(() => {
-    if (object) {
-      setMessages(prev => {
-        const newMessages = prev.filter(m => !m.isStreaming);
-        const lastMessage = newMessages[newMessages.length - 1];
-        
-        if (lastMessage?.type === 'ai' && !lastMessage.isStreaming) {
-          // Update last assistant message
-          lastMessage.content = object.answer_markdown || '';
-          lastMessage.isStreaming = false;
-          return [...newMessages];
-        } else {
-          // Add new assistant message
-          return [...newMessages, { 
-            id: Date.now().toString(), 
-            type: 'ai', 
-            content: object.answer_markdown || '', 
-            timestamp: new Date(), 
-            fieldContext,
-            isStreaming: false
-          }];
-        }
-      });
-    }
+    if (!object) return;
+
+    setMessages(prev => {
+      // Find the "thinking" message and replace it with the first chunk of the AI response,
+      // or update the last AI message with subsequent chunks.
+      const lastMessage = prev[prev.length - 1];
+
+      if (lastMessage?.type === 'ai') {
+        // Create a new array with the updated message to avoid mutation
+        return prev.map((msg, index) =>
+          index === prev.length - 1
+            ? { ...msg, content: object.answer_markdown || '', isStreaming: false }
+            : msg
+        );
+      }
+      return prev;
+    });
   }, [object, fieldContext]);
 
   // Handle streaming errors
@@ -189,17 +183,25 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     if (streamError) {
       setMessages(prev => {
         const newMessages = prev.filter(m => !m.isStreaming);
-        return [...newMessages, {
-          id: Date.now().toString(),
-          type: 'ai',
-          content: 'Sorry, I encountered an error while processing your question. Please try again.',
-          timestamp: new Date(),
-          fieldContext: fieldContext!,
-          isStreaming: false
-        }];
+        return [...newMessages, createErrorMessage(fieldContext)];
       });
     }
   }, [streamError, fieldContext]);
+
+  // When streaming finishes, ensure the last message's streaming flag is false
+  useEffect(() => {
+    if (!isStreaming) {
+      setMessages(prev => {
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage?.isStreaming) {
+          return prev.map((msg, index) =>
+            index === prev.length - 1 ? { ...msg, isStreaming: false } : msg
+          );
+        }
+        return prev;
+      });
+    }
+  }, [isStreaming]);
 
   // Ask preset question
   const askPresetQuestion = useCallback((question: PresetQuestion) => {
@@ -210,7 +212,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     // State
     messages,
     fieldContext,
-    isLoading: isLoading || isStreaming,
+    isLoading: isBuildingContext || isStreaming,
     isBuildingContext,
     contextError,
     droppedField,

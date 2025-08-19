@@ -9,7 +9,7 @@ const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 
-const MODEL_NAME = 'gemini-2.5-pro';
+const MODEL_NAME = 'gemini-2.5-flash';
 
 // Schema for AI response with markdown support
 const ProjectQASchema = z.object({
@@ -73,14 +73,6 @@ Remember: You're helping someone complete a real commercial real estate project 
       system: systemPrompt,
       schema: ProjectQASchema,
       prompt: `${userPrompt}${historyContext}`,
-      providerOptions: {
-        google: {
-          thinkingConfig: {
-            includeThoughts: true,
-            thinkingBudget: 784,
-          },
-        } satisfies GoogleGenerativeAIProviderOptions,
-      },
     });
 
     return result.toTextStreamResponse();
