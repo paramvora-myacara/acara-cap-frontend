@@ -36,7 +36,7 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
   droppedFieldId, 
   onFieldProcessed 
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('ai-assistant');
+  const [activeTab, setActiveTab] = useState<TabType>('advisor');
   
   // AI Assistant state and hooks
   const {
@@ -197,19 +197,6 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
         {/* Tab Navigation */}
         <div className="flex bg-gray-100 p-1 rounded-lg">
           <button
-            onClick={() => setActiveTab('ai-assistant')}
-            className={cn(
-              "flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-              activeTab === 'ai-assistant'
-                ? "bg-white text-blue-600 shadow-sm"
-                : "text-gray-600 hover:text-gray-800"
-            )}
-          >
-            <Brain className="h-4 w-4" />
-            <span>AI Assistant</span>
-          </button>
-          
-          <button
             onClick={() => setActiveTab('advisor')}
             className={cn(
               "flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
@@ -221,12 +208,93 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
             <MessageCircle className="h-4 w-4" />
             <span>Advisor</span>
           </button>
+          
+          <button
+            onClick={() => setActiveTab('ai-assistant')}
+            className={cn(
+              "flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+              activeTab === 'ai-assistant'
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+            )}
+          >
+            <Brain className="h-4 w-4" />
+            <span>AI Assistant</span>
+          </button>
         </div>
       </CardHeader>
 
       {/* Tab Content */}
       <CardContent className="flex-1 pt-0 overflow-hidden px-0">
-        {activeTab === 'ai-assistant' ? (
+        {activeTab === 'advisor' ? (
+          // Advisor Tab
+          <div className="h-full flex flex-col">
+            {/* Advisor Header */}
+            <div className="flex items-center space-x-2 p-2 bg-green-50 border border-green-200 rounded-md mb-3 mx-3">
+              <MessageCircle className="h-4 w-4 text-green-600" />
+              <span className="text-sm text-green-700">
+                {isLoadingAdvisor ? 'Loading advisor...' : advisorName}
+              </span>
+            </div>
+
+            {/* Messages Card */}
+            <div className="flex-1 mx-3 mb-3 min-h-0">
+              <Card className="h-full">
+                <CardContent className="p-3 h-full">
+                  <div className="h-full overflow-y-auto space-y-3">
+                    {localMessages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={cn(
+                          "flex space-x-2",
+                          message.senderType === 'Borrower' ? "justify-end" : "justify-start"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "max-w-[80%] rounded-lg px-3 py-2 text-sm",
+                            message.senderType === 'Borrower'
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-100 text-gray-800"
+                          )}
+                        >
+                          <div className="font-medium text-xs mb-1">
+                            {message.senderType === 'Borrower' ? 'You' : advisorName}
+                          </div>
+                          <div>{message.message}</div>
+                          <div className="text-xs opacity-70 mt-1">
+                            {new Date(message.createdAt).toLocaleTimeString()}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Message Input */}
+            <div className="mx-3">
+              <form onSubmit={handleSendMessage} className="flex space-x-2">
+                <input
+                  type="text"
+                  placeholder="Type your message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="submit"
+                  disabled={!newMessage.trim()}
+                  className="px-3 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
+          </div>
+        ) : (
           // AI Assistant Tab
           <div 
             className="h-full flex flex-col"
@@ -318,69 +386,6 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
                 </div>
               </div>
             )}
-          </div>
-        ) : (
-          // Advisor Tab
-          <div className="h-full flex flex-col">
-            {/* Advisor Header */}
-            <div className="flex items-center space-x-2 p-2 bg-green-50 border border-green-200 rounded-md mb-3">
-              <MessageCircle className="h-4 w-4 text-green-600" />
-              <span className="text-sm text-green-700">
-                {isLoadingAdvisor ? 'Loading advisor...' : advisorName}
-              </span>
-            </div>
-
-            {/* Messages */}
-            <div 
-              ref={messageContainerRef}
-              className="flex-1 overflow-y-auto space-y-3 mb-3"
-            >
-                             {localMessages.map((message) => (
-                 <div
-                   key={message.id}
-                   className={cn(
-                     "flex space-x-2",
-                     message.senderType === 'Borrower' ? "justify-end" : "justify-start"
-                   )}
-                 >
-                   <div
-                     className={cn(
-                       "max-w-[80%] rounded-lg px-3 py-2 text-sm",
-                       message.senderType === 'Borrower'
-                         ? "bg-blue-600 text-white"
-                         : "bg-gray-100 text-gray-800"
-                     )}
-                   >
-                     <div className="font-medium text-xs mb-1">
-                       {message.senderType === 'Borrower' ? 'You' : advisorName}
-                     </div>
-                     <div>{message.message}</div>
-                     <div className="text-xs opacity-70 mt-1">
-                       {new Date(message.createdAt).toLocaleTimeString()}
-                     </div>
-                   </div>
-                 </div>
-               ))}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="flex space-x-2">
-              <input
-                type="text"
-                placeholder="Type your message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="submit"
-                disabled={!newMessage.trim()}
-                className="px-3 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Send className="h-4 w-4" />
-              </button>
-            </form>
           </div>
         )}
       </CardContent>

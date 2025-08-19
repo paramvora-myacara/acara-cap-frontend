@@ -49,14 +49,34 @@ INSTRUCTIONS:
 
 RESPONSE FORMAT:
 - Use markdown formatting for structure (headers, lists, emphasis)
-- Clear, concise explanations
-- Bullet points for actionable items
+- **IMPORTANT: Add proper spacing and paragraph breaks for readability**
+- **BE CONCISE: Keep answers focused and to-the-point**
+- Separate major sections with double line breaks (\\n\\n)
+- Use single line breaks between related points
+- Add spacing before and after lists (\\n before, \\n after)
+- Use bullet points for actionable items with proper spacing
 - Specific examples relevant to their project
 - References to related form sections
 - Industry benchmarks when applicable
 - Use **bold** for important points and *italic* for emphasis
+- Structure your response with clear visual hierarchy
 
-Remember: You're helping someone complete a real commercial real estate project form. Be specific and practical.`;
+SPACING GUIDELINES:
+- Start with a brief overview paragraph
+- Use ## for section headers with spacing above and below
+- Separate different topics with double line breaks
+- Add spacing around lists and examples
+- End with a summary or next steps section
+
+CONCISENESS REQUIREMENTS:
+- **Keep responses under 300 words unless absolutely necessary**
+- Focus on the most critical information first
+- Use bullet points instead of long paragraphs
+- Avoid unnecessary explanations or repetition
+- Get straight to actionable advice
+- Prioritize what the user needs to know right now
+
+Remember: You're helping someone complete a real commercial real estate project form. Be specific, practical, concise, and ensure your response is easy to read with proper spacing.`;
 
     // Build user prompt
     const userPrompt = question 
