@@ -12,7 +12,7 @@ import { Loader2, FileSpreadsheet } from 'lucide-react'; // Added FileSpreadshee
 import { ProjectProfile } from '@/types/enhanced-types';
 import { Button } from '../ui/Button'; // Import Button
 import { useAuth } from '@/hooks/useAuth'; // Add this import
-import { DragDropProvider } from '../ui/DragDropProvider';
+import { AskAIProvider } from '../ui/AskAIProvider';
 import { ConsolidatedSidebar } from './ConsolidatedSidebar';
 
 interface ProjectWorkspaceProps {
@@ -111,7 +111,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
             )}
 
 
-            <DragDropProvider onFieldDrop={(fieldId) => {
+            <AskAIProvider onFieldAskAI={(fieldId: string) => {
               setDroppedFieldId(fieldId);
             }}>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -125,7 +125,11 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
                           <div className="w-full bg-gray-200 rounded-full h-2"><div className={`h-2 rounded-full transition-all duration-500 ${projectProgressColor}`} style={{ width: `${projectCompleteness}%` }} /></div>
                       </div>
                       <div className="flex-1 overflow-y-auto">
-                        <EnhancedProjectForm existingProject={activeProject} onComplete={handleProjectUpdateComplete} />
+                        <EnhancedProjectForm 
+                          existingProject={activeProject} 
+                          onComplete={handleProjectUpdateComplete}
+                          onAskAI={(fieldId) => setDroppedFieldId(fieldId)}
+                        />
                       </div>
                   </div>
 
@@ -141,7 +145,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
                       />
                   </div>
               </div>
-            </DragDropProvider>
+            </AskAIProvider>
         </div>
     );
 };

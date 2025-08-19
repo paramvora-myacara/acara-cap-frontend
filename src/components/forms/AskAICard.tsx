@@ -4,7 +4,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAskAI } from '../../hooks/useAskAI';
 import { Card, CardContent, CardHeader } from '../ui/card';
-import { useDroppable } from '@dnd-kit/core';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -36,14 +35,6 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
     hasMessages
   } = useAskAI({ projectId, formData });
 
-  // Make the entire card a drop target
-  const { setNodeRef, isOver } = useDroppable({
-    id: 'ask-ai-drop-zone',
-    data: {
-      type: 'ai-assistant-zone',
-    },
-  });
-
   // Handle field drop from DragDropProvider
   useEffect(() => {
     if (droppedFieldId) {
@@ -63,10 +54,7 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
 
   return (
     <Card 
-      ref={setNodeRef}
-      className={`transition-all duration-200 ${
-        isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
-      }`}
+      className="transition-all duration-200"
     >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -96,16 +84,10 @@ export const AskAICard: React.FC<AskAICardProps> = ({ projectId, formData, dropp
       <CardContent className="pt-0">
         {!hasActiveContext ? (
           // Drop zone
-          <div className={`min-h-[200px] flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition-all duration-200 ${
-            isOver 
-              ? 'border-blue-500 bg-blue-100 scale-105 shadow-lg' 
-              : 'border-blue-300 bg-blue-50/50 hover:border-blue-400 hover:bg-blue-100/50'
-          }`}>
-            <MessageSquare className={`h-12 w-12 mb-3 transition-colors ${
-              isOver ? 'text-blue-600' : 'text-blue-400'
-            }`} />
-            <p className="text-blue-600 font-medium text-center">
-              {isOver ? 'Drop here!' : 'Drop a form field here'}
+          <div className={`min-h-[200px] flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition-all duration-200`}>
+            <MessageSquare className={`h-12 w-12 mb-3 transition-colors`} />
+            <p className={`font-medium text-center`}>
+              Drop a form field here
             </p>
             <p className="text-blue-500 text-sm text-center mt-1">
               Get instant AI guidance for any field

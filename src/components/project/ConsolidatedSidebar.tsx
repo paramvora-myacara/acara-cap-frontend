@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '../ui/card';
-import { useDroppable } from '@dnd-kit/core';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAskAI } from '../../hooks/useAskAI';
@@ -66,15 +65,7 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
     return false;
   });
 
-  // Make the entire card a drop target for AI assistant
-  const { setNodeRef, isOver } = useDroppable({
-    id: 'ask-ai-drop-zone',
-    data: {
-      type: 'ai-assistant-zone',
-    },
-  });
-
-  // Handle field drop from DragDropProvider
+  // Handle field drop from AskAIProvider
   useEffect(() => {
     if (droppedFieldId) {
       handleFieldDrop(droppedFieldId);
@@ -238,23 +229,14 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
         {activeTab === 'ai-assistant' ? (
           // AI Assistant Tab
           <div 
-            ref={setNodeRef}
-            className={cn(
-              "h-full transition-all duration-200",
-              isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
-            )}
+            className="h-full flex flex-col"
           >
             {!hasActiveContext ? (
               // Drop zone
-              <div className={cn(
-                "h-full flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition-all duration-200 mx-3",
-                isOver 
-                  ? "border-blue-500 bg-blue-50" 
-                  : "border-gray-300 bg-gray-50"
-              )}>
+              <div className="h-full flex flex-col items-center justify-center border-2 border-dashed rounded-lg transition-all duration-200 mx-3 border-gray-300 bg-gray-50">
                 <MessageSquare className="h-12 w-12 text-gray-400 mb-3" />
                 <p className="text-sm text-gray-600 text-center">
-                  Drag and drop a form field here<br />
+                  Click "Ask AI" buttons on form fields<br />
                   to get AI assistance
                 </p>
               </div>

@@ -19,8 +19,7 @@ import { useUI } from '../../hooks/useUI';
 import { useAuth } from '../../hooks/useAuth';
 import { ContextHelp } from '../ui/ContextHelp';
 import { FormProvider, useFormContext } from '../../contexts/FormContext';
-import { AskAICard } from './AskAICard';
-import { DraggableField } from '../ui/DragDropProvider';
+import { AskAIButton } from '../ui/AskAIProvider';
 
 import {
   FileText, MapPin, Building, DollarSign, Clock, CheckCircle,
@@ -35,6 +34,7 @@ interface EnhancedProjectFormProps {
   existingProject: ProjectProfile; // Made non-optional as workspace loads it
   onComplete?: (project: ProjectProfile) => void; // Make onComplete optional
   compact?: boolean; // Add compact prop
+  onAskAI?: (fieldId: string) => void; // Add onAskAI prop
 }
 
 // Define options for ButtonSelect components
@@ -62,7 +62,9 @@ const stateOptions = [ // Keep states for Select component
 
 export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
   existingProject,
-  onComplete
+  onComplete,
+  compact = false,
+  onAskAI
 }) => {
   const router = useRouter();
   const { updateProject, setProjectChanges, autoSaveProject } = useProjects(); // Use updateProject
@@ -128,7 +130,7 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
           </CardHeader>
           <CardContent className="p-4 space-y-6">
             <FormGroup> 
-              <DraggableField id="projectName">
+              <AskAIButton id="projectName" onAskAI={onAskAI || (() => {})}>
                 <Input 
                   id="projectName" 
                   label="Project Name" 
@@ -143,13 +145,13 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                   data-field-label="Project Name"
                   data-field-placeholder="e.g., Riverfront Acquisition"
                 />
-              </DraggableField>
+              </AskAIButton>
             </FormGroup>
             {/* Property Address Section */}
             <div className="border-t pt-4">
                 <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center"><MapPin className="h-4 w-4 mr-2 text-blue-600" /> Property Address</h3>
                 <FormGroup> 
-                  <DraggableField id="propertyAddressStreet">
+                                <AskAIButton id="propertyAddressStreet" onAskAI={onAskAI || (() => {})}>
                     <Input 
                       id="propertyAddressStreet" 
                       label="Street Address" 
@@ -164,11 +166,11 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                       data-field-label="Street Address"
                       data-field-placeholder="123 Main Street"
                     />
-                  </DraggableField>
+                  </AskAIButton>
                 </FormGroup>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <FormGroup> 
-                      <DraggableField id="propertyAddressCity">
+                      <AskAIButton id="propertyAddressCity" onAskAI={onAskAI || (() => {})}>
                         <Input 
                           id="propertyAddressCity" 
                           label="City" 
@@ -183,11 +185,11 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                           data-field-label="City"
                           data-field-placeholder="Anytown"
                         />
-                      </DraggableField>
+                      </AskAIButton>
                     </FormGroup>
                     {/* State uses Select */}
                     <FormGroup> 
-                      <DraggableField id="propertyAddressState">
+                                             <AskAIButton id="propertyAddressState" onAskAI={onAskAI || (() => {})}>
                         <Select 
                           id="propertyAddressState" 
                           label="State" 
@@ -202,10 +204,10 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                           data-field-label="State"
                           data-field-options={JSON.stringify(stateOptions)}
                         />
-                      </DraggableField>
+                      </AskAIButton>
                     </FormGroup>
                     <FormGroup> 
-                      <DraggableField id="propertyAddressZip">
+                      <AskAIButton id="propertyAddressZip" onAskAI={onAskAI || (() => {})}>
                         <Input 
                           id="propertyAddressZip" 
                           label="ZIP Code" 
@@ -220,11 +222,11 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                           data-field-label="ZIP Code"
                           data-field-placeholder="12345"
                         />
-                      </DraggableField>
+                      </AskAIButton>
                     </FormGroup>
                 </div>
-                <FormGroup className="mt-4"> 
-                  <DraggableField id="propertyAddressCounty">
+                                  <FormGroup className="mt-4"> 
+                    <AskAIButton id="propertyAddressCounty" onAskAI={onAskAI || (() => {})}>
                     <Input 
                       id="propertyAddressCounty" 
                       label="County" 
@@ -238,15 +240,15 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                       data-field-label="County"
                       data-field-placeholder="e.g., Orange County"
                     />
-                  </DraggableField>
+                  </AskAIButton>
                 </FormGroup>
             </div>
              {/* Property Info Section */}
             <div className="border-t pt-4">
                  <h3 className="text-md font-medium text-gray-800 mb-3 flex items-center"><Building className="h-4 w-4 mr-2 text-blue-600" /> Property Information</h3>
                  {/* Asset Type uses ButtonSelect */}
-                 <FormGroup> 
-                   <DraggableField id="assetType">
+                                    <FormGroup> 
+                    <AskAIButton id="assetType" onAskAI={onAskAI || (() => {})}>
                      <div
                        data-field-id="assetType"
                        data-field-type="button-select"
@@ -263,11 +265,11 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                          required 
                        />
                      </div>
-                   </DraggableField>
+                   </AskAIButton>
                  </FormGroup>
                  {/* Project Phase uses ButtonSelect */}
-                 <FormGroup className="mt-4"> 
-                   <DraggableField id="projectPhase">
+                                    <FormGroup className="mt-4"> 
+                    <AskAIButton id="projectPhase" onAskAI={onAskAI || (() => {})}>
                      <div
                        data-field-id="projectPhase"
                        data-field-type="button-select"
@@ -284,11 +286,11 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                          required 
                        />
                      </div>
-                   </DraggableField>
+                   </AskAIButton>
                  </FormGroup>
                  {/* Project Description uses Textarea */}
-                 <FormGroup className="mt-4"> 
-                   <DraggableField id="projectDescription">
+                                    <FormGroup className="mt-4"> 
+                    <AskAIButton id="projectDescription" onAskAI={onAskAI || (() => {})}>
                      <div
                        data-field-id="projectDescription"
                        data-field-type="textarea"
@@ -307,7 +309,7 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                          required 
                        />
                      </div>
-                   </DraggableField>
+                   </AskAIButton>
                  </FormGroup>
             </div>
           </CardContent>
@@ -323,8 +325,8 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
           <CardHeader className="pb-3 border-b"> <h2 className="text-xl font-semibold text-gray-800 flex items-center"><DollarSign className="h-5 w-5 mr-2 text-blue-600" /> Loan Request Details</h2> </CardHeader>
           <CardContent className="p-4 space-y-6">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormGroup> 
-                  <DraggableField id="loanAmountRequested">
+                                  <FormGroup> 
+                   <AskAIButton id="loanAmountRequested" onAskAI={onAskAI || (() => {})}>
                     <Input 
                       id="loanAmountRequested" 
                       type="number" 
@@ -340,11 +342,11 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                       data-field-label="Requested Loan Amount ($)"
                       data-field-placeholder="e.g., 10000000"
                     />
-                  </DraggableField>
+                  </AskAIButton>
                 </FormGroup>
                  {/* Capital Type uses ButtonSelect */}
-                                 <FormGroup> 
-                   <DraggableField id="loanType">
+                                                                    <FormGroup> 
+                    <AskAIButton id="loanType" onAskAI={onAskAI || (() => {})}>
                      <div
                        data-field-id="loanType"
                        data-field-type="button-select"
@@ -362,12 +364,12 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                          gridCols="grid-cols-2 md:grid-cols-3" 
                        />
                      </div>
-                   </DraggableField>
+                   </AskAIButton>
                  </FormGroup>
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormGroup> 
-                  <DraggableField id="targetLtvPercent">
+                                  <FormGroup> 
+                   <AskAIButton id="targetLtvPercent" onAskAI={onAskAI || (() => {})}>
                     <Input 
                       id="targetLtvPercent" 
                       type="number" 
@@ -383,10 +385,10 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                       data-field-label="Target LTV (%)"
                       data-field-placeholder="e.g., 70"
                     />
-                  </DraggableField>
+                  </AskAIButton>
                 </FormGroup>
-                <FormGroup> 
-                  <DraggableField id="targetLtcPercent">
+                                  <FormGroup> 
+                   <AskAIButton id="targetLtcPercent" onAskAI={onAskAI || (() => {})}>
                     <Input 
                       id="targetLtcPercent" 
                       type="number" 
@@ -401,12 +403,12 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                       data-field-label="Target LTC (%) (Construction/Dev)"
                       data-field-placeholder="e.g., 80"
                     />
-                  </DraggableField>
+                  </AskAIButton>
                 </FormGroup>
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormGroup> 
-                  <DraggableField id="amortizationYears">
+                                  <FormGroup> 
+                   <AskAIButton id="amortizationYears" onAskAI={onAskAI || (() => {})}>
                     <Input 
                       id="amortizationYears" 
                       type="number" 
@@ -421,10 +423,10 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                       data-field-label="Amortization (Years)"
                       data-field-placeholder="e.g., 30"
                     />
-                  </DraggableField>
+                  </AskAIButton>
                 </FormGroup>
-                <FormGroup> 
-                  <DraggableField id="interestOnlyPeriodMonths">
+                                  <FormGroup> 
+                   <AskAIButton id="interestOnlyPeriodMonths" onAskAI={onAskAI || (() => {})}>
                     <Input 
                       id="interestOnlyPeriodMonths" 
                       type="number" 
@@ -439,13 +441,13 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                       data-field-label="Interest-Only Period (Months)"
                       data-field-placeholder="e.g., 36"
                     />
-                  </DraggableField>
+                  </AskAIButton>
                 </FormGroup>
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  {/* Interest Rate Type uses ButtonSelect */}
-                <FormGroup> 
-                  <DraggableField id="interestRateType">
+                                   <FormGroup> 
+                    <AskAIButton id="interestRateType" onAskAI={onAskAI || (() => {})}>
                     <div
                       data-field-id="interestRateType"
                       data-field-type="button-select"
@@ -462,10 +464,10 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                         gridCols="grid-cols-2 md:grid-cols-3" 
                       />
                     </div>
-                  </DraggableField>
+                  </AskAIButton>
                 </FormGroup>
-                <FormGroup> 
-                  <DraggableField id="targetCloseDate">
+                                  <FormGroup> 
+                   <AskAIButton id="targetCloseDate" onAskAI={onAskAI || (() => {})}>
                     <Input 
                       id="targetCloseDate" 
                       type="date" 
@@ -478,12 +480,12 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                       data-field-required="false"
                       data-field-label="Target Close Date"
                     />
-                  </DraggableField>
+                  </AskAIButton>
                 </FormGroup>
              </div>
              {/* Recourse Preference uses ButtonSelect */}
-             <FormGroup> 
-               <DraggableField id="recoursePreference">
+                            <FormGroup> 
+                <AskAIButton id="recoursePreference" onAskAI={onAskAI || (() => {})}>
                  <div
                    data-field-id="recoursePreference"
                    data-field-type="button-select"
@@ -500,11 +502,11 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                      gridCols="grid-cols-2 md:grid-cols-3" 
                    />
                  </div>
-               </DraggableField>
+               </AskAIButton>
              </FormGroup>
                                          {/* Use of Proceeds uses Textarea */}
-              <FormGroup> 
-                <DraggableField id="useOfProceeds">
+                              <FormGroup> 
+                 <AskAIButton id="useOfProceeds" onAskAI={onAskAI || (() => {})}>
                   <div
                     data-field-id="useOfProceeds"
                     data-field-type="textarea"
@@ -523,7 +525,7 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                       required 
                     />
                   </div>
-                </DraggableField>
+                </AskAIButton>
               </FormGroup>
             </CardContent>
         </Card>
@@ -538,8 +540,8 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
           <CardHeader className="pb-3 border-b"> <h2 className="text-xl font-semibold text-gray-800 flex items-center"><BarChart className="h-5 w-5 mr-2 text-blue-600" /> Financial Information</h2> </CardHeader>
           <CardContent className="p-4 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormGroup> 
-                <DraggableField id="purchasePrice">
+                              <FormGroup> 
+                 <AskAIButton id="purchasePrice" onAskAI={onAskAI || (() => {})}>
                   <Input 
                     id="purchasePrice" 
                     type="number" 
@@ -554,10 +556,10 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                     data-field-label="Purchase Price / Current Basis ($)"
                     data-field-placeholder="e.g., 15000000"
                   />
-                </DraggableField>
+                </AskAIButton>
               </FormGroup>
-              <FormGroup> 
-                <DraggableField id="totalProjectCost">
+                              <FormGroup> 
+                 <AskAIButton id="totalProjectCost" onAskAI={onAskAI || (() => {})}>
                   <Input 
                     id="totalProjectCost" 
                     type="number" 
@@ -572,12 +574,12 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                     data-field-label="Total Project Cost ($)"
                     data-field-placeholder="e.g., 18000000"
                   />
-                </DraggableField>
+                </AskAIButton>
               </FormGroup>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormGroup> 
-                <DraggableField id="capexBudget">
+                              <FormGroup> 
+                 <AskAIButton id="capexBudget" onAskAI={onAskAI || (() => {})}>
                   <Input 
                     id="capexBudget" 
                     type="number" 
@@ -592,10 +594,10 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                     data-field-label="CapEx Budget ($)"
                     data-field-placeholder="e.g., 1500000"
                   />
-                </DraggableField>
+                </AskAIButton>
               </FormGroup>
-              <FormGroup> 
-                <DraggableField id="equityCommittedPercent">
+                              <FormGroup> 
+                 <AskAIButton id="equityCommittedPercent" onAskAI={onAskAI || (() => {})}>
                   <Input 
                     id="equityCommittedPercent" 
                     type="number" 
@@ -610,12 +612,12 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                     data-field-label="Equity Committed (%)"
                     data-field-placeholder="e.g., 100"
                   />
-                </DraggableField>
+                </AskAIButton>
               </FormGroup>
             </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <FormGroup> 
-                 <DraggableField id="propertyNoiT12">
+                                <FormGroup> 
+                  <AskAIButton id="propertyNoiT12" onAskAI={onAskAI || (() => {})}>
                    <Input 
                      id="propertyNoiT12" 
                      type="number" 
@@ -630,10 +632,10 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                      data-field-label="Current/T12 NOI ($)"
                      data-field-placeholder="e.g., 450000"
                    />
-                 </DraggableField>
+                 </AskAIButton>
                </FormGroup>
-               <FormGroup> 
-                 <DraggableField id="stabilizedNoiProjected">
+                                <FormGroup> 
+                  <AskAIButton id="stabilizedNoiProjected" onAskAI={onAskAI || (() => {})}>
                    <Input 
                      id="stabilizedNoiProjected" 
                      type="number" 
@@ -648,12 +650,12 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                      data-field-label="Projected Stabilized NOI ($)"
                      data-field-placeholder="e.g., 750000"
                    />
-                 </DraggableField>
+                 </AskAIButton>
                </FormGroup>
              </div>
              {/* Exit Strategy uses ButtonSelect */}
-             <FormGroup> 
-               <DraggableField id="exitStrategy">
+                            <FormGroup> 
+                <AskAIButton id="exitStrategy" onAskAI={onAskAI || (() => {})}>
                  <div
                    data-field-id="exitStrategy"
                    data-field-type="button-select"
@@ -669,11 +671,11 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                      onSelect={(value) => handleInputChange('exitStrategy', value as ExitStrategy)} 
                    />
                  </div>
-               </DraggableField>
+               </AskAIButton>
              </FormGroup>
              {/* Business Plan & Market Overview use Textarea */}
-             <FormGroup> 
-               <DraggableField id="businessPlanSummary">
+                            <FormGroup> 
+                <AskAIButton id="businessPlanSummary" onAskAI={onAskAI || (() => {})}>
                  <div
                    data-field-id="businessPlanSummary"
                    data-field-type="textarea"
@@ -691,10 +693,10 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                      className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" 
                    />
                  </div>
-               </DraggableField>
+               </AskAIButton>
              </FormGroup>
-             <FormGroup> 
-               <DraggableField id="marketOverviewSummary">
+                            <FormGroup> 
+                <AskAIButton id="marketOverviewSummary" onAskAI={onAskAI || (() => {})}>
                  <div
                    data-field-id="marketOverviewSummary"
                    data-field-type="textarea"
@@ -712,7 +714,7 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
                      className="w-full h-24 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" 
                    />
                  </div>
-               </DraggableField>
+               </AskAIButton>
              </FormGroup>
           </CardContent>
         </Card>
