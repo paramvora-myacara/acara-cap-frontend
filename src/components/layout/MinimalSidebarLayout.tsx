@@ -108,7 +108,7 @@ const MinimalSidebarLayout: React.FC<MinimalSidebarLayoutProps> = ({ children, t
                 <h1 className="text-2xl font-semibold text-gray-800">{title}</h1>
             </div>
         </header>
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 px-6 pt-2 pb-6">
           {children}
         </main>
       </div>

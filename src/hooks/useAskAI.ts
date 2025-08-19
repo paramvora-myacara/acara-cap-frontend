@@ -106,7 +106,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
   }, [formData, stop]);
 
   // Send message to AI
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, displayMessage?: string) => {
     if (!fieldContext || !content.trim() || isBuildingContext) return;
     
     // Abort any previous requests
@@ -115,7 +115,7 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content: content.trim(),
+      content: displayMessage?.trim() || content.trim(), // Use displayMessage if provided, otherwise use content
       timestamp: new Date(),
       fieldContext
     };
@@ -138,11 +138,11 @@ export const useAskAI = ({ projectId, formData }: UseAskAIOptions) => {
       // Build project context
       const projectContext = AIContextBuilder.buildProjectContext(formData);
       
-      // Prepare AI request with the question as-is (preset questions are already included)
+      // Prepare AI request with the actual content (not display message)
       const aiRequest: AIContextRequest = {
         fieldContext,
         projectContext,
-        question: content.trim(),
+        question: content.trim(), // Always use the actual content for the API
         chatHistory: messages
       };
       
