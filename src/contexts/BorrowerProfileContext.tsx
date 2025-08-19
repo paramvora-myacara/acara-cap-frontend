@@ -21,6 +21,7 @@ interface BorrowerProfileContextProps {
   setProfileChanges: (hasChanges: boolean) => void;
   autoSaveBorrowerProfile: () => Promise<void>;
   resetProfileState: () => void; // Add reset function type
+  autoCreatedFirstProfileThisSession: boolean;
 }
 
 // Create context with default values - ADD reset function default
@@ -33,6 +34,7 @@ export const BorrowerProfileContext = createContext<BorrowerProfileContextProps>
   calculateCompleteness: () => 0, profileChanges: false, setProfileChanges: () => {},
   autoSaveBorrowerProfile: async () => {},
   resetProfileState: () => {}, // Add default empty reset function
+  autoCreatedFirstProfileThisSession: false,
 });
 
 interface BorrowerProfileProviderProps { children: ReactNode; storageService: StorageService; }
@@ -45,6 +47,7 @@ export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = (
   const [principals, setPrincipals] = useState<Principal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [profileChanges, setProfileChanges] = useState(false);
+  const [autoCreatedFirstProfileThisSession, setAutoCreatedFirstProfileThisSession] = useState(false);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedRef = useRef<string | null>(null);
 
@@ -54,6 +57,7 @@ export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = (
         setBorrowerProfile(null);
         setPrincipals([]);
         setProfileChanges(false);
+        setAutoCreatedFirstProfileThisSession(false);
         lastSavedRef.current = null;
         if (autoSaveTimerRef.current) { clearInterval(autoSaveTimerRef.current); autoSaveTimerRef.current = null; }
         // No need to set isLoading here, loading effect handles it
@@ -238,6 +242,7 @@ export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = (
     if (isLoading) return;                    // wait until initial load finished
     if (!user || user.role !== 'borrower') return;
     if (borrowerProfile) return;              // profile already exists
+    if (autoCreatedFirstProfileThisSession) return; // Prevent multiple auto-creations in same session
 
     (async () => {
       try {
@@ -263,6 +268,7 @@ export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = (
             primaryEntityName: 'My Entity',
           });
           await updateUser({ profileId: newProfile.id });
+          setAutoCreatedFirstProfileThisSession(true);
         } else {
           // For new users, create completely empty profile
           const newProfile = await createBorrowerProfile({
@@ -272,6 +278,7 @@ export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = (
             primaryEntityName: '',
           });
           await updateUser({ profileId: newProfile.id });
+          setAutoCreatedFirstProfileThisSession(true);
         }
       } catch (err) {
         console.error('[BorrowerProfileContext] Auto-create failed:', err);
@@ -363,7 +370,7 @@ export const BorrowerProfileProvider: React.FC<BorrowerProfileProviderProps> = (
   }, [borrowerProfile, storageService]);
 
   return (
-    <BorrowerProfileContext.Provider value={{ borrowerProfile, principals, isLoading, createBorrowerProfile, updateBorrowerProfile, addPrincipal, updatePrincipal, removePrincipal, calculateCompleteness, profileChanges, setProfileChanges, autoSaveBorrowerProfile, resetProfileState }}>
+    <BorrowerProfileContext.Provider value={{ borrowerProfile, principals, isLoading, createBorrowerProfile, updateBorrowerProfile, addPrincipal, updatePrincipal, removePrincipal, calculateCompleteness, profileChanges, setProfileChanges, autoSaveBorrowerProfile, resetProfileState, autoCreatedFirstProfileThisSession }}>
       {children}
     </BorrowerProfileContext.Provider>
   );
