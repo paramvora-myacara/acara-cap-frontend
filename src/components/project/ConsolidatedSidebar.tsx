@@ -51,6 +51,7 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
     contextError,
     handleFieldDrop,
     sendMessage,
+    sendMessageSilently,
     hasActiveContext,
     hasMessages
   } = useAskAI({ projectId, formData });
@@ -80,7 +81,7 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
     }
   }, [droppedFieldId, onFieldProcessed, handleFieldDrop]);
 
-  // Automatically send a comprehensive question when field context is built
+  // Automatically send a comprehensive question when field context is built (silently - user won't see the question)
   useEffect(() => {
     if (fieldContext && aiMessages.length === 0 && !aiLoading && !isBuildingContext) {
       // Get the preset questions for this field
@@ -114,9 +115,10 @@ Please also address these additional considerations:
 
 Provide actionable advice that helps me make the best decision for my project.`;
       
-      sendMessage(comprehensiveQuestion);
+      // Use sendMessageSilently to avoid showing the auto-generated question in the UI
+      sendMessageSilently(comprehensiveQuestion);
     }
-  }, [fieldContext, aiMessages.length, aiLoading, isBuildingContext, sendMessage]);
+  }, [fieldContext, aiMessages.length, aiLoading, isBuildingContext, sendMessageSilently]);
 
   // Message panel effects
   useEffect(() => {
