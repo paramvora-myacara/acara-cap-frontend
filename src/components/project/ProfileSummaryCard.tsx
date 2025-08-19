@@ -83,12 +83,12 @@ export const ProfileSummaryCard: React.FC<ProfileSummaryCardProps> = ({ profile,
       
       setEditingField(null);
       
-      // Optional: Add success feedback here if you have a toast system
+              // Profile copied successfully
       console.log('Profile updated successfully');
     } catch (error) {
       console.error('Failed to update profile:', error);
       // Keep the editing state open so user can retry
-      // You could add a toast notification here for error feedback
+              // Profile update failed
     }
   };
 

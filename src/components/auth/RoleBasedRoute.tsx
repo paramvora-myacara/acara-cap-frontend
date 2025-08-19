@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { useUI } from '../../hooks/useUI';
+
 
 interface RoleBasedRouteProps {
   children: React.ReactNode;
@@ -18,14 +18,14 @@ export const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
   redirectTo = '/login'
 }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { setLoading, showNotification } = useUI();
+
   const router = useRouter();
   const [redirected, setRedirected] = useState(false);
 
   // Update the UI loading state once when the component mounts.
   // This effect will run only once.
   useEffect(() => {
-    setLoading(isLoading);
+
     // We intentionally leave out isLoading from the dependency array
     // so that we don't trigger repeated updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -36,19 +36,13 @@ export const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
       if (!isAuthenticated) {
         if (!redirected) {
           setRedirected(true);
-          showNotification({
-            type: 'error',
-            message: 'Please sign in to access this page',
-          });
+          console.error('Please sign in to access this page');
           router.push(redirectTo);
         }
       } else if (!roles.includes(user?.role || 'borrower')) {
         if (!redirected) {
           setRedirected(true);
-          showNotification({
-            type: 'error',
-            message: 'You do not have permission to access this page',
-          });
+          console.error('You do not have permission to access this page');
           // Redirect based on role
           if (user?.role === 'advisor') {
             router.push('/advisor/dashboard');
@@ -64,7 +58,6 @@ export const RoleBasedRoute: React.FC<RoleBasedRouteProps> = ({
     isAuthenticated,
     isLoading,
     router,
-    showNotification,
     redirected,
     redirectTo,
     roles,

@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogOut, PlusCircle, Home, User, FileText } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useUI } from '../../hooks/useUI';
-import { GlobalToast } from '../ui/GlobalToast';
+
+
 import { LoadingOverlay } from '../ui/LoadingOverlay';
 import { cn } from '../../utils/cn';
 
@@ -30,30 +30,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
   const router = useRouter();
   const { user, logout, isAuthenticated } = useAuth();
-  const { showNotification } = useUI();
+
   
   const handleLogout = async () => {
     try {
       await logout();
-      showNotification({
-        type: 'success',
-        message: 'You have been successfully signed out',
-      });
+      console.log('You have been successfully signed out');
       router.push('/');
     } catch (error) {
-      showNotification({
-        type: 'error',
-        message: 'Failed to sign out. Please try again.',
-      });
+      console.error('Failed to sign out. Please try again.');
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <LoadingOverlay />
-      <GlobalToast />
-      
-      {/* Sidebar */}
+          <div className="flex h-screen bg-gray-50">
+        <LoadingOverlay isLoading={false} />
+        
+        {/* Sidebar */}
       <div className={cn("bg-white shadow-md", sidebarMinimal ? "w-16" : "w-64")}>
         <div className="p-4 border-b border-gray-200">
           {sidebarMinimal ? (

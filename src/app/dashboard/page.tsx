@@ -7,8 +7,8 @@ import { RoleBasedRoute } from '../../components/auth/RoleBasedRoute';
 import { useProjects } from '../../hooks/useProjects';
 import { useBorrowerProfile } from '../../hooks/useBorrowerProfile';
 import { useAuth } from '../../hooks/useAuth'; // Import useAuth for logout
-import { useUI } from '../../hooks/useUI';
-import { GlobalToast } from '../../components/ui/GlobalToast';
+
+
 import { LoadingOverlay } from '../../components/ui/LoadingOverlay';
 import { ProfileSummaryCard } from '../../components/project/ProfileSummaryCard'; // Import Profile Summary
 import { ProjectCard } from '../../components/dashboard/ProjectCard'; // Import Project Card
@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const { user, isLoading: authLoading, loginSource, logout } = useAuth(); // Get logout
   const { projects, isLoading: projectsLoading, activeProject, setActiveProject, autoCreatedFirstProjectThisSession } = useProjects();
   const { borrowerProfile, isLoading: profileLoading } = useBorrowerProfile();
-  const { setLoading, isLoading: uiLoading, showNotification } = useUI(); // Get showNotification
+
   const [isRedirecting, setIsRedirecting] = useState(true); // Start as true until checks complete
   const [hasCheckedForNewUser, setHasCheckedForNewUser] = useState(false);
   const [hasAttemptedRedirect, setHasAttemptedRedirect] = useState(false);
@@ -50,13 +50,12 @@ export default function DashboardPage() {
   useEffect(() => {
     // Don't run redirect logic until all initial loading is potentially complete
     if (combinedLoading) {
-      setLoading(true); // Keep UI loading indicator active
+
       setIsRedirecting(true); // Assume redirect might happen until loaded
       return;
     }
 
     // Once core contexts are loaded
-    setLoading(false);
     console.log(`Dashboard: Contexts loaded. User: ${user?.role}, Projects: ${projects.length}, Profile: ${!!borrowerProfile}`);
 
     // Check if this is a new borrower who needs to be redirected to their project
@@ -105,7 +104,7 @@ export default function DashboardPage() {
       console.log("Dashboard: Rendering dashboard content.");
     }
 
-  }, [user, combinedLoading, projects, loginSource, router, setLoading, hasCheckedForNewUser, borrowerProfile]);
+  }, [user, combinedLoading, projects, loginSource, router, hasCheckedForNewUser, borrowerProfile]);
 
   // Additional effect to watch for project creation
   useEffect(() => {
@@ -145,10 +144,7 @@ export default function DashboardPage() {
       // If we still don't have a project after waiting, show a message and let user manually navigate
       console.warn('Dashboard: Project creation timeout, showing manual navigation option');
       setIsRedirecting(false);
-      showNotification({
-        type: 'warning',
-        message: 'Project creation is taking longer than expected. You can manually navigate to your project once it appears.',
-      });
+      console.warn('Project creation is taking longer than expected. You can manually navigate to your project once it appears.');
       
     } catch (error) {
       console.error('Dashboard: Error waiting for project creation:', error);
@@ -169,10 +165,10 @@ export default function DashboardPage() {
     try {
       await logout();
       sessionStorage.removeItem('hasAutoRedirected'); // Clear redirect flag
-      showNotification({ type: 'success', message: 'Signed out successfully.' });
+      console.log('Signed out successfully.');
       router.push('/login'); // Redirect to login after logout
     } catch (error) {
-      showNotification({ type: 'error', message: 'Logout failed. Please try again.' });
+      console.error('Logout failed. Please try again.');
     }
   };
 
@@ -180,7 +176,7 @@ export default function DashboardPage() {
   if (combinedLoading || isRedirecting) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-100">
-        <LoadingOverlay />
+        <LoadingOverlay isLoading={false} />
          <div className="flex flex-col items-center text-gray-600">
             <Loader2 className="h-12 w-12 animate-spin text-blue-600 mb-4" />
             <span>Loading Dashboard...</span>
@@ -191,10 +187,9 @@ export default function DashboardPage() {
 
   return (
     <RoleBasedRoute roles={['borrower']}>
-       <div className="min-h-screen bg-gray-50">
-           <LoadingOverlay />
-           <GlobalToast />
-            {/* Header with Sign Out button */}
+                <div className="min-h-screen bg-gray-50">
+             <LoadingOverlay isLoading={false} />
+             {/* Header with Sign Out button */}
            <header className="bg-white shadow-sm sticky top-0 z-10">
                <div className="container mx-auto py-3 px-4 md:px-6 flex justify-between items-center">
                   <Link 

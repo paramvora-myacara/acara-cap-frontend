@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/Button';
 import { RoleBasedRoute } from '../../../../components/auth/RoleBasedRoute';
 import { useProjects } from '../../../../hooks/useProjects';
-import { useUI } from '../../../../hooks/useUI';
-import { GlobalToast } from '../../../../components/ui/GlobalToast';
+
+
 import { LoadingOverlay } from '../../../../components/ui/LoadingOverlay';
 import { ChevronLeft, Upload, FileText, Check, X, AlertTriangle } from 'lucide-react';
 import { DocumentUpload } from '../../../../components/ui/DocumentUpload';
@@ -30,15 +30,12 @@ export default function ProjectDocumentsPage() {
   const router = useRouter();
   const params = useParams();
   const { getProject, isLoading, documentRequirements, updateDocumentRequirement } = useProjects();
-  const { showNotification, setLoading } = useUI();
+
   
   const [project, setProject] = useState<any>(null);
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
   
-  // Update loading state
-  useEffect(() => {
-    setLoading(isLoading);
-  }, [isLoading, setLoading]);
+
   
   // Load project and documents
   useEffect(() => {
@@ -82,16 +79,13 @@ export default function ProjectDocumentsPage() {
           }
         }
       } else {
-        showNotification({
-          type: 'error',
-          message: 'Project not found',
-        });
+        console.error('Project not found');
         router.push('/dashboard');
       }
     };
     
     loadData();
-  }, [params, router, getProject, documentRequirements, updateDocumentRequirement, showNotification]);
+  }, [params, router, getProject, documentRequirements, updateDocumentRequirement]);
   
   // Get document status label and color
   const getDocumentStatusInfo = (status: string) => {
@@ -160,18 +154,14 @@ export default function ProjectDocumentsPage() {
       }
     }
     
-    showNotification({
-      type: 'success',
-      message: `${documentType} uploaded successfully`,
-    });
+    console.log(`${documentType} uploaded successfully`);
   };
   
   if (!project) {
     return (
       <RoleBasedRoute roles={['borrower']}>
         <DashboardLayout title="Project Documents">
-          <LoadingOverlay />
-          <GlobalToast />
+          <LoadingOverlay isLoading={false} />
           <div className="text-center py-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-2">Project not found</h2>
             <p className="text-gray-600 mb-6">The project you're looking for doesn't exist or has been removed.</p>
@@ -191,8 +181,7 @@ export default function ProjectDocumentsPage() {
   return (
     <RoleBasedRoute roles={['borrower']}>
       <DashboardLayout title={`Documents - ${project.projectName}`}>
-        <LoadingOverlay />
-        <GlobalToast />
+        <LoadingOverlay isLoading={false} />
         
         <div className="mb-6">
           <Button 
@@ -252,10 +241,7 @@ export default function ProjectDocumentsPage() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                  showNotification({
-                                    type: 'info',
-                                    message: 'This is a demo - document would normally be downloaded here',
-                                  });
+                                  console.log('This is a demo - document would normally be downloaded here');
                                 }}
                               >
                                 Download
@@ -381,10 +367,7 @@ export default function ProjectDocumentsPage() {
                               <button
                                 className="text-blue-600 hover:text-blue-900"
                                 onClick={() => {
-                                  showNotification({
-                                    type: 'info',
-                                    message: 'This is a demo - document would normally be downloaded here',
-                                  });
+                                  console.log('This is a demo - document would normally be downloaded here');
                                 }}
                               >
                                 Download

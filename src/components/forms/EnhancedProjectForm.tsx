@@ -15,7 +15,7 @@ import { ButtonSelect } from '../ui/ButtonSelect'; // Import ButtonSelect
 import { DocumentUpload } from '../ui/DocumentUpload';
 import { useProjects } from '../../hooks/useProjects';
 import { useBorrowerProfile } from '../../hooks/useBorrowerProfile';
-import { useUI } from '../../hooks/useUI';
+
 import { useAuth } from '../../hooks/useAuth';
 import { ContextHelp } from '../ui/ContextHelp';
 import { FormProvider, useFormContext } from '../../contexts/FormContext';
@@ -68,7 +68,7 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
 }) => {
   const router = useRouter();
   const { updateProject, setProjectChanges, autoSaveProject } = useProjects(); // Use updateProject
-  const { showNotification } = useUI();
+
 
   // Form state initialized from existingProject prop
   const [formData, setFormData] = useState<ProjectProfile>(existingProject);
@@ -98,7 +98,7 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
         // const updatedProject = await updateProject(formData.id, formData, true); // Manual flag true
 
         // Let's rely on auto-save for now and just provide feedback
-        showNotification({ type: 'success', message: 'Project changes saved.' });
+        console.log('Project changes saved.');
 
         if (onComplete) {
             // Pass the current formData state which reflects the latest changes
@@ -107,7 +107,7 @@ export const EnhancedProjectForm: React.FC<EnhancedProjectFormProps> = ({
 
     } catch (error) {
         console.error('Error saving project:', error);
-        showNotification({ type: 'error', message: 'Failed to save project.' });
+        console.error('Failed to save project.');
     } finally {
          // Reset saved indicator after a short delay
         setTimeout(() => setFormSaved(false), 2000);

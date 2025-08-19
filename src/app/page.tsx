@@ -11,8 +11,8 @@ import FilterSection from '../components/filter-section';
 import LenderGraph from '../components/graph/LenderGraph';
 import { useLenders } from '../hooks/useLenders';
 import { LenderFilters } from '../contexts/LenderContext';
-import { useUI } from '../hooks/useUI';
-import { GlobalToast } from '../components/ui/GlobalToast';
+
+
 import { LenderProfile } from '@/types/lender';
 import { Button } from '@/components/ui/Button';
 import { ArrowRight } from 'lucide-react';
@@ -32,7 +32,7 @@ export default function HomePage() {
     selectLender,
     refreshLenders
   } = useLenders();
-  const { setLoading } = useUI();
+
 
   const [scrolled, setScrolled] = useState(false);
   const [splashComplete, setSplashComplete] = useState(false);
@@ -91,7 +91,7 @@ export default function HomePage() {
 
   useEffect(() => { const load = async () => { try { await refreshLenders(); } catch (e) { console.error("Err load lenders:", e); } }; load(); }, [refreshLenders]);
 
-  useEffect(() => { setLoading(false); }, [setLoading]);
+
 
   const handleFilterChange = (newFilters: Partial<LenderFilters>) => {
     setFilters(newFilters);
@@ -185,11 +185,9 @@ export default function HomePage() {
         </AnimatePresence> 
       )}
 
-      {splashComplete && (
-        <>
-          <GlobalToast />
-
-          <main className="flex-grow">
+              {splashComplete && (
+                <>
+                  <main className="flex-grow">
             <section className="py-32 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden" style={{minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
               {/* Blueprint Grid Background */}
               <div className="absolute inset-0 opacity-40">

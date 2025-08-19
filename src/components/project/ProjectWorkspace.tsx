@@ -5,7 +5,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjects } from '../../hooks/useProjects';
 import { useBorrowerProfile } from '../../hooks/useBorrowerProfile';
-import { useUI } from '../../hooks/useUI';
+
 import { ProfileSummaryCard } from './ProfileSummaryCard';
 import { EnhancedProjectForm } from '../forms/EnhancedProjectForm';
 import { Loader2, FileSpreadsheet } from 'lucide-react'; // Added FileSpreadsheet
@@ -27,7 +27,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
     } = useProjects();
     const { borrowerProfile, isLoading: profileLoading } = useBorrowerProfile();
     const { user, isLoading: authLoading } = useAuth(); // Add auth loading state
-    const { setLoading, showNotification } = useUI();
+  
     
     // State for Ask AI field drop
     const [droppedFieldId, setDroppedFieldId] = useState<string | null>(null);
@@ -118,7 +118,6 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
         
         // Don't proceed if still in initial loading phase
         if (isInitialLoading) {
-            setLoading(true);
             return;
         }
         
@@ -131,21 +130,19 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
                 // Only show error if we're confident the project doesn't exist
                 // (not just because we haven't loaded projects yet)
                 console.error(`Project ${projectId} not found.`);
-                showNotification({ type: 'error', message: 'Project not found.' });
+                console.error('Project not found.');
                 router.push('/dashboard');
             }
         }
         
-        setLoading(false);
+
     }, [
         projectId,
         activeProject,
         setActiveProject,
         getProject,
         isInitialLoading,
-        router,
-        showNotification,
-        setLoading
+        router
     ]);
 
     // Effect to generate welcome message when project is loaded
@@ -182,7 +179,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
 
 
      // Handle project update completion (no changes needed)
-     const handleProjectUpdateComplete = (updatedProject: ProjectProfile) => { showNotification({ type: 'success', message: `Project "${updatedProject.projectName}" updated.` }); };
+     const handleProjectUpdateComplete = (updatedProject: ProjectProfile) => { console.log(`Project "${updatedProject.projectName}" updated.`); };
 
     const projectCompleteness = activeProject?.completenessPercent || 0;
     const projectProgressColor = projectCompleteness === 100 ? 'bg-green-600' : 'bg-blue-600';

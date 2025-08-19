@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/useAuth';
-import { useUI } from '../../hooks/useUI';
+
 import { FormWizard, Step } from '../ui/FormWizard';
 import { Card, CardContent, CardHeader } from '../ui/card';
 import { Form, FormGroup } from '../ui/Form';
@@ -57,7 +57,7 @@ export const BorrowerProfileForm: React.FC<BorrowerProfileFormProps> = ({ onComp
   } = borrowerProfileHookData || {}; // Handle hook returning undefined initially
 
 
-  const { showNotification } = useUI();
+
 
   // State variables
   const [formSaved, setFormSaved] = useState(false);
@@ -85,7 +85,7 @@ export const BorrowerProfileForm: React.FC<BorrowerProfileFormProps> = ({ onComp
       // Give context state a moment to potentially update after auto-save
       await new Promise(res => setTimeout(res, 50));
 
-      showNotification({ type: 'success', message: 'Profile changes saved.' });
+              console.log('Profile changes saved.');
       setFormSaved(false);
 
       if (onComplete) {
@@ -100,7 +100,7 @@ export const BorrowerProfileForm: React.FC<BorrowerProfileFormProps> = ({ onComp
       }
     } catch (error) {
       console.error('Error saving borrower profile:', error);
-      showNotification({ type: 'error', message: 'Failed to save profile.' });
+              console.error('Failed to save profile.');
       setFormSaved(false);
        if (onComplete) onComplete(null); // Indicate failure in callback
     }
@@ -108,18 +108,18 @@ export const BorrowerProfileForm: React.FC<BorrowerProfileFormProps> = ({ onComp
 
   // Add Principal
   const handleAddPrincipal = async () => {
-     if (!principalFormData.principalLegalName?.trim()) { showNotification({ type: 'warning', message: 'Enter principal name.' }); return; }
-     if (!borrowerProfile?.id) { showNotification({ type: 'error', message: 'Save profile first.' }); return; }
+           if (!principalFormData.principalLegalName?.trim()) { console.warn('Enter principal name.'); return; }
+           if (!borrowerProfile?.id) { console.error('Save profile first.'); return; }
     setIsAddingPrincipal(true);
-    try { await addPrincipal(principalFormData); showNotification({ type: 'success', message: 'Principal added.' }); resetPrincipalForm(); }
-    catch (error) { console.error('Error adding principal:', error); showNotification({ type: 'error', message: 'Failed add principal.' }); }
+          try { await addPrincipal(principalFormData); console.log('Principal added.'); resetPrincipalForm(); }
+          catch (error) { console.error('Error adding principal:', error); console.error('Failed add principal.'); }
     finally { setIsAddingPrincipal(false); }
   };
 
   // Remove Principal
   const handleRemovePrincipal = async (principalId: string) => {
-    try { await removePrincipal(principalId); showNotification({ type: 'success', message: 'Principal removed.' }); }
-    catch (error) { console.error('Error removing principal:', error); showNotification({ type: 'error', message: 'Failed remove principal.' }); }
+          try { await removePrincipal(principalId); console.log('Principal removed.'); }
+          catch (error) { console.error('Error removing principal:', error); console.error('Failed remove principal.'); }
   };
 
 

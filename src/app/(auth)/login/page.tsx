@@ -4,13 +4,13 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../hooks/useAuth';
-import { useUI } from '../../../hooks/useUI';
+
 import AuthLayout from '../../../components/layout/AuthLayout';
 import { Form, FormGroup } from '../../../components/ui/Form';
 import { Input } from '../../../components/ui/Input';
 import { Button } from '../../../components/ui/Button';
 import { Sparkles, Mail } from 'lucide-react';
-import { GlobalToast } from '../../../components/ui/GlobalToast';
+
 import { LoadingOverlay } from '../../../components/ui/LoadingOverlay';
 
 // Separate component for login form to handle search params
@@ -18,7 +18,7 @@ const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const { login, isAuthenticated, isLoading: authLoading, user } = useAuth();
-  const { showNotification, setLoading } = useUI();
+
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -49,10 +49,7 @@ const LoginForm = () => {
     }
   }, [isAuthenticated, router, user]);
 
-  // Update loading state
-  useEffect(() => {
-    setLoading(authLoading);
-  }, [authLoading, setLoading]);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,18 +61,13 @@ const LoginForm = () => {
     }
 
     try {
-      setLoading(true);
-
       const isAdvisor = email.includes('advisor') || email.endsWith('@capmatch.com');
       const isAdmin = email.includes('admin@capmatch.com');
       const role: 'borrower' | 'advisor' | 'admin' = isAdmin ? 'admin' : isAdvisor ? 'advisor' : 'borrower';
 
       await login(email, loginSource, role);
 
-      showNotification({
-        type: 'success',
-        message: 'Successfully signed in!',
-      });
+      console.log('Successfully signed in!');
 
       if (role === 'advisor') {
         router.push('/advisor/dashboard');
@@ -85,14 +77,9 @@ const LoginForm = () => {
         router.push('/dashboard');
       }
 
-    } catch (err) {
+        } catch (err) {
       console.error("Login Error:", err);
-      showNotification({
-        type: 'error',
-        message: err instanceof Error ? err.message : 'An error occurred during login. Please try again.',
-      });
-    } finally {
-      setLoading(false);
+      console.error(err instanceof Error ? err.message : 'An error occurred during login. Please try again.');
     }
   };
 
@@ -139,24 +126,15 @@ const LoginForm = () => {
                   className="flex-1 max-w-[calc(50%-6px)] h-12"
                   onClick={async () => {
                     try {
-                      setLoading(true);
                       const role: 'borrower' = 'borrower';
                       await login('borrower1@example.com', loginSource, role);
                       
-                      showNotification({
-                        type: 'success',
-                        message: 'Successfully signed in!',
-                      });
+                      console.log('Successfully signed in!');
                       
                       router.push('/dashboard');
                     } catch (err) {
                       console.error("Login Error:", err);
-                      showNotification({
-                        type: 'error',
-                        message: err instanceof Error ? err.message : 'An error occurred during login. Please try again.',
-                      });
-                    } finally {
-                      setLoading(false);
+                      console.error(err instanceof Error ? err.message : 'An error occurred during login. Please try again.');
                     }
                   }}
                   disabled={authLoading}
@@ -169,24 +147,15 @@ const LoginForm = () => {
                   className="flex-1 max-w-[calc(50%-6px)] h-12"
                   onClick={async () => {
                     try {
-                      setLoading(true);
                       const role: 'borrower' = 'borrower';
                       await login('borrower2@example.com', loginSource, role);
                       
-                      showNotification({
-                        type: 'success',
-                        message: 'Successfully signed in!',
-                      });
+                      console.log('Successfully signed in!');
                       
                       router.push('/dashboard');
                     } catch (err) {
                       console.error("Login Error:", err);
-                      showNotification({
-                        type: 'error',
-                        message: err instanceof Error ? err.message : 'An error occurred during login. Please try again.',
-                      });
-                    } finally {
-                      setLoading(false);
+                      console.error(err instanceof Error ? err.message : 'An error occurred during login. Please try again.');
                     }
                   }}
                   disabled={authLoading}
@@ -228,9 +197,8 @@ const LoginForm = () => {
 export default function LoginPage() {
   return (
     <AuthLayout>
-      <LoadingOverlay />
-      <GlobalToast />
-      <Suspense fallback={<div className="w-full max-w-md">Loading...</div>}>
+              <LoadingOverlay isLoading={false} />
+        <Suspense fallback={<div className="w-full max-w-md">Loading...</div>}>
         <LoginForm />
       </Suspense>
     </AuthLayout>
