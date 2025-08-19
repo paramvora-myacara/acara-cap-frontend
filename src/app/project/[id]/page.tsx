@@ -9,8 +9,8 @@ import { Button } from '../../../components/ui/Button';
 import { RoleBasedRoute } from '../../../components/auth/RoleBasedRoute';
 import { useProjects } from '../../../hooks/useProjects';
 import { useBorrowerProfile } from '../../../hooks/useBorrowerProfile';
-import { useUI } from '../../../hooks/useUI';
-import { GlobalToast } from '../../../components/ui/GlobalToast';
+
+
 import { LoadingOverlay } from '../../../components/ui/LoadingOverlay';
 import { BorrowerProfileForm } from '../../../components/forms/BorrowerProfileForm';
 import { MessagePanel } from '../../../components/dashboard/MessagePanel';
@@ -22,14 +22,11 @@ export default function ProjectDetailPage() {
   const params = useParams();
   const { getProject, isLoading, activeProject, setActiveProject } = useProjects();
   const { borrowerProfile } = useBorrowerProfile();
-  const { showNotification, setLoading } = useUI();
+
   
   const [showProfileForm, setShowProfileForm] = useState(false);
   
-  // Update loading state
-  useEffect(() => {
-    setLoading(isLoading);
-  }, [isLoading, setLoading]);
+
 
   // Load project
   useEffect(() => {
@@ -45,24 +42,20 @@ export default function ProjectDetailPage() {
       if (project) {
         setActiveProject(project);
       } else {
-        showNotification({
-          type: 'error',
-          message: 'Project not found',
-        });
+        console.error('Project not found');
         router.push('/dashboard');
       }
     };
     
     loadProject();
-  }, [params, router, getProject, setActiveProject, showNotification]);
+  }, [params, router, getProject, setActiveProject]);
 
   // Render placeholder if no project is loaded
   if (!activeProject) {
     return (
       <RoleBasedRoute roles={['borrower']}>
         <DashboardLayout title="Deal Room™">
-          <LoadingOverlay />
-          <GlobalToast />
+          <LoadingOverlay isLoading={false} />
           <div className="text-center py-8">
             <h2 className="text-xl font-semibold text-gray-800 mb-2">Project not found</h2>
             <p className="text-gray-600 mb-6">The project you're looking for doesn't exist or has been removed.</p>
@@ -88,8 +81,7 @@ export default function ProjectDetailPage() {
           { label: 'Dashboard', icon: <Home size={16} />, href: '/dashboard' }
         ]}
       >
-        <LoadingOverlay />
-        <GlobalToast />
+        <LoadingOverlay isLoading={false} />
         
         <div className="mb-6">
           <Button 

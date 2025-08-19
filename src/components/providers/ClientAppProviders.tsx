@@ -6,7 +6,6 @@ import { AuthProvider } from '../../contexts/AuthContext';
 import { BorrowerProfileProvider } from '../../contexts/BorrowerProfileContext';
 import { ProjectProvider } from '../../contexts/ProjectContext';
 import { LenderProvider } from '../../contexts/LenderContext';
-import { UIProvider } from '../../contexts/UIContext';
 import { createStorageService } from '../../services/storage/StorageService';
 
 // Initialize storage service
@@ -14,16 +13,14 @@ const storageService = createStorageService(false, 'capmatch_'); // Set to true 
 
 export const ClientAppProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <UIProvider>
-      <AuthProvider storageService={storageService}>
-        <BorrowerProfileProvider storageService={storageService}>
-          <ProjectProvider storageService={storageService}>
-            <LenderProvider storageService={storageService}>
-              {children}
-            </LenderProvider>
-          </ProjectProvider>
-        </BorrowerProfileProvider>
-      </AuthProvider>
-    </UIProvider>
+    <AuthProvider storageService={storageService}>
+      <BorrowerProfileProvider storageService={storageService}>
+        <ProjectProvider storageService={storageService}>
+          <LenderProvider storageService={storageService}>
+            {children}
+          </LenderProvider>
+        </ProjectProvider>
+      </BorrowerProfileProvider>
+    </AuthProvider>
   );
 };

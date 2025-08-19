@@ -7,9 +7,9 @@ import { RoleBasedRoute } from '../../components/auth/RoleBasedRoute';
 // *** CORRECTED IMPORT ***
 import MinimalSidebarLayout from '../../components/layout/MinimalSidebarLayout';
 import { BorrowerProfileForm } from '../../components/forms/BorrowerProfileForm';
-import { GlobalToast } from '../../components/ui/GlobalToast';
+
 import { useBorrowerProfile } from '../../hooks/useBorrowerProfile';
-import { useUI } from '../../hooks/useUI';
+
 import { BorrowerProfile } from '../../types/enhanced-types';
 import { Loader2 } from 'lucide-react';
 import { LoadingOverlay } from '@/components/ui/LoadingOverlay'; // Import LoadingOverlay
@@ -18,20 +18,17 @@ export default function ProfilePage() {
   const router = useRouter();
   // Use context hook, providing a fallback empty object if context is not ready
   const { borrowerProfile, isLoading: profileLoading } = useBorrowerProfile() || { borrowerProfile: null, isLoading: true };
-  const { showNotification, setLoading, isLoading: uiLoading } = useUI();
 
-  // Update loading state based on profile loading
-  useEffect(() => {
-    setLoading(profileLoading || uiLoading); // Combine loading states
-  }, [profileLoading, uiLoading, setLoading]);
+
+
 
   // Handle profile completion from the form's onComplete callback
   const handleProfileComplete = (profile: BorrowerProfile | null) => { // Allow null profile
     // Only show success if a profile was actually returned/saved
     if (profile) {
-        showNotification({ type: 'success', message: 'Profile saved successfully' });
+        console.log('Profile saved successfully');
     } else {
-         showNotification({ type: 'warning', message: 'Profile update process completed.' });
+         console.log('Profile update process completed.');
     }
     // Navigate back to the dashboard after saving attempt
     router.push('/dashboard');
@@ -40,9 +37,8 @@ export default function ProfilePage() {
   return (
     <RoleBasedRoute roles={['borrower']}>
       {/* *** USE CORRECT LAYOUT *** */}
-      <MinimalSidebarLayout title={borrowerProfile ? "Update Borrower Profile" : "Create Borrower Profile"}>
-        <GlobalToast />
-        <LoadingOverlay /> {/* Display loading overlay based on UI context */}
+              <MinimalSidebarLayout title={borrowerProfile ? "Update Borrower Profile" : "Create Borrower Profile"}>
+          <LoadingOverlay isLoading={false} /> {/* Display loading overlay based on UI context */}
 
         {profileLoading ? ( // Check profile specific loading state
              <div className="flex justify-center items-center h-64">

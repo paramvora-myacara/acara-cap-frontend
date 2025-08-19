@@ -8,8 +8,9 @@ import { Button } from '../ui/Button';
 import { MessageSquare, Send, ChevronRight } from 'lucide-react';
 import { useProjects } from '../../hooks/useProjects';
 import { ProjectMessage } from '../../types/enhanced-types';
-// Adjust path if your mock service is elsewhere
-import { getAdvisorById, generateAdvisorMessage } from '../../../lib/enhancedMockApiService';
+// Remove generateAdvisorMessage import since it's no longer needed
+// import { getAdvisorById, generateAdvisorMessage } from '../../../lib/enhancedMockApiService';
+import { getAdvisorById } from '../../../lib/enhancedMockApiService';
 import { useAuth } from '../../hooks/useAuth'; // Import useAuth
 import { cn } from '@/utils/cn';
 
@@ -34,27 +35,29 @@ export const MessagePanel: React.FC<MessagePanelProps> = ({
   const [advisorAvatar, setAdvisorAvatar] = useState(''); // Keep avatar state if used
   const [isLoadingAdvisor, setIsLoadingAdvisor] = useState(false);
   const [localMessages, setLocalMessages] = useState<ProjectMessage[]>([]);
-  const [welcomeMessageGenerated, setWelcomeMessageGenerated] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true';
-    }
-    return false;
-  });
+  // Remove welcome message generation state since it's now handled by parent
+  // const [welcomeMessageGenerated, setWelcomeMessageGenerated] = useState(() => {
+  //   if (typeof window !== 'undefined') {
+  //     return localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true';
+  //   }
+  //   return false;
+  // });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageContainerRef = useRef<HTMLDivElement>(null);
-  const welcomeGenerationInProgress = useRef(false);
+  // Remove welcome generation progress ref since it's no longer needed
+  // const welcomeGenerationInProgress = useRef(false);
 
-  // Helper function to persist welcome message flag in localStorage
-  const setWelcomeGeneratedWithStorage = useCallback((value: boolean) => {
-    setWelcomeMessageGenerated(value);
-    if (typeof window !== 'undefined') {
-      if (value) {
-        localStorage.setItem(`capmatch_welcomeGenerated_${projectId}`, 'true');
-      } else {
-        localStorage.removeItem(`capmatch_welcomeGenerated_${projectId}`);
-      }
-    }
-  }, [projectId]);
+  // Remove welcome message generation helper function
+  // const setWelcomeGeneratedWithStorage = useCallback((value: boolean) => {
+  //   setWelcomeMessageGenerated(value);
+  //   if (typeof window !== 'undefined') {
+  //     if (value) {
+  //       localStorage.setItem(`capmatch_welcomeGenerated_${projectId}`, 'true');
+  //     } else {
+  //       localStorage.removeItem(`capmatch_welcomeGenerated_${projectId}`);
+  //     }
+  //   }
+  // }, [projectId]);
 
   const scrollToBottom = () => {
     // Scroll the message container to the bottom instead of using scrollIntoView
@@ -113,70 +116,90 @@ export const MessagePanel: React.FC<MessagePanelProps> = ({
   }, [project]); // Depend only on the project prop
 
   // Generate welcome message if no messages exist *for the active project*
-  // This logic might need refinement if the panel shows messages for non-active projects
-  useEffect(() => {
-    const generateWelcome = async () => {
-        // Ensure this runs only for the currently active project matching the panel
-        // and that we haven't already generated a welcome message for this project
-        if (
-          activeProject && 
-          activeProject.id === projectId && 
-          localMessages.length === 0 && 
-          activeProject.assignedAdvisorUserId && 
-          !isLoadingAdvisor &&
-          !welcomeMessageGenerated &&
-          !welcomeGenerationInProgress.current
-        ) {
-          try {
-            // Set ref immediately to prevent race conditions
-            welcomeGenerationInProgress.current = true;
-            
-            // Set flag to prevent duplicate generation (now persisted in localStorage)
-            setWelcomeGeneratedWithStorage(true);
-            
-            // Generate a welcome message
-            const welcomeMessageText = await generateAdvisorMessage(
-                activeProject.assignedAdvisorUserId,
-                activeProject.id,
-                {
-                assetType: activeProject.assetType,
-                dealType: activeProject.projectPhase,
-                loanAmount: activeProject.loanAmountRequested,
-                stage: activeProject.projectStatus
-                }
-            );
+  // This logic is now handled by the parent ProjectWorkspace component
+  // useEffect(() => {
+  //   const generateWelcome = async () => {
+  //       // Ensure this runs only for the currently active project matching the panel
+  //       // and that we haven't already generated a welcome message for this project
+  //       if (
+  //         activeProject && 
+  //         activeProject.id === projectId && 
+  //         localMessages.length === 0 && 
+  //         activeProject.assignedAdvisorUserId && 
+  //         !isLoadingAdvisor &&
+  //         // !welcomeMessageGenerated && // Removed welcomeMessageGenerated
+  //         // !welcomeGenerationInProgress.current // Removed welcomeGenerationInProgress
+  //       ) {
+  //         try {
+  //           // Set ref immediately to prevent race conditions
+  //           // welcomeGenerationInProgress.current = true; // Removed welcomeGenerationInProgress
+  //           
+  //           // Double-check localStorage to prevent race conditions
+  //           const storageFlag = typeof window !== 'undefined' 
+  //             ? localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true'
+  //             : false;
+  //           
+  //           if (storageFlag) {
+  //             // Another instance already generated the message
+  //             // setWelcomeGeneratedWithStorage(true); // Removed setWelcomeGeneratedWithStorage
+  //             // welcomeGenerationInProgress.current = false; // Removed welcomeGenerationInProgress
+  //             return;
+  //           }
+  //           
+  //           // Set flag to prevent duplicate generation (now persisted in localStorage)
+  //           // setWelcomeGeneratedWithStorage(true); // Removed setWelcomeGeneratedWithStorage
+  //           
+  //           // Generate a welcome message
+  //           const welcomeMessageText = await generateAdvisorMessage(
+  //               activeProject.assignedAdvisorUserId,
+  //               activeProject.id,
+  //               {
+  //               assetType: activeProject.assetType,
+  //               dealType: activeProject.projectPhase,
+  //               loanAmount: activeProject.loanAmountRequested,
+  //               stage: activeProject.projectStatus
+  //               }
+  //           );
 
-             // Use addProjectMessage context function
-             await addProjectMessage(welcomeMessageText, 'Advisor', activeProject.assignedAdvisorUserId);
-             console.log("Generated welcome message for " + projectId);
-             
-             // Reset ref after successful completion
-             welcomeGenerationInProgress.current = false;
+  //            // Use addProjectMessage context function
+  //            await addProjectMessage(welcomeMessageText, 'Advisor', activeProject.assignedAdvisorUserId);
+  //            console.log("Generated welcome message for " + projectId);
+  //            
+  //            // Reset ref after successful completion
+  //            // welcomeGenerationInProgress.current = false; // Removed welcomeGenerationInProgress
 
-        } catch (error) {
-            console.error('Error generating welcome message:', error);
-            // Reset flag on error so it can be retried
-            setWelcomeGeneratedWithStorage(false);
-            // Reset ref on error
-            welcomeGenerationInProgress.current = false;
-        }
-        }
-    };
+  //       } catch (error) {
+  //           console.error('Error generating welcome message:', error);
+  //           // Reset flag on error so it can be retried
+  //           // setWelcomeGeneratedWithStorage(false); // Removed setWelcomeGeneratedWithStorage
+  //           // Reset ref on error
+  //           // welcomeGenerationInProgress.current = false; // Removed welcomeGenerationInProgress
+  //       }
+  //       }
+  //   };
 
-    // Only generate if advisor info is loaded and messages are confirmed empty
-    if (!isLoadingAdvisor) {
-       generateWelcome();
-    }
-  }, [activeProject, projectId, localMessages, isLoadingAdvisor, welcomeMessageGenerated, setWelcomeGeneratedWithStorage]);
+  //   // Only generate if advisor info is loaded and messages are confirmed empty
+  //   if (!isLoadingAdvisor) {
+  //      generateWelcome();
+  //   }
+  // }, [activeProject, projectId, localMessages, isLoadingAdvisor]); // Removed welcomeMessageGenerated, setWelcomeGeneratedWithStorage
 
-  // Reset welcome message flag when switching projects
-  useEffect(() => {
-    // Reset flag only when actually switching to a different project
-    const currentFlag = typeof window !== 'undefined' 
-      ? localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true'
-      : false;
-    setWelcomeMessageGenerated(currentFlag);
-  }, [projectId]);
+  // Reset welcome message flag when switching projects - no longer needed
+  // useEffect(() => {
+  //   // Reset flag only when actually switching to a different project
+  //   const currentFlag = typeof window !== 'undefined' 
+  //     ? localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true'
+  //     : false;
+  //   // setWelcomeMessageGenerated(currentFlag); // Removed setWelcomeMessageGenerated
+  // }, [projectId]);
+
+  // Cleanup effect to reset ref when component unmounts or project changes - no longer needed
+  // useEffect(() => {
+  //   return () => {
+  //     // Reset the ref when component unmounts or project changes
+  //     // welcomeGenerationInProgress.current = false; // Removed welcomeGenerationInProgress
+  //   };
+  // }, [projectId]);
 
   // Handle sending a message
   const handleSendMessage = async () => {

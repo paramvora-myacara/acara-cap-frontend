@@ -5,8 +5,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { RoleBasedRoute } from '../../../components/auth/RoleBasedRoute';
 import { useAuth } from '../../../hooks/useAuth';
-import { useUI } from '../../../hooks/useUI';
-import { GlobalToast } from '../../../components/ui/GlobalToast';
+
+
 import { LoadingOverlay } from '../../../components/ui/LoadingOverlay';
 import { Card, CardContent, CardHeader, CardFooter } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/Button';
@@ -31,7 +31,7 @@ import { Advisor, ProjectProfile, ProjectMessage, ProjectStatus } from '../../..
 export default function AdvisorDashboardPage() {
   const router = useRouter();
   const { user, logout } = useAuth();
-  const { showNotification, setLoading } = useUI();
+
   
   const [advisor, setAdvisor] = useState<Advisor | null>(null);
   const [activeProjects, setActiveProjects] = useState<ProjectProfile[]>([]);
@@ -56,7 +56,7 @@ export default function AdvisorDashboardPage() {
       
       try {
         setIsLoadingData(true);
-        setLoading(true);
+
         
         // Get advisor profile
         const advisorProfile = await getAdvisorById(user.email);
@@ -135,18 +135,15 @@ export default function AdvisorDashboardPage() {
         }
       } catch (error) {
         console.error('Error loading advisor data:', error);
-        showNotification({
-          type: 'error',
-          message: 'Failed to load advisor dashboard data',
-        });
+        console.error('Failed to load advisor dashboard data');
       } finally {
         setIsLoadingData(false);
-        setLoading(false);
+
       }
     };
     
     loadAdvisorData();
-  }, [user, setLoading, showNotification]);
+  }, [user]);
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -196,11 +193,10 @@ export default function AdvisorDashboardPage() {
   
   return (
     <RoleBasedRoute roles={['advisor', 'admin']}>
-      <div className="flex h-screen bg-gray-50">
-        <LoadingOverlay />
-        <GlobalToast />
-        
-        {/* Sidebar */}
+              <div className="flex h-screen bg-gray-50">
+          <LoadingOverlay isLoading={false} />
+          
+          {/* Sidebar */}
         <div className="w-64 bg-white shadow-md">
           <div className="p-6 border-b border-gray-200">
             <h1 className="text-xl font-bold text-blue-800">Advisor Portal</h1>
@@ -253,17 +249,11 @@ export default function AdvisorDashboardPage() {
                     onClick={async () => {
                         try {
                         await logout();
-                        showNotification({
-                            type: 'success',
-                            message: 'You have been successfully signed out',
-                        });
+                        console.log('You have been successfully signed out');
                         router.push('/');
                         } catch (error) {
                         console.error('Failed to sign out:', error);
-                        showNotification({
-                            type: 'error',
-                            message: 'Failed to sign out. Please try again.',
-                        });
+                        console.error('Failed to sign out. Please try again.');
                         }
                     }}
                     >

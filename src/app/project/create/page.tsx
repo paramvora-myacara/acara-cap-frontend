@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 import MinimalSidebarLayout from '../../../components/layout/MinimalSidebarLayout';
 import { EnhancedProjectForm } from '../../../components/forms/EnhancedProjectForm';
 import { RoleBasedRoute } from '../../../components/auth/RoleBasedRoute';
-import { GlobalToast } from '../../../components/ui/GlobalToast';
-import { useUI } from '../../../hooks/useUI';
+
+
 import { useProjects } from '../../../hooks/useProjects';
 import { useBorrowerProfile } from '../../../hooks/useBorrowerProfile';
 import { ProjectProfile } from '../../../types/enhanced-types';
@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/Button';
 
 export default function CreateProjectPage() {
   const router = useRouter();
-  const { showNotification } = useUI();
+
   const { createProject, isLoading: projectsLoading } = useProjects(); // Use createProject directly? Or EnhancedProjectForm handles it?
   const { borrowerProfile, isLoading: profileLoading } = useBorrowerProfile();
   const hasShownWelcome = useRef(false);
@@ -34,13 +34,13 @@ export default function CreateProjectPage() {
     try {
         // Typically, EnhancedProjectForm would handle its own saving via auto-save
         // This onComplete might just be for navigation after the wizard finishes
-        showNotification({ type: 'success', message: 'Project data processed.' });
+        console.log('Project data processed.');
          // Navigate to the new workspace page for the created/updated project
         router.push(`/project/workspace/${projectData.id}`);
 
     } catch (error) {
         console.error("Error during final project step:", error);
-        showNotification({ type: 'error', message: 'Failed to finalize project.' });
+        console.error('Failed to finalize project.');
         // setIsCreating(false);
     }
   };
@@ -81,10 +81,8 @@ export default function CreateProjectPage() {
 
   return (
     <RoleBasedRoute roles={['borrower']}>
-      <MinimalSidebarLayout title="New Project"> {/* Use new layout */}
-        <GlobalToast />
-
-        <div className="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded text-yellow-800">
+              <MinimalSidebarLayout title="New Project"> {/* Use new layout */}
+          <div className="mb-6 p-4 bg-yellow-100 border border-yellow-300 rounded text-yellow-800">
            <h2 className="text-lg font-semibold">Manual Project Creation</h2>
            <p className="text-sm mt-1">Note: Projects are now typically created automatically when you first log in or via the LenderLine™. This page is for potential future use or edge cases.</p>
            <p className="text-sm mt-1">Please use your dashboard or the homepage to start.</p>

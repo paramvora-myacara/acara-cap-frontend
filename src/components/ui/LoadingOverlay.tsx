@@ -2,11 +2,13 @@
 'use client';
 
 import React from 'react';
-import { useUI } from '../../hooks/useUI';
 
-export const LoadingOverlay: React.FC = () => {
-  const { isLoading } = useUI();
 
+interface LoadingOverlayProps {
+  isLoading?: boolean;
+}
+
+export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ isLoading = false }) => {
   if (!isLoading) return null;
 
   return (

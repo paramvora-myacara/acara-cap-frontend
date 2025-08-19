@@ -5,8 +5,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { RoleBasedRoute } from '../../../../components/auth/RoleBasedRoute';
 import { useAuth } from '../../../../hooks/useAuth';
-import { useUI } from '../../../../hooks/useUI';
-import { GlobalToast } from '../../../../components/ui/GlobalToast';
+
+
 import { LoadingOverlay } from '../../../../components/ui/LoadingOverlay';
 import { Card, CardContent, CardHeader, CardFooter } from '../../../../components/ui/card';
 import { Button } from '../../../../components/ui/Button';
@@ -37,7 +37,7 @@ export default function AdvisorProjectDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { user } = useAuth();
-  const { showNotification, setLoading } = useUI();
+
   
   const [project, setProject] = useState<ProjectProfile | null>(null);
   const [borrowerProfile, setBorrowerProfile] = useState<BorrowerProfile | null>(null);
@@ -53,7 +53,7 @@ export default function AdvisorProjectDetailPage() {
       
       try {
         setIsLoadingData(true);
-        setLoading(true);
+
         
         const projectId = params?.id as string;
         if (!projectId) {
@@ -101,27 +101,21 @@ export default function AdvisorProjectDetailPage() {
               setDocumentRequirements(projectRequirements);
             }
           } else {
-            showNotification({
-              type: 'error',
-              message: 'Project not found',
-            });
+                    console.error('Project not found');
             router.push('/advisor/dashboard');
           }
         }
       } catch (error) {
         console.error('Error loading project data:', error);
-        showNotification({
-          type: 'error',
-          message: 'Failed to load project data',
-        });
+        console.error('Failed to load project data');
       } finally {
         setIsLoadingData(false);
-        setLoading(false);
+
       }
     };
     
     loadProjectData();
-  }, [user, params, router, setLoading, showNotification]);
+  }, [user, params, router]);
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -170,8 +164,6 @@ export default function AdvisorProjectDetailPage() {
     if (!project) return;
     
     try {
-      setLoading(true);
-      
       // Update project status
       const updatedProject: ProjectProfile = {
         ...project,
@@ -210,18 +202,12 @@ export default function AdvisorProjectDetailPage() {
         await handleSendMessage(statusMessages[newStatus], true);
       }
       
-      showNotification({
-        type: 'success',
-        message: 'Project status updated successfully',
-      });
+      console.log('Project status updated successfully');
     } catch (error) {
       console.error('Error updating project status:', error);
-      showNotification({
-        type: 'error',
-        message: 'Failed to update project status',
-      });
+      console.error('Failed to update project status');
     } finally {
-      setLoading(false);
+      // setLoading(false); // Removed
     }
   };
   
@@ -261,10 +247,7 @@ export default function AdvisorProjectDetailPage() {
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      showNotification({
-        type: 'error',
-        message: 'Failed to send message',
-      });
+      console.error('Failed to send message');
     }
   };
   
@@ -272,7 +255,7 @@ export default function AdvisorProjectDetailPage() {
     if (!project) return;
     
     try {
-      setLoading(true);
+      // setLoading(true); // Removed
       
       // Generate feedback
       const feedback = await generateProjectFeedback(project.id, project);
@@ -280,28 +263,21 @@ export default function AdvisorProjectDetailPage() {
       // Send the feedback as a message
       await handleSendMessage(feedback, true);
       
-      showNotification({
-        type: 'success',
-        message: 'Feedback generated and sent',
-      });
+      console.log('Feedback generated and sent');
     } catch (error) {
       console.error('Error generating feedback:', error);
-      showNotification({
-        type: 'error',
-        message: 'Failed to generate feedback',
-      });
+      console.error('Failed to generate feedback');
     } finally {
-      setLoading(false);
+      // setLoading(false); // Removed
     }
   };
   
   return (
     <RoleBasedRoute roles={['advisor', 'admin']}>
-      <div className="flex h-screen bg-gray-50">
-        <LoadingOverlay />
-        <GlobalToast />
-        
-        {/* Main content */}
+              <div className="flex h-screen bg-gray-50">
+          <LoadingOverlay isLoading={false} />
+          
+          {/* Main content */}
         <div className="flex-1 overflow-auto">
           <header className="bg-white shadow-sm py-4 px-6 flex items-center">
             <Button 

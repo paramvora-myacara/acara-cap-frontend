@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { LayoutDashboard, Gift, LogOut } from 'lucide-react'; // Added LogOut
 import { useAuth } from '../../hooks/useAuth'; // Import useAuth for logout
 import { useRouter } from 'next/navigation'; // Import useRouter
-import { useUI } from '../../hooks/useUI'; // Import useUI for notifications
-import { GlobalToast } from '../ui/GlobalToast'; // Import GlobalToast
+
+
 import { LoadingOverlay } from '../ui/LoadingOverlay'; // Import LoadingOverlay
 
 interface MinimalSidebarLayoutProps {
@@ -17,26 +17,25 @@ interface MinimalSidebarLayoutProps {
 
 const MinimalSidebarLayout: React.FC<MinimalSidebarLayoutProps> = ({ children, title }) => {
   const { user, logout } = useAuth(); // Get logout function
-  const { showNotification } = useUI();
+
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
       await logout();
-      showNotification({ type: 'success', message: 'Signed out successfully.' });
+      console.log('Signed out successfully.');
       router.push('/login'); // Redirect to login after logout
     } catch (error) {
-      showNotification({ type: 'error', message: 'Logout failed. Please try again.' });
+      console.error('Logout failed. Please try again.');
     }
   };
 
 
   return (
-    <div className="flex h-screen bg-gray-50">
-        <LoadingOverlay /> {/* Include LoadingOverlay */}
-        <GlobalToast />    {/* Include GlobalToast */}
-
-      {/* Minimal Sidebar */}
+          <div className="flex h-screen bg-gray-50">
+          <LoadingOverlay isLoading={false} /> {/* Include LoadingOverlay */}
+        
+        {/* Minimal Sidebar */}
       <div className="w-24 lg:w-56 bg-white shadow-md flex flex-col justify-between"> {/* Adjust width as needed */}
         <div>
           {/* Logo/Brand */}
