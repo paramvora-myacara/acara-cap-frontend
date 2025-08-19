@@ -26,6 +26,7 @@ interface ConsolidatedSidebarProps {
   formData: any;
   droppedFieldId?: string | null;
   onFieldProcessed?: () => void;
+  welcomeMessageGenerated?: boolean; // Add this prop
 }
 
 type TabType = 'ai-assistant' | 'advisor';
@@ -34,7 +35,8 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
   projectId, 
   formData, 
   droppedFieldId, 
-  onFieldProcessed 
+  onFieldProcessed,
+  welcomeMessageGenerated = false // Add this prop with default value
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('advisor');
   
@@ -58,12 +60,13 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
   const [advisorName, setAdvisorName] = useState('Your Capital Advisor');
   const [isLoadingAdvisor, setIsLoadingAdvisor] = useState(false);
   const [localMessages, setLocalMessages] = useState<ProjectMessage[]>([]);
-  const [welcomeMessageGenerated, setWelcomeMessageGenerated] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true';
-    }
-    return false;
-  });
+  // Remove welcome message generation state and logic - now handled by parent
+  // const [welcomeMessageGenerated, setWelcomeMessageGenerated] = useState(() => {
+  //   if (typeof window !== 'undefined') {
+  //     return localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true';
+  //   }
+  //   return false;
+  // });
 
   // Handle field drop from AskAIProvider
   useEffect(() => {
@@ -111,39 +114,39 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
     loadData();
   }, [projectId, getProject]);
 
-  // Generate welcome message if needed
-  useEffect(() => {
-    const generateWelcomeMessage = async () => {
-      if (!welcomeMessageGenerated && localMessages.length === 0 && activeTab === 'advisor') {
-        try {
-          const project = getProject(projectId);
-          if (project && project.assignedAdvisorUserId) {
-            const welcomeMessage = await generateAdvisorMessage(
-              project.assignedAdvisorUserId,
-              projectId,
-              {
-                assetType: project.assetType,
-                dealType: project.loanType,
-                loanAmount: project.loanAmountRequested,
-                stage: project.projectPhase
-              }
-            );
-            if (welcomeMessage) {
-              await addProjectMessage(welcomeMessage, 'Advisor', project.assignedAdvisorUserId);
-              setWelcomeMessageGenerated(true);
-              if (typeof window !== 'undefined') {
-                localStorage.setItem(`capmatch_welcomeGenerated_${projectId}`, 'true');
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Failed to generate welcome message:', error);
-        }
-      }
-    };
+  // Remove the welcome message generation effect entirely
+  // useEffect(() => {
+  //   const generateWelcomeMessage = async () => {
+  //     if (!welcomeMessageGenerated && localMessages.length === 0 && activeTab === 'advisor') {
+  //       try {
+  //         const project = getProject(projectId);
+  //         if (project && project.assignedAdvisorUserId) {
+  //           const welcomeMessage = await generateAdvisorMessage(
+  //             project.assignedAdvisorUserId,
+  //             projectId,
+  //             {
+  //               assetType: project.assetType,
+  //               dealType: project.loanType,
+  //               loanAmount: project.loanAmountRequested,
+  //               stage: project.projectPhase
+  //             }
+  //           );
+  //           if (welcomeMessage) {
+  //             await addProjectMessage(welcomeMessage, 'Advisor', project.assignedAdvisorUserId);
+  //             setWelcomeMessageGenerated(true);
+  //             if (typeof window !== 'undefined') {
+  //               localStorage.setItem(`capmatch_welcomeGenerated_${projectId}`, 'true');
+  //             }
+  //           }
+  //         }
+  //       } catch (error) {
+  //         console.error('Failed to generate welcome message:', error);
+  //       }
+  //     }
+  //   };
 
-    generateWelcomeMessage();
-  }, [welcomeMessageGenerated, localMessages.length, activeTab, projectId, getProject, addProjectMessage]);
+  //   generateWelcomeMessage();
+  // }, [welcomeMessageGenerated, localMessages.length, activeTab, projectId, getProject, addProjectMessage]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,32 +245,53 @@ export const ConsolidatedSidebar: React.FC<ConsolidatedSidebarProps> = ({
               <Card className="h-full">
                 <CardContent className="p-3 h-full">
                   <div className="h-full overflow-y-auto space-y-3">
-                    {localMessages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={cn(
-                          "flex space-x-2",
-                          message.senderType === 'Borrower' ? "justify-end" : "justify-start"
-                        )}
-                      >
+                    {localMessages.length > 0 ? (
+                      localMessages.map((message) => (
                         <div
+                          key={message.id}
                           className={cn(
-                            "max-w-[80%] rounded-lg px-3 py-2 text-sm",
-                            message.senderType === 'Borrower'
-                              ? "bg-blue-600 text-white"
-                              : "bg-gray-100 text-gray-800"
+                            "flex space-x-2",
+                            message.senderType === 'Borrower' ? "justify-end" : "justify-start"
                           )}
                         >
-                          <div className="font-medium text-xs mb-1">
-                            {message.senderType === 'Borrower' ? 'You' : advisorName}
+                          <div
+                            className={cn(
+                              "max-w-[80%] rounded-lg px-3 py-2 text-sm",
+                              message.senderType === 'Borrower'
+                                ? "bg-blue-600 text-white"
+                                : "bg-gray-100 text-gray-800"
+                            )}
+                          >
+                            <div className="font-medium text-xs mb-1">
+                              {message.senderType === 'Borrower' ? 'You' : advisorName}
+                            </div>
+                            <div>{message.message}</div>
+                            <div className="text-xs opacity-70 mt-1">
+                              {new Date(message.createdAt).toLocaleTimeString()}
+                            </div>
                           </div>
-                          <div>{message.message}</div>
-                          <div className="text-xs opacity-70 mt-1">
-                            {new Date(message.createdAt).toLocaleTimeString()}
+                        </div>
+                      ))
+                    ) : welcomeMessageGenerated ? (
+                      // Show welcome message placeholder when no messages but welcome was generated
+                      <div className="flex justify-start space-x-2">
+                        <div className="max-w-[80%] rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-800">
+                          <div className="font-medium text-xs mb-1">
+                            {advisorName}
+                          </div>
+                          <div className="text-gray-500 italic">
+                            Welcome message loading...
                           </div>
                         </div>
                       </div>
-                    ))}
+                    ) : (
+                      // Show no messages state
+                      <div className="text-center py-8 text-gray-500">
+                        <MessageCircle className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                        <p className="text-sm">No messages yet.</p>
+                        <p className="text-xs text-gray-400 mt-1">Start a conversation with your advisor.</p>
+                      </div>
+                    )}
                     <div ref={messagesEndRef} />
                   </div>
                 </CardContent>

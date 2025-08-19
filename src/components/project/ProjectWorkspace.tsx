@@ -1,7 +1,7 @@
 // src/components/project/ProjectWorkspace.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProjects } from '../../hooks/useProjects';
 import { useBorrowerProfile } from '../../hooks/useBorrowerProfile';
@@ -14,6 +14,7 @@ import { Button } from '../ui/Button'; // Import Button
 import { useAuth } from '@/hooks/useAuth'; // Add this import
 import { AskAIProvider } from '../ui/AskAIProvider';
 import { ConsolidatedSidebar } from './ConsolidatedSidebar';
+import { generateAdvisorMessage } from '../../../lib/enhancedMockApiService';
 
 interface ProjectWorkspaceProps {
     projectId: string;
@@ -22,7 +23,7 @@ interface ProjectWorkspaceProps {
 export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId }) => {
     const router = useRouter();
     const {
-        activeProject, setActiveProject, isLoading: projectsLoading, getProject, updateProject, projects
+        activeProject, setActiveProject, isLoading: projectsLoading, getProject, updateProject, projects, addProjectMessage
     } = useProjects();
     const { borrowerProfile, isLoading: profileLoading } = useBorrowerProfile();
     const { user, isLoading: authLoading } = useAuth(); // Add auth loading state
@@ -30,9 +31,86 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
     
     // State for Ask AI field drop
     const [droppedFieldId, setDroppedFieldId] = useState<string | null>(null);
+    
+    // Welcome message state management
+    const [welcomeMessageGenerated, setWelcomeMessageGenerated] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true';
+        }
+        return false;
+    });
+    const welcomeGenerationInProgress = useRef(false);
+
+    // Helper function to persist welcome message flag in localStorage
+    const setWelcomeGeneratedWithStorage = useCallback((value: boolean) => {
+        setWelcomeMessageGenerated(value);
+        if (typeof window !== 'undefined') {
+            if (value) {
+                localStorage.setItem(`capmatch_welcomeGenerated_${projectId}`, 'true');
+            } else {
+                localStorage.removeItem(`capmatch_welcomeGenerated_${projectId}`);
+            }
+        }
+    }, [projectId]);
 
     // Calculate if we're still in initial loading phase
     const isInitialLoading = authLoading || projectsLoading || (user?.role === 'borrower' && profileLoading);
+
+    // Generate welcome message if needed
+    const generateWelcomeMessage = useCallback(async () => {
+        if (
+            !welcomeMessageGenerated && 
+            activeProject && 
+            activeProject.id === projectId && 
+            activeProject.assignedAdvisorUserId && 
+            !welcomeGenerationInProgress.current
+        ) {
+            try {
+                // Set ref immediately to prevent race conditions
+                welcomeGenerationInProgress.current = true;
+                
+                // Double-check localStorage to prevent race conditions
+                const storageFlag = typeof window !== 'undefined' 
+                    ? localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true'
+                    : false;
+                
+                if (storageFlag) {
+                    // Another instance already generated the message
+                    setWelcomeGeneratedWithStorage(true);
+                    welcomeGenerationInProgress.current = false;
+                    return;
+                }
+                
+                // Set flag to prevent duplicate generation
+                setWelcomeGeneratedWithStorage(true);
+                
+                // Generate a welcome message
+                const welcomeMessageText = await generateAdvisorMessage(
+                    activeProject.assignedAdvisorUserId,
+                    activeProject.id,
+                    {
+                        assetType: activeProject.assetType,
+                        dealType: activeProject.loanType,
+                        loanAmount: activeProject.loanAmountRequested,
+                        stage: activeProject.projectPhase
+                    }
+                );
+
+                // Add the welcome message to the project
+                await addProjectMessage(welcomeMessageText, 'Advisor', activeProject.assignedAdvisorUserId);
+                console.log("Generated welcome message for " + projectId);
+                
+                // Reset ref after successful completion
+                welcomeGenerationInProgress.current = false;
+            } catch (error) {
+                console.error('Error generating welcome message:', error);
+                // Reset flag on error so it can be retried
+                setWelcomeGeneratedWithStorage(false);
+                // Reset ref on error
+                welcomeGenerationInProgress.current = false;
+            }
+        }
+    }, [welcomeMessageGenerated, activeProject, projectId, addProjectMessage, setWelcomeGeneratedWithStorage]);
 
     // useEffect for loading and setting active project
     useEffect(() => {
@@ -69,6 +147,28 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
         showNotification,
         setLoading
     ]);
+
+    // Effect to generate welcome message when project is loaded
+    useEffect(() => {
+        if (activeProject && activeProject.id === projectId && !isInitialLoading) {
+            generateWelcomeMessage();
+        }
+    }, [activeProject, projectId, isInitialLoading, generateWelcomeMessage]);
+
+    // Reset welcome message flag when switching projects
+    useEffect(() => {
+        const currentFlag = typeof window !== 'undefined' 
+            ? localStorage.getItem(`capmatch_welcomeGenerated_${projectId}`) === 'true'
+            : false;
+        setWelcomeMessageGenerated(currentFlag);
+    }, [projectId]);
+
+    // Cleanup effect to reset ref when component unmounts or project changes
+    useEffect(() => {
+        return () => {
+            welcomeGenerationInProgress.current = false;
+        };
+    }, [projectId]);
 
     // Loading state render - show loading during initial loading or if project doesn't match
     if (isInitialLoading || !activeProject || activeProject.id !== projectId) {
@@ -142,6 +242,7 @@ export const ProjectWorkspace: React.FC<ProjectWorkspaceProps> = ({ projectId })
                         onFieldProcessed={() => {
                           setDroppedFieldId(null);
                         }}
+                        welcomeMessageGenerated={welcomeMessageGenerated}
                       />
                   </div>
               </div>
