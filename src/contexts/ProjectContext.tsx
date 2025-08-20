@@ -267,22 +267,28 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
     // useEffect to Save Projects List to Storage
     useEffect(() => {
         const saveProjectsToStorage = async () => {
-            if (isLoading) return; // Don't save while initial loading
+            // Don't save while initial loading or when auth/profile context isn't ready
+            if (isLoading) return;
+            if (!user) return;
+            if (user.role === 'borrower' && !borrowerProfileContext.borrowerProfile) return;
             try {
                 const allStoredProjects = await storageService.getItem<ProjectProfile[]>('projects') || [];
                 const currentProfile = borrowerProfileContext.borrowerProfile;
                 let otherUserProjects: ProjectProfile[];
-                if (user && user.role === 'borrower' && currentProfile) { otherUserProjects = allStoredProjects.filter(p => p.borrowerProfileId !== currentProfile.id); }
-                else if (user && (user.role === 'advisor' || user.role === 'admin')) { otherUserProjects = allStoredProjects.filter(p => p.assignedAdvisorUserId !== user.email); }
-                else { otherUserProjects = allStoredProjects; }
-                const combinedProjects = [...otherUserProjects, ...projects];
-                await storageService.setItem('projects', combinedProjects);
+                if (user.role === 'borrower' && currentProfile) {
+                    otherUserProjects = allStoredProjects.filter(p => p.borrowerProfileId !== currentProfile.id);
+                } else if (user.role === 'advisor' || user.role === 'admin') {
+                    otherUserProjects = allStoredProjects.filter(p => p.assignedAdvisorUserId !== user.email);
+                } else {
+                    otherUserProjects = allStoredProjects;
+                }
+                // Merge and de-duplicate by id to avoid accidental duplicates
+                const merged = [...otherUserProjects, ...projects];
+                const deduped = Array.from(new Map(merged.map(p => [p.id, p])).values());
+                await storageService.setItem('projects', deduped);
             } catch (error) { console.error('[ProjectContext] Failed to save projects list:', error); }
         };
-        // Save only if not loading and there are projects to save or state is empty (to clear storage potentially)
-        if(!isLoading){
-            saveProjectsToStorage();
-        }
+        saveProjectsToStorage();
     }, [projects, user, borrowerProfileContext.borrowerProfile, storageService, isLoading]);
 
     // Get Completion Stats
@@ -376,6 +382,8 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
         if (projects.length > 0) return;             // Already have projects
         if (autoCreatedFirstProjectThisSession) return; // Prevent multiple auto-creations in same session
 
+        console.log('[ProjectContext] Auto-create effect triggered for user:', user.email);
+
         (async () => {
             try {
                 // 1️⃣ Double-check storage to avoid duplicates
@@ -385,6 +393,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
                 const stored = await storageService.getItem<ProjectProfile[]>('projects') || [];
                 const existing = stored.filter(p => p.borrowerProfileId === profile.id);
                 if (existing.length > 0) {
+                    console.log(`[ProjectContext] Found ${existing.length} existing projects in storage, skipping auto-create`);
                     const withProgress = existing.map(p => ({
                         ...p,
                         ...calculateProgress(p)
@@ -396,6 +405,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
                 }
 
                 // 2️⃣ Still none → create first project
+                console.log('[ProjectContext] No existing projects found, creating first project');
                 // For new users (not borrower1/borrower2), create completely empty project
                 const isTestUser = user.email === 'borrower1@example.com' || user.email === 'borrower2@example.com';
                 
@@ -431,6 +441,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children, stor
                   });
                 }
                 setAutoCreatedFirstProjectThisSession(true); // Set flag to true after successful auto-creation
+                console.log('[ProjectContext] Auto-created first project successfully');
             } catch (err) {
                 console.error('[ProjectContext] Auto-create project failed:', err);
             }
